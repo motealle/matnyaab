@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  repository-safety:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Reject secrets, databases, archives and generated binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          bad=0
+
+          while IFS= read -r file; do
+            case "$file" in
+              .env|*/.env|.env.*|*/.env.*)
+                case "$file" in
+                  .env.example|*/.env.example) ;;
+                  *) echo "::error file=$file::Environment/secret file must not be committed"; bad=1 ;;
+                esac
+                ;;
+              *.sqlite|*.sqlite3|*.db|*.sql|*.dump|*.rar|*.7z|*.exe|*.msi|*.p12|*.pfx|*.jks|*.keystore)
+                echo "::error file=$file::Private/generated/binary artifact must not be committed"
+                bad=1
+                ;;
+              */build/*|*/.gradle/*|*/vendor/*|*/node_modules/*)
+                echo "::error file=$file::Generated dependency/build directory must not be committed"
+                bad=1
+                ;;
+            esac
+          done < <(git ls-files)
+
+          exit "$bad"
+
+      - name: Repository layout
+        shell: bash
+        run: |
+          echo "Expected source roots after sanitized import:"
+          echo "  web/             Laravel app (backend + Blade frontend)"
+          echo "  client/windows/  Kotlin/JVM client"
+          echo "  legacy/          selected source-only migration references"
+          echo "  docs/            migration/architecture documentation"
+          echo "  ops/             non-secret deployment support"
+
+  source-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Laravel manifest smoke check
+        shell: bash
+        run: |
+          if [[ -f web/composer.json ]]; then
+            php -r 'json_decode(file_get_contents("web/composer.json"), true, 512, JSON_THROW_ON_ERROR);'
+            echo "web/composer.json is valid JSON"
+          else
+            echo "Laravel source not imported yet; skipping."
+          fi
+
+      - name: Gradle wrapper smoke check
+        shell: bash
+        run: |
+          if [[ -f client/windows/gradlew ]]; then
+            test -f client/windows/gradle/wrapper/gradle-wrapper.properties
+            echo "Gradle wrapper structure is present."
+          else
+            echo "Kotlin client source not imported yet; skipping."
+          fi
