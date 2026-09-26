@@ -14,7 +14,7 @@ final class IdPayService
     {
         $merchant = (string) config('services.idpay.merchant_code', '');
         if ($merchant === '') {
-            throw new \RuntimeException('درگاه پرداخت هنوز پیکربندی نشده است');
+            throw new \RuntimeException('پرداخت آنلاین در حال حاضر در دسترس نیست.');
         }
 
         return [
@@ -57,7 +57,7 @@ final class IdPayService
         $redirect = (string) $response->json('link', '');
 
         if (! $response->successful() || $gatewayId === '' || $redirect === '') {
-            throw new \RuntimeException('خطا در اتصال به درگاه پرداخت');
+            throw new \RuntimeException('برقراری ارتباط با درگاه پرداخت انجام نشد. لطفاً دوباره تلاش کنید.');
         }
 
         $now = now()->format('Y-m-d H:i:s');
