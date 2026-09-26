@@ -9,14 +9,14 @@
     .stack{display:grid;gap:14px}
     .status-pill{display:inline-flex;align-items:center;gap:7px;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:700;border:1px solid var(--line)}
     .status-pill:before{content:"";width:6px;height:6px;border-radius:50%}
-    .status-active{color:#a7f3d0;background:rgba(16,185,129,.07);border-color:rgba(52,211,153,.17)}
-    .status-active:before{background:#34d399;box-shadow:0 0 13px #34d399}
-    .status-off{color:#fcd34d;background:rgba(245,158,11,.06);border-color:rgba(251,191,36,.15)}
-    .status-off:before{background:#fbbf24}
-    .section-label{font-size:13px;color:#d6d6df;font-weight:700;margin-bottom:13px}
+    .status-active{color:var(--green);background:rgba(16,185,129,.07);border-color:rgba(52,211,153,.17)}
+    .status-active:before{background:var(--green);box-shadow:0 0 13px #34d399}
+    .status-off{color:var(--amber);background:rgba(245,158,11,.06);border-color:rgba(251,191,36,.15)}
+    .status-off:before{background:var(--amber)}
+    .section-label{font-size:13px;color:var(--text);font-weight:700;margin-bottom:13px}
     .subscription-cards{display:grid;gap:8px;margin-bottom:15px}
-    .subscription-option{display:flex;justify-content:space-between;gap:15px;align-items:center;padding:13px;border:1px solid var(--line);border-radius:12px;background:#0b0b0f}
-    .subscription-option strong{font-size:13px}.subscription-option span{font-size:12px;color:#b9b9c6}
+    .subscription-option{display:flex;justify-content:space-between;gap:15px;align-items:center;padding:13px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+    .subscription-option strong{font-size:13px}.subscription-option span{font-size:12px;color:var(--muted)}
     @media(max-width:900px){.profile-grid{grid-template-columns:1fr}.profile-head{flex-direction:column}}
 </style>
 @endpush
