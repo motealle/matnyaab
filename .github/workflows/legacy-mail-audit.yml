@@ -1,0 +1,64 @@
+name: Legacy Mail Config Audit
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/legacy-mail-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USER: ${{ secrets.FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD_MATNYAAB_IR }}
+
+    steps:
+      - name: Normalize FTP endpoint
+        id: ftp
+        shell: bash
+        run: |
+          set -euo pipefail
+          server="$FTP_SERVER"
+          server="${server%/}"
+          case "$server" in
+            ftp://*|ftps://*) url="$server" ;;
+            *) url="ftp://$server" ;;
+          esac
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Inspect legacy email setting names only
+        env:
+          FTP_URL: ${{ steps.ftp.outputs.url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --silent --show-error --fail             --connect-timeout 15 --max-time 45             --user "$FTP_USER:$FTP_PASSWORD"             --ftp-method nocwd             "$FTP_URL/matnyaab_with_license/Django_Project/private.py"             --output /tmp/private.py
+
+          python3 - <<'PY'
+          import ast
+          from pathlib import Path
+
+          tree=ast.parse(Path('/tmp/private.py').read_text(encoding='utf-8'))
+          names=[]
+
+          for node in tree.body:
+              if isinstance(node, ast.Assign):
+                  for target in node.targets:
+                      if isinstance(target, ast.Name) and target.id.startswith('EMAIL_'):
+                          names.append(target.id)
+
+          names=sorted(set(names))
+          print('Legacy email configuration keys:', ', '.join(names) if names else '(none)')
+          if not names:
+              raise SystemExit('No legacy EMAIL_ settings found')
+          PY
+
+          rm -f /tmp/private.py
