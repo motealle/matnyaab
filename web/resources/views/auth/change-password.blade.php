@@ -1,22 +1,42 @@
-<!doctype html>
-<html lang="fa" dir="rtl">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>تغییر رمز عبور | متن‌یاب</title>
-</head>
-<body style="font-family:Tahoma,sans-serif;max-width:520px;margin:4rem auto;padding:1rem">
-<h1>تغییر رمز عبور</h1>
-@if ($errors->any())
-    <div style="color:#a00;margin:1rem 0">{{ $errors->first() }}</div>
-@endif
-<form method="post" action="{{ route('password.change.submit') }}">
-    @csrf
-    <p><label>رمز عبور فعلی<br><input type="password" name="current_password" required autofocus></label></p>
-    <p><label>رمز عبور جدید<br><input type="password" name="password" minlength="8" required></label></p>
-    <p><label>تکرار رمز عبور جدید<br><input type="password" name="password_confirmation" minlength="8" required></label></p>
-    <button type="submit">ذخیره رمز جدید</button>
-</form>
-<p><a href="{{ route('profile') }}">بازگشت به پروفایل</a></p>
-</body>
-</html>
+@extends('layouts.app')
+
+@section('title', 'تغییر رمز عبور | متن‌یاب')
+
+@section('content')
+<div class="container auth-shell">
+    <section class="panel panel-pad">
+        <div class="panel-header">
+            <span class="eyebrow">SECURITY</span>
+            <h1 class="page-title">تغییر رمز عبور</h1>
+            <p class="page-subtitle">پس از تأیید رمز فعلی، رمز جدید حساب شما ذخیره می‌شود.</p>
+        </div>
+
+        @if ($errors->any())
+            <div class="alert alert-error">{{ $errors->first() }}</div>
+        @endif
+        @if (session('status'))
+            <div class="alert alert-success">{{ session('status') }}</div>
+        @endif
+
+        <form method="post" action="{{ route('password.change.submit') }}">
+            @csrf
+            <label class="field">
+                <span class="field-label">رمز عبور فعلی</span>
+                <input class="input" type="password" name="current_password" autocomplete="current-password" required autofocus>
+            </label>
+            <label class="field">
+                <span class="field-label">رمز عبور جدید</span>
+                <input class="input" type="password" name="password" minlength="8" autocomplete="new-password" required>
+            </label>
+            <label class="field">
+                <span class="field-label">تکرار رمز عبور جدید</span>
+                <input class="input" type="password" name="password_confirmation" minlength="8" autocomplete="new-password" required>
+            </label>
+            <button class="btn btn-primary btn-block" type="submit">ذخیره رمز جدید</button>
+        </form>
+
+        <div class="divider"></div>
+        <p class="center" style="margin:0"><a class="text-link" href="{{ route('profile') }}">بازگشت به پروفایل</a></p>
+    </section>
+</div>
+@endsection
