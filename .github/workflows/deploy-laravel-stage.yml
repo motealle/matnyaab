@@ -1,0 +1,130 @@
+name: Deploy Laravel Stage
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - migration/source-import
+    paths:
+      - "web/**"
+      - "ops/laravel-stage-deployer.php"
+      - ".github/workflows/deploy-laravel-stage.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: matnyaab-laravel-stage
+  cancel-in-progress: false
+
+jobs:
+  deploy-stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USER: ${{ secrets.FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD_MATNYAAB_IR }}
+      SITE_URL: https://www.matnyaab.ir
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mbstring, pdo_sqlite, sqlite3, curl, openssl, fileinfo, zip
+          coverage: none
+
+      - name: Build production Laravel release
+        working-directory: web
+        run: |
+          composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader
+          php artisan --version
+
+      - name: Package release
+        shell: bash
+        run: |
+          set -euo pipefail
+          (
+            cd web
+            zip -qr ../matnyaab-laravel-release.zip .               -x '.env'               -x 'storage/logs/*'               -x 'storage/framework/cache/*'               -x 'storage/framework/sessions/*'               -x 'storage/framework/views/*'
+          )
+          test -s matnyaab-laravel-release.zip
+
+      - name: Prepare one-time deployer
+        shell: bash
+        run: |
+          set -euo pipefail
+          deploy_token="$(openssl rand -hex 32)"
+          app_key="base64:$(openssl rand -base64 32 | tr -d '\n')"
+
+          echo "::add-mask::$deploy_token"
+          echo "::add-mask::$app_key"
+
+          echo "DEPLOY_TOKEN=$deploy_token" >> "$GITHUB_ENV"
+
+          DEPLOY_TOKEN="$deploy_token"           APP_KEY="$app_key"           RELEASE_ID="$GITHUB_SHA"           python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          src = Path('ops/laravel-stage-deployer.php').read_text(encoding='utf-8')
+          src = src.replace('__DEPLOY_TOKEN__', os.environ['DEPLOY_TOKEN'])
+          src = src.replace('__APP_KEY__', os.environ['APP_KEY'])
+          src = src.replace('__RELEASE_ID__', os.environ['RELEASE_ID'])
+          Path('/tmp/matnyaab-laravel-stage-deploy.php').write_text(src, encoding='utf-8')
+          PY
+
+      - name: Normalize FTP endpoint
+        id: ftp
+        shell: bash
+        run: |
+          set -euo pipefail
+          server="$FTP_SERVER"
+          server="${server%/}"
+          case "$server" in
+            ftp://*|ftps://*) url="$server" ;;
+            *) url="ftp://$server" ;;
+          esac
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Upload stage release and one-time deployer
+        env:
+          FTP_URL: ${{ steps.ftp.outputs.url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          curl --silent --show-error --fail             --connect-timeout 15 --max-time 180             --user "$FTP_USER:$FTP_PASSWORD"             --ftp-method nocwd             --upload-file matnyaab-laravel-release.zip             "$FTP_URL/.matnyaab-laravel-release.zip"
+
+          curl --silent --show-error --fail             --connect-timeout 15 --max-time 60             --user "$FTP_USER:$FTP_PASSWORD"             --ftp-method nocwd             --upload-file /tmp/matnyaab-laravel-stage-deploy.php             "$FTP_URL/.matnyaab-laravel-stage-deploy.php"
+
+      - name: Extract and smoke-test Laravel outside document root
+        shell: bash
+        run: |
+          set -euo pipefail
+          response="$(curl --silent --show-error --fail             --connect-timeout 15 --max-time 180             -H "X-Matnyaab-Deploy-Token: $DEPLOY_TOKEN"             "$SITE_URL/.matnyaab-laravel-stage-deploy.php")"
+
+          echo "$response" | python3 -m json.tool
+
+          python3 - "$response" <<'PY'
+          import json, sys
+          x=json.loads(sys.argv[1])
+          assert x["ok"] is True
+          assert x["sqlite"] is True
+          assert x["contents"] >= 1
+          assert x["users"] >= 1
+          assert str(x["php"]).startswith("8.2.")
+          print("Laravel stage release booted against production SQLite.")
+          PY
+
+      - name: Remove public temporary deployment files
+        if: always()
+        env:
+          FTP_URL: ${{ steps.ftp.outputs.url }}
+        shell: bash
+        run: |
+          for file in .matnyaab-laravel-stage-deploy.php .matnyaab-laravel-release.zip; do
+            curl --silent --show-error               --connect-timeout 15 --max-time 60               --user "$FTP_USER:$FTP_PASSWORD"               --ftp-method nocwd               --quote "DELE $file"               "$FTP_URL/"               --output /dev/null || true
+          done
