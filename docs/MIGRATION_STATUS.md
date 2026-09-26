@@ -66,8 +66,11 @@ Recovery bridge currently covers:
 - broken saved-HTML homepage removed
 - old navigation aliases restored
 - unified Vazirmatn design system for homepage/account/error pages
+- persistent light/dark theme switching is live
+- original product screenshot is restored and covered by live asset checks
+- homepage motion respects reduced-motion preference
 - live homepage audit reports zero broken local URLs
-- dark theme is live; light-theme toggle and enhanced hero motion are the current UI task
+- a full customer-facing copy audit is now in progress to remove engineering/migration/template language from production UI
 
 ## Current production gates
 
@@ -115,8 +118,8 @@ GitHub Actions FTP authentication and production deploys are operational.
 
 ## Remaining sequence
 
-1. finish light/dark theme switching, hero motion and authentic original product image restoration;
-2. supply SMS runtime secrets and verify one real registration;
+1. finish the production-copy audit across all visible web pages;
+2. verify one controlled real SMS registration;
 3. supply SMTP runtime settings and verify password-recovery delivery;
 4. supply real IDPay merchant settings and verify one controlled payment;
 5. import sanitized Kotlin source and obtain a reproducible Windows clean build;
