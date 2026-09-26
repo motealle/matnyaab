@@ -87,7 +87,7 @@ class AdminController extends Controller
 
         return redirect()
             ->route('admin.dashboard', ['q' => $user->username])
-            ->with('status', 'اشتراک هدیه ثبت و سریال جدید تولید شد.');
+            ->with('status', 'اشتراک برای کاربر فعال شد و سریال جدید صادر شد.');
     }
 
     private function authorizeSuperuser(Request $request): void
