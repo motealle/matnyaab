@@ -1,0 +1,79 @@
+name: FTP Smoke Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - migration/bootstrap-2026-09-26
+    paths:
+      - .github/workflows/ftp-smoke.yml
+
+permissions:
+  contents: read
+
+jobs:
+  ftp-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USER: ${{ secrets.FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD_MATNYAAB_IR }}
+
+    steps:
+      - name: Validate required secrets exist
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$FTP_SERVER" || { echo "::error::FTP_SERVER is missing"; exit 1; }
+          test -n "$FTP_USER" || { echo "::error::FTP_USER is missing"; exit 1; }
+          test -n "$FTP_PASSWORD" || { echo "::error::FTP_PASSWORD_MATNYAAB_IR is missing"; exit 1; }
+          echo "Required FTP secrets are available to this workflow."
+
+      - name: Normalize FTP endpoint
+        id: endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          server="$FTP_SERVER"
+          server="${server%/}"
+
+          case "$server" in
+            ftp://*|ftps://*) url="$server" ;;
+            *) url="ftp://$server" ;;
+          esac
+
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Authenticate and list remote root
+        shell: bash
+        env:
+          FTP_URL: ${{ steps.endpoint.outputs.url }}
+        run: |
+          set -euo pipefail
+          curl             --silent --show-error --fail             --connect-timeout 15 --max-time 45             --user "$FTP_USER:$FTP_PASSWORD"             --ftp-method nocwd             --list-only             "$FTP_URL/"             --output /tmp/ftp-list.txt
+
+          count="$(wc -l < /tmp/ftp-list.txt | tr -d ' ')"
+          echo "FTP authentication and directory listing succeeded."
+          echo "Remote listing returned $count entries."
+
+      - name: Upload and delete temporary marker
+        shell: bash
+        env:
+          FTP_URL: ${{ steps.endpoint.outputs.url }}
+        run: |
+          set -euo pipefail
+          marker="matnyaab-ci-smoke-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.txt"
+          printf 'Matnyaab GitHub Actions FTP smoke test. Run %s attempt %s.\n'             "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" > "/tmp/$marker"
+
+          cleanup() {
+            curl               --silent --show-error               --connect-timeout 15 --max-time 30               --user "$FTP_USER:$FTP_PASSWORD"               --ftp-method nocwd               --quote "DELE $marker"               "$FTP_URL/"               --output /dev/null || true
+          }
+          trap cleanup EXIT
+
+          curl             --silent --show-error --fail             --connect-timeout 15 --max-time 45             --user "$FTP_USER:$FTP_PASSWORD"             --ftp-method nocwd             --upload-file "/tmp/$marker"             "$FTP_URL/$marker"
+
+          echo "Temporary FTP upload succeeded; cleanup will delete the marker."
+
+      - name: Smoke result
+        run: echo "FTP smoke test passed (auth + list + write + cleanup attempted)."
