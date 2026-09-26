@@ -1,0 +1,86 @@
+name: Legacy Django Source Snapshot
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - migration/source-import
+    paths:
+      - ".github/workflows/legacy-source-snapshot.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USER: ${{ secrets.FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD_MATNYAAB_IR }}
+
+    steps:
+      - name: Normalize FTP endpoint
+        id: endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          server="$FTP_SERVER"
+          server="${server%/}"
+          case "$server" in
+            ftp://*|ftps://*) url="$server" ;;
+            *) url="ftp://$server" ;;
+          esac
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Download selected legacy source files
+        shell: bash
+        env:
+          FTP_URL: ${{ steps.endpoint.outputs.url }}
+        run: |
+          set -euo pipefail
+          mkdir -p legacy-source
+
+          files=(
+            "Django_Project/settings.py"
+            "Django_Project/urls.py"
+            "matnyaab/models.py"
+            "matnyaab/views.py"
+            "matnyaab/urls.py"
+            "matnyaab/forms.py"
+            "matnyaab/serializers.py"
+            "users/models.py"
+            "users/views.py"
+            "users/urls.py"
+            "users/forms.py"
+            "users/utils.py"
+            "orderdiscount/models.py"
+            "orderdiscount/views.py"
+            "orderdiscount/urls.py"
+            "news/models.py"
+            "news/views.py"
+            "news/urls.py"
+            "requirements.txt"
+            "README.md"
+          )
+
+          for rel in "${files[@]}"; do
+            mkdir -p "legacy-source/$(dirname "$rel")"
+            curl --silent --show-error --fail               --connect-timeout 15 --max-time 45               --user "$FTP_USER:$FTP_PASSWORD"               --ftp-method nocwd               "$FTP_URL/matnyaab_with_license/$rel"               --output "legacy-source/$rel"
+          done
+
+          # Fail if an obvious secret/private module was accidentally included.
+          if find legacy-source -type f -name 'private.py' | grep -q .; then
+            echo "::error::private.py must not be included in source snapshot"
+            exit 1
+          fi
+
+          find legacy-source -type f -maxdepth 4 -print | sort
+
+      - name: Upload source snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: legacy-django-source-${{ github.run_id }}
+          path: legacy-source
+          retention-days: 7
