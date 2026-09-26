@@ -70,7 +70,7 @@ Recovery bridge currently covers:
 - original product screenshot is restored and covered by live asset checks
 - homepage motion respects reduced-motion preference
 - live homepage audit reports zero broken local URLs
-- a full customer-facing copy audit is now in progress to remove engineering/migration/template language from production UI
+- full customer-facing copy audit is complete; engineering/migration/template language has been removed from production UI and guarded in CI
 
 ## Current production gates
 
@@ -118,8 +118,8 @@ GitHub Actions FTP authentication and production deploys are operational.
 
 ## Remaining sequence
 
-1. finish the production-copy audit across all visible web pages;
-2. verify one controlled real SMS registration;
+1. verify one controlled real SMS registration;
+2. configure runtime SMTP and verify one controlled password-recovery delivery;
 3. supply SMTP runtime settings and verify password-recovery delivery;
 4. supply real IDPay merchant settings and verify one controlled payment;
 5. import sanitized Kotlin source and obtain a reproducible Windows clean build;
