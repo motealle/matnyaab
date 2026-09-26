@@ -42,6 +42,7 @@ return [
 
     'sms' => [
         'url' => env('SMS_PANEL_URL', 'http://tsms.ir/url/tsmshttp.php'),
+        'production_enabled' => env('SMS_PRODUCTION_ENABLED', false),
         'username' => env('SMS_PANEL_USERNAME'),
         'password' => env('SMS_PANEL_PASSWORD'),
         'number' => env('SMS_PANEL_NUMBER'),
