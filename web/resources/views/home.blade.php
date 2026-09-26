@@ -97,14 +97,14 @@
 <section class="hero">
     <div class="container hero-grid">
         <div>
-            <div class="hero-kicker"><span class="pulse"></span> موتور جستجوی شخصی برای فایل‌های شما</div>
+            <div class="hero-kicker"><span class="pulse"></span> جست‌وجو در محتوای فایل‌های شما</div>
             <h1 class="hero-title">
-                <span class="quiet">وقتی فقط بخشی از آن را یادتان مانده،</span>
-                <span class="type-line"><span id="hero-phrase">متن‌یاب پیدایش می‌کند</span><span class="type-caret" aria-hidden="true"></span></span>
+                <span class="quiet">اگر فقط چند واژه از یک متن را به یاد دارید،</span>
+                <span class="type-line"><span id="hero-phrase">همان چند واژه را جست‌وجو کنید</span><span class="type-caret" aria-hidden="true"></span></span>
             </h1>
             <p class="hero-copy">
-                هزاران سند روی رایانه‌تان می‌تواند مثل یک کتابخانه واحد جستجو شود؛
-                Word، PDF، PowerPoint، Excel، متن ساده و صفحات وب، بدون باز کردن تک‌تک فایل‌ها.
+                آرشیو فایل‌های شما می‌تواند مثل یک کتابخانه یکپارچه جست‌وجو شود؛
+                در Word، PDF، PowerPoint، Excel، متن ساده و صفحات وب، بدون اینکه فایل‌ها را یکی‌یکی باز کنید.
             </p>
             <div class="hero-actions">
                 <a class="btn btn-primary" href="#download">دانلود برای ویندوز</a>
@@ -112,8 +112,8 @@
             </div>
             <div class="hero-meta">
                 <span><i></i> پردازش محلی فایل‌ها</span>
-                <span><i></i> مناسب آرشیوهای بزرگ</span>
-                <span><i></i> حساب‌های قبلی حفظ شده‌اند</span>
+                <span><i></i> مناسب مجموعه‌های بزرگ</span>
+                <span><i></i> جست‌وجو روی رایانه شما انجام می‌شود</span>
             </div>
         </div>
 
@@ -121,7 +121,7 @@
             <div class="real-shot">
                 <img src="/static/sc1.png" alt="تصویر واقعی محیط نرم‌افزار متن‌یاب" loading="eager" fetchpriority="high">
             </div>
-            <figcaption class="stage-caption"><b>تصویر واقعی برنامه</b><br>محیط نسخه دسکتاپ متن‌یاب</figcaption>
+            <figcaption class="stage-caption"><b>نمای محیط متن‌یاب</b><br>نتایج جست‌وجو در نسخه ویندوز</figcaption>
         </figure>
     </div>
 </section>
@@ -129,16 +129,16 @@
 <section class="section" id="features">
     <div class="container">
         <div class="section-head">
-            <div><span class="eyebrow">FEATURES</span><h2>ساخته شده برای آرشیوهای واقعی</h2></div>
-            <p>وقتی تعداد فایل‌ها زیاد می‌شود، نام فایل دیگر کافی نیست. متن‌یاب خودِ محتوای فایل را قابل جستجو می‌کند.</p>
+            <div><span class="eyebrow">جست‌وجویی که به متن فایل می‌رسد</span><h2>برای آرشیوهایی که هر روز بزرگ‌تر می‌شوند</h2></div>
+            <p>وقتی تعداد فایل‌ها زیاد می‌شود، نام فایل دیگر کافی نیست. متن‌یاب درون اسناد را جست‌وجو می‌کند تا سریع‌تر به مطلب موردنظر برسید.</p>
         </div>
         <div class="feature-grid">
-            <article class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></div><h3>جستجوی سریع و رتبه‌بندی‌شده</h3><p>نتایج مرتبط‌تر بالاتر دیده می‌شوند تا سریع‌تر به سند درست برسید.</p></article>
+            <article class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></div><h3>نتایج مرتبط، زودتر در دسترس</h3><p>نتایج بر پایه میزان ارتباط مرتب می‌شوند تا مسیر رسیدن به سند موردنظر کوتاه‌تر شود.</p></article>
             <article class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/></svg></div><h3>فرمت‌های متنوع</h3><p>Word، PDF، PowerPoint، Excel، TXT، HTML و فرمت‌های متنی متداول.</p></article>
-            <article class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h10M4 19h7"/><circle cx="18" cy="17" r="3"/></svg></div><h3>جستجوی عمیق در پوشه‌ها</h3><p>پوشه‌ها و زیرپوشه‌های بزرگ را یک‌بار ایندکس کنید و بارها جستجو کنید.</p></article>
-            <article class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M4 7h6l2 2h8v10H4z"/><path d="M4 7V5h6l2 2"/></svg></div><h3>مناسب پژوهش و آرشیو</h3><p>برای کتابخانه‌های شخصی، پرونده‌های پژوهشی و مجموعه‌های حجیم اسناد.</p></article>
-            <article class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></div><h3>بسته‌های محتوایی</h3><p>پشتیبانی از مجموعه‌های محتوایی آماده برای شروع سریع‌تر جستجو.</p></article>
-            <article class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div><h3>کلاینت ویندوز</h3><p>جستجو روی سیستم خودتان انجام می‌شود و فایل‌ها در اختیار شما می‌مانند.</p></article>
+            <article class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h10M4 19h7"/><circle cx="18" cy="17" r="3"/></svg></div><h3>جست‌وجو در پوشه‌ها و زیرپوشه‌ها</h3><p>پوشه‌ها و زیرپوشه‌ها را یک‌بار آماده کنید و بعد هر قدر خواستید در محتوای آن‌ها جست‌وجو کنید.</p></article>
+            <article class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M4 7h6l2 2h8v10H4z"/><path d="M4 7V5h6l2 2"/></svg></div><h3>برای پژوهش و آرشیوهای شخصی</h3><p>برای کتابخانه‌های شخصی، پرونده‌های پژوهشی و مجموعه‌هایی که پیدا کردن مطلب در آن‌ها زمان‌بر شده است.</p></article>
+            <article class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></div><h3>بسته‌های محتوایی</h3><p>مجموعه‌های محتوایی آماده را نیز می‌توانید در کنار فایل‌های خودتان جست‌وجو کنید.</p></article>
+            <article class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div><h3>کلاینت ویندوز</h3><p>جست‌وجو روی رایانه شما انجام می‌شود و فایل‌ها همان‌جا در اختیار خودتان می‌مانند.</p></article>
         </div>
     </div>
 </section>
@@ -146,13 +146,13 @@
 <section class="section" id="workflow">
     <div class="container">
         <div class="section-head">
-            <div><span class="eyebrow">WORKFLOW</span><h2>سه مرحله تا پیدا کردن هر متن</h2></div>
-            <p>بعد از ایندکس اولیه، جستجوهای بعدی بسیار سریع انجام می‌شوند و لازم نیست فایل‌ها را یکی‌یکی باز کنید.</p>
+            <div><span class="eyebrow">از پوشه تا نتیجه</span><h2>از انتخاب پوشه تا رسیدن به متن موردنظر</h2></div>
+            <p>پس از آماده‌سازی اولیه، برای جست‌وجوهای بعدی نیازی نیست فایل‌ها را یکی‌یکی باز کنید.</p>
         </div>
         <div class="workflow">
             <div class="workflow-card"><h3>پوشه را انتخاب کنید</h3><p>آرشیو، کتابخانه یا پوشه پروژه‌ای که می‌خواهید قابل جستجو شود.</p></div>
-            <div class="workflow-card"><h3>ایندکس ساخته می‌شود</h3><p>متن‌یاب محتوای قابل استخراج فایل‌ها را برای جستجوی سریع آماده می‌کند.</p></div>
-            <div class="workflow-card"><h3>آن تکه متن را جستجو کنید</h3><p>حتی اگر فقط چند واژه از متن را یادتان مانده، نتیجه مرتبط را پیدا کنید.</p></div>
+            <div class="workflow-card"><h3>متن فایل‌ها آماده جست‌وجو می‌شود</h3><p>متن‌یاب محتوای قابل خواندن فایل‌ها را آماده می‌کند تا جست‌وجوهای بعدی سریع انجام شوند.</p></div>
+            <div class="workflow-card"><h3>چند واژه‌ای را که به یاد دارید وارد کنید</h3><p>متن‌یاب میان فایل‌ها می‌گردد و نتیجه‌های مرتبط را پیش رویتان می‌گذارد.</p></div>
         </div>
     </div>
 </section>
@@ -161,10 +161,10 @@
     <div class="container">
         <div class="download-panel">
             <div>
-                <span class="eyebrow">WINDOWS APP</span>
-                <h2>متن‌یاب را روی ویندوز نصب کنید</h2>
-                <p>نسخه پایدار فعلی در دسترس است و کلاینت جدید Kotlin برای انتشار مرحله‌ای آماده می‌شود.</p>
-                <div class="download-note"><span>نصب‌کننده x64</span><span>حساب‌های قبلی حفظ می‌شوند</span><span>به‌روزرسانی مرحله‌ای</span></div>
+                <span class="eyebrow">نسخه ویندوز</span>
+                <h2>جست‌وجوی فایل‌هایتان را از ویندوز آغاز کنید</h2>
+                <p>نسخه ویندوز متن‌یاب را دریافت کنید و پوشه‌های دلخواهتان را برای جست‌وجو آماده کنید.</p>
+                <div class="download-note"><span>نصب‌کننده x64</span><span>مدیریت اشتراک از حساب کاربری</span><span>نصب ساده روی ویندوز</span></div>
             </div>
             <a class="btn btn-primary" href="/update/MATNYAAB_x64_setup.exe">دریافت نصب‌کننده</a>
         </div>
@@ -174,12 +174,12 @@
 <section class="section" id="account">
     <div class="container">
         <div class="section-head">
-            <div><span class="eyebrow">ACCOUNT</span><h2>حساب و اشتراک شما همان‌جاست</h2></div>
-            <p>داده‌های کاربران و خریدهای قبلی در مهاجرت حفظ شده‌اند و زیرساخت جدید روی همان اطلاعات کار می‌کند.</p>
+            <div><span class="eyebrow">حساب کاربری</span><h2>اشتراک و سوابق خریدتان در دسترس شماست</h2></div>
+            <p>وارد حساب خود شوید تا وضعیت اشتراک، سریال و سوابق خریدتان را ببینید.</p>
         </div>
         <div class="account-grid">
-            <div class="account-card"><h3>کاربر متن‌یاب هستید؟</h3><p>با همان حساب قبلی وارد شوید، وضعیت اشتراک و سریال خود را ببینید.</p><a class="btn btn-primary" href="{{ route('login') }}">ورود به حساب</a></div>
-            <div class="account-card"><h3>تازه با متن‌یاب آشنا شدید؟</h3><p>ثبت‌نام جدید پس از فعال‌سازی کامل سرویس پیامک از همین مسیر انجام می‌شود.</p><a class="btn" href="{{ route('register') }}">صفحه ثبت‌نام</a></div>
+            <div class="account-card"><h3>پیش‌تر در متن‌یاب حساب ساخته‌اید؟</h3><p>با ایمیل و رمز عبور خود وارد شوید و جزئیات اشتراک و سریال را ببینید.</p><a class="btn btn-primary" href="{{ route('login') }}">ورود به حساب</a></div>
+            <div class="account-card"><h3>می‌خواهید حساب تازه‌ای بسازید؟</h3><p>هر زمان ثبت‌نام آنلاین در دسترس باشد، از همین بخش می‌توانید حساب تازه‌ای بسازید.</p><a class="btn" href="{{ route('register') }}">صفحه ثبت‌نام</a></div>
         </div>
     </div>
 </section>
@@ -193,10 +193,10 @@
 
         const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
         const phrases = [
-            'متن‌یاب پیدایش می‌کند',
-            'در هزار فایل دنبالش می‌گردد',
-            'از داخل PDF و Word بیرونش می‌کشد',
-            'نتیجه مرتبط را جلوی شما می‌گذارد'
+            'همان چند واژه را جست‌وجو کنید',
+            'متن‌یاب میان فایل‌ها به دنبالش می‌گردد',
+            'در Word و PDF هم سراغش را می‌گیرد',
+            'و شما را به نتیجه‌های مرتبط می‌رساند'
         ];
 
         if (reduced) {
