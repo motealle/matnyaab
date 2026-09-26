@@ -5,6 +5,9 @@ on:
     branches:
       - main
     paths:
+      - "web/resources/views/**"
+      - "web/routes/**"
+      - "ops/recovery-bridge/**"
       - ".github/workflows/homepage-audit.yml"
   workflow_dispatch:
 
