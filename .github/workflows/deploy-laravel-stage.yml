@@ -127,7 +127,12 @@ jobs:
           set -euo pipefail
 
           curl --silent --show-error --fail --location "$SITE_URL/" -o /tmp/home.html
-          grep -q "دانشتان گم نمی‌شود" /tmp/home.html
+          grep -q "متن‌یاب | جستجوی حرفه‌ای در محتوای فایل‌ها" /tmp/home.html
+          grep -q "data-theme-toggle" /tmp/home.html
+          grep -q "/static/sc1.png" /tmp/home.html
+
+          curl --silent --show-error --fail --location "$SITE_URL/static/sc1.png" -o /tmp/sc1.png
+          test "$(wc -c < /tmp/sc1.png)" -gt 10000
 
           curl --silent --show-error --fail --location "$SITE_URL/login" -o /tmp/login.html
           grep -q "ورود به متن‌یاب" /tmp/login.html
