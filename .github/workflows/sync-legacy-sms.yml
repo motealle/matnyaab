@@ -1,0 +1,261 @@
+name: Sync Legacy SMS Runtime
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/sync-legacy-sms.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USER: ${{ secrets.FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD_MATNYAAB_IR }}
+      SITE_URL: https://www.matnyaab.ir
+
+    steps:
+      - name: Normalize FTP endpoint
+        id: ftp
+        shell: bash
+        run: |
+          set -euo pipefail
+          server="$FTP_SERVER"
+          server="${server%/}"
+          case "$server" in
+            ftp://*|ftps://*) url="$server" ;;
+            *) url="ftp://$server" ;;
+          esac
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Read legacy SMS values without printing them
+        env:
+          FTP_URL: ${{ steps.ftp.outputs.url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --silent --show-error --fail             --connect-timeout 15 --max-time 45             --user "$FTP_USER:$FTP_PASSWORD"             --ftp-method nocwd             "$FTP_URL/matnyaab_with_license/Django_Project/private.py"             --output /tmp/private.py
+
+          python3 - <<'PY'
+          import ast
+          import base64
+          import os
+          from pathlib import Path
+
+          source = Path('/tmp/private.py').read_text(encoding='utf-8')
+          tree = ast.parse(source)
+          wanted = {
+              'SMS_PANEL_USERNAME',
+              'SMS_PANEL_PASSWORD',
+              'SMS_PANEL_NUMBER',
+          }
+          values = {}
+
+          for node in tree.body:
+              if not isinstance(node, ast.Assign) or len(node.targets) != 1:
+                  continue
+              target = node.targets[0]
+              if not isinstance(target, ast.Name) or target.id not in wanted:
+                  continue
+              if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+                  values[target.id] = node.value.value
+
+          missing = wanted - values.keys()
+          if missing:
+              raise SystemExit('legacy SMS configuration is incomplete')
+
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as out:
+              for key, value in values.items():
+                  encoded = base64.b64encode(value.encode()).decode()
+                  print(f'::add-mask::{value}')
+                  print(f'::add-mask::{encoded}')
+                  out.write(f'{key}_B64={encoded}\n')
+          PY
+
+          rm -f /tmp/private.py
+
+      - name: Prepare one-time private runtime synchronizer
+        shell: bash
+        run: |
+          set -euo pipefail
+          token="$(openssl rand -hex 32)"
+          echo "::add-mask::$token"
+          echo "SYNC_TOKEN=$token" >> "$GITHUB_ENV"
+
+          cat > /tmp/matnyaab-sync-sms.php <<'PHP'
+          <?php
+          declare(strict_types=1);
+
+          header('Content-Type: application/json; charset=utf-8');
+
+          $expected = '__TOKEN__';
+          $provided = (string) ($_SERVER['HTTP_X_MATNYAAB_SYNC_TOKEN'] ?? '');
+
+          if ($expected === '' || !hash_equals($expected, $provided)) {
+              http_response_code(403);
+              echo json_encode(['ok' => false, 'error' => 'forbidden']);
+              exit;
+          }
+
+          function header_b64(string $name): string
+          {
+              $encoded = trim((string) ($_SERVER[$name] ?? ''));
+              $decoded = base64_decode($encoded, true);
+
+              if ($encoded === '' || $decoded === false || $decoded === '') {
+                  throw new RuntimeException('missing runtime value');
+              }
+
+              return $decoded;
+          }
+
+          function env_quote(string $value): string
+          {
+              return '"' . str_replace(
+                  ['\\', '"', '$'],
+                  ['\\\\', '\\"', '\\$'],
+                  $value
+              ) . '"';
+          }
+
+          try {
+              $docRoot = __DIR__;
+              $stageRoot = dirname($docRoot) . DIRECTORY_SEPARATOR . 'matnyaab-laravel-stage';
+              $sharedDir = $stageRoot . DIRECTORY_SEPARATOR . 'shared';
+              $currentFile = $stageRoot . DIRECTORY_SEPARATOR . 'current.txt';
+
+              if (!is_file($currentFile)) {
+                  throw new RuntimeException('current release marker missing');
+              }
+
+              $release = trim((string) file_get_contents($currentFile));
+              if (!preg_match('/^[a-f0-9]{40}$/', $release)) {
+                  throw new RuntimeException('invalid release marker');
+              }
+
+              if (!is_dir($sharedDir) && !mkdir($sharedDir, 0755, true) && !is_dir($sharedDir)) {
+                  throw new RuntimeException('cannot create shared directory');
+              }
+
+              $values = [
+                  'SMS_PANEL_URL' => 'http://tsms.ir/url/tsmshttp.php',
+                  'SMS_PANEL_USERNAME' => header_b64('HTTP_X_SMS_USER_B64'),
+                  'SMS_PANEL_PASSWORD' => header_b64('HTTP_X_SMS_PASS_B64'),
+                  'SMS_PANEL_NUMBER' => header_b64('HTTP_X_SMS_NUMBER_B64'),
+              ];
+
+              $runtimeFile = $sharedDir . DIRECTORY_SEPARATOR . 'runtime-services.env';
+              $lines = is_file($runtimeFile)
+                  ? (file($runtimeFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [])
+                  : [];
+
+              $kept = [];
+              foreach ($lines as $line) {
+                  if (!str_contains($line, '=')) {
+                      continue;
+                  }
+
+                  [$key] = explode('=', $line, 2);
+                  if (!array_key_exists($key, $values)) {
+                      $kept[] = $line;
+                  }
+              }
+
+              foreach ($values as $key => $value) {
+                  $kept[] = $key . '=' . env_quote($value);
+              }
+
+              if (file_put_contents($runtimeFile, implode(PHP_EOL, $kept) . PHP_EOL, LOCK_EX) === false) {
+                  throw new RuntimeException('cannot persist runtime service config');
+              }
+              @chmod($runtimeFile, 0600);
+
+              $envPath = $stageRoot . DIRECTORY_SEPARATOR . 'releases' . DIRECTORY_SEPARATOR . $release . DIRECTORY_SEPARATOR . '.env';
+              if (!is_file($envPath)) {
+                  throw new RuntimeException('current release env missing');
+              }
+
+              $env = (string) file_get_contents($envPath);
+              foreach ($values as $key => $value) {
+                  $line = $key . '=' . env_quote($value);
+                  $pattern = '/^' . preg_quote($key, '/') . '=.*$/m';
+
+                  if (preg_match($pattern, $env)) {
+                      $env = preg_replace($pattern, $line, $env);
+                  } else {
+                      $env .= PHP_EOL . $line;
+                  }
+              }
+
+              if (file_put_contents($envPath, rtrim($env) . PHP_EOL, LOCK_EX) === false) {
+                  throw new RuntimeException('cannot update current release env');
+              }
+              @chmod($envPath, 0600);
+
+              echo json_encode([
+                  'ok' => true,
+                  'release' => $release,
+                  'synced_keys' => array_keys($values),
+                  'production_enabled' => false,
+              ], JSON_UNESCAPED_SLASHES);
+          } catch (Throwable $e) {
+              error_log('Matnyaab SMS runtime sync failed: ' . get_class($e) . ': ' . $e->getMessage());
+              http_response_code(500);
+              echo json_encode([
+                  'ok' => false,
+                  'error' => 'runtime_sync_failed',
+                  'type' => get_class($e),
+              ]);
+          }
+          PHP
+
+          TOKEN="$token" python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          path = Path('/tmp/matnyaab-sync-sms.php')
+          text = path.read_text(encoding='utf-8')
+          text = text.replace('__TOKEN__', os.environ['TOKEN'])
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Upload and execute one-time synchronizer
+        env:
+          FTP_URL: ${{ steps.ftp.outputs.url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          curl --silent --show-error --fail             --connect-timeout 15 --max-time 45             --user "$FTP_USER:$FTP_PASSWORD"             --ftp-method nocwd             --upload-file /tmp/matnyaab-sync-sms.php             "$FTP_URL/.matnyaab-sync-sms.php"
+
+          response="$(curl --silent --show-error --fail             --connect-timeout 15 --max-time 45             -H "X-Matnyaab-Sync-Token: $SYNC_TOKEN"             -H "X-Sms-User-B64: $SMS_PANEL_USERNAME_B64"             -H "X-Sms-Pass-B64: $SMS_PANEL_PASSWORD_B64"             -H "X-Sms-Number-B64: $SMS_PANEL_NUMBER_B64"             "$SITE_URL/.matnyaab-sync-sms.php")"
+
+          python3 - "$response" <<'PY'
+          import json, sys
+          result = json.loads(sys.argv[1])
+          assert result.get('ok') is True
+          assert result.get('production_enabled') is False
+          assert set(result.get('synced_keys', [])) == {
+              'SMS_PANEL_URL',
+              'SMS_PANEL_USERNAME',
+              'SMS_PANEL_PASSWORD',
+              'SMS_PANEL_NUMBER',
+          }
+          print('Legacy SMS runtime credentials synchronized; production sending remains gated.')
+          PY
+
+      - name: Remove public synchronizer
+        if: always()
+        env:
+          FTP_URL: ${{ steps.ftp.outputs.url }}
+        shell: bash
+        run: |
+          rm -f /tmp/private.py /tmp/matnyaab-sync-sms.php
+          curl --silent --show-error             --connect-timeout 15 --max-time 30             --user "$FTP_USER:$FTP_PASSWORD"             --ftp-method nocwd             --quote "DELE .matnyaab-sync-sms.php"             "$FTP_URL/"             --output /dev/null || true
