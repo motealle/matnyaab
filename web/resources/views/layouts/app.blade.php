@@ -159,7 +159,7 @@
                 </form>
             @else
                 <a class="btn desktop-only" href="{{ route('login') }}">ورود</a>
-                <a class="btn btn-primary" href="{{ route('register') }}">شروع کنید</a>
+                <a class="btn btn-primary" href="{{ route('register') }}">ثبت‌نام</a>
             @endauth
         </div>
     </div>
@@ -170,7 +170,7 @@
 <footer class="site-footer">
     <div class="container footer-row">
         <span>© {{ date('Y') }} متن‌یاب</span>
-        <span>جستجوی محلی، سریع و خصوصی در محتوای فایل‌ها</span>
+        <span>جست‌وجو در محتوای فایل‌ها، روی رایانه شما</span>
     </div>
 </footer>
 
