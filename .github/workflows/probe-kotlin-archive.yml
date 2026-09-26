@@ -1,0 +1,51 @@
+name: Probe Kotlin Archive
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/probe-kotlin-archive.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USER: ${{ secrets.FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD_MATNYAAB_IR }}
+
+    steps:
+      - name: Normalize FTP endpoint
+        id: ftp
+        shell: bash
+        run: |
+          set -euo pipefail
+          server="$FTP_SERVER"
+          server="${server%/}"
+          case "$server" in
+            ftp://*|ftps://*) url="$server" ;;
+            *) url="ftp://$server" ;;
+          esac
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Probe exact client archive names
+        env:
+          FTP_URL: ${{ steps.ftp.outputs.url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          found=0
+          for path in             "NEW%20JAVA%20PROJECT.rar"             "NEW%20JAVA%20PROJECT.zip"             "kotlin-source.zip"             "kotlin-text-source.zip"; do
+            code="$(curl --silent --show-error               --connect-timeout 10 --max-time 30               --user "$FTP_USER:$FTP_PASSWORD"               --ftp-method nocwd               -o /dev/null -w '%{http_code}'               "$FTP_URL/$path" || true)"
+            if [[ "$code" == "226" || "$code" == "200" ]]; then
+              echo "Found candidate: $path"
+              found=1
+            fi
+          done
+          echo "Found count flag: $found"
