@@ -115,6 +115,10 @@ class PasswordRecoveryController extends Controller
 
     private function mailReady(): bool
     {
+        if (! (bool) config('mail.production_enabled')) {
+            return false;
+        }
+
         $mailer = (string) config('mail.default', '');
 
         if ($mailer === '' || $mailer === 'log' || $mailer === 'array') {
