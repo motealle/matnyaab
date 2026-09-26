@@ -17,8 +17,8 @@ Route::redirect('/contact', '/#contact');
 
 Route::get('health', [LegacyApiController::class, 'health']);
 Route::get('news', [LegacyApiController::class, 'news']);
-Route::get('get_contents', [LegacyApiController::class, 'getContents']);
-Route::post('statistics', [LegacyApiController::class, 'statistics']);
+Route::match(['get', 'post'], 'get_contents', [LegacyApiController::class, 'getContents']);
+Route::match(['get', 'post'], 'statistics', [LegacyApiController::class, 'statistics']);
 Route::get('download_content', [LegacyApiController::class, 'downloadContent']);
 Route::get('download_content_img', [LegacyApiController::class, 'downloadContentImage']);
 Route::match(['get', 'post'], 'callback-gateway', [SubscriptionController::class, 'callbackGateway'])->name('callback_gateway');
