@@ -1,0 +1,66 @@
+name: Import Sanitized Kotlin Source
+
+on:
+  push:
+    branches:
+      - migration/kotlin-import-live
+    paths:
+      - ".import/KOTLIN_READY"
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reconstruct source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f .import/KOTLIN_READY
+          test -s .import/kotlin-source.b64
+          tr -d '\n\r' < .import/kotlin-source.b64 | base64 -d > /tmp/kotlin-source.zip
+          unzip -t /tmp/kotlin-source.zip >/dev/null
+
+      - name: Import source only
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf client/windows
+          mkdir -p client/windows
+          unzip -q /tmp/kotlin-source.zip -d client/windows
+
+          test -f client/windows/settings.gradle.kts
+          test -f client/windows/app/build.gradle.kts
+          test -d client/windows/app/src/main/kotlin
+
+          if find client/windows \( -type d -name .idea -o -type d -name .gradle -o -type d -name build \) -print -quit | grep -q .; then
+            echo "::error::Generated/IDE directory found in imported client"
+            exit 1
+          fi
+
+          if find client/windows -type f \( -iname '*.ttf' -o -iname '*.otf' \) -print -quit | grep -q .; then
+            echo "::error::Font binaries must not be committed"
+            exit 1
+          fi
+
+          if grep -RniE '(BEGIN (RSA|OPENSSH|EC) PRIVATE KEY|api[_-]?key\s*=\s*["'\'' ][^"'\'']+|password\s*=\s*["'\'' ][^"'\'']+)' client/windows/app/src/main/kotlin; then
+            echo "::error::Credential-like source string requires review"
+            exit 1
+          fi
+
+          rm -rf .import
+
+      - name: Commit imported source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A client/windows .import
+          git commit -m "client: import sanitized Kotlin Windows source"
+          git push origin HEAD:migration/kotlin-import-live
