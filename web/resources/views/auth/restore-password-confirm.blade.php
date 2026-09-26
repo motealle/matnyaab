@@ -6,9 +6,9 @@
 <div class="container auth-shell">
     <section class="panel panel-pad">
         <div class="panel-header">
-            <span class="eyebrow">NEW PASSWORD</span>
+            <span class="eyebrow">انتخاب رمز تازه</span>
             <h1 class="page-title">رمز عبور جدید</h1>
-            <p class="page-subtitle">برای حساب {{ $account->username }} یک رمز جدید انتخاب کنید.</p>
+            <p class="page-subtitle">برای حساب {{ $account->username }} رمز عبور تازه‌ای انتخاب کنید.</p>
         </div>
 
         @if ($errors->any())
