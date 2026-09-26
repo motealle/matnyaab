@@ -82,6 +82,8 @@ Status legend: DONE, IN PROGRESS, BLOCKED, TODO, DEFERRED.
 
 ## P1 — Web UX
 
+- IN PROGRESS — Full production-copy audit: remove internal/migration/template language and rewrite all visible text in polished product Persian.
+- DONE — Add product-copy standard and repository review gate.
 - DONE — Remove dependency on broken matnyaab.ir_files snapshot.
 - DONE — Restore old navigation aliases.
 - DONE — Dark professional design system with Vazirmatn.
@@ -92,7 +94,7 @@ Status legend: DONE, IN PROGRESS, BLOCKED, TODO, DEFERRED.
 - TODO — Accessibility contrast/focus/keyboard pass.
 - DONE — Improve profile/subscription/history presentation.
 - TODO — Add polished payment success/failure pages.
-- TODO — Improve password recovery UX after backend parity.
+- IN PROGRESS — Refine password recovery copy and unavailable-state guidance for production.
 - TODO — Replace empty favicon with branded icon strategy.
 
 ## P1 — Operations and security
