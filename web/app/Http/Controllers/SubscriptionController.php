@@ -98,11 +98,10 @@ class SubscriptionController extends Controller
             ->firstOrFail();
 
         if (! $idpay->verify($transaction, $request->all())) {
-            return response(
-                '<!doctype html><html lang="fa" dir="rtl"><meta charset="utf-8"><body><h1>پرداخت ناموفق</h1><p>اگر مبلغی کسر شده باشد، طبق رویه درگاه بانکی بازگشت وجه انجام می‌شود.</p></body></html>',
-                400,
-                ['Content-Type' => 'text/html; charset=utf-8']
-            );
+            return response()->view('payments.result', [
+                'success' => false,
+                'trackingCode' => $trackingCode,
+            ], 400);
         }
 
         $metadata = $transaction->metadata();
@@ -128,11 +127,10 @@ class SubscriptionController extends Controller
             return redirect()->route('profile')->with('status', 'پرداخت با موفقیت انجام شد و اشتراک فعال شد.');
         }
 
-        return response(
-            '<!doctype html><html lang="fa" dir="rtl"><meta charset="utf-8"><body><h1>پرداخت موفق</h1><p>اشتراک فعال شد. برای مشاهده سریال وارد حساب کاربری شوید.</p></body></html>',
-            200,
-            ['Content-Type' => 'text/html; charset=utf-8']
-        );
+        return response()->view('payments.result', [
+            'success' => true,
+            'trackingCode' => $trackingCode,
+        ]);
     }
 
     private function activateSubscription(
