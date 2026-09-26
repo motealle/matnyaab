@@ -140,8 +140,8 @@ Latest verified backend state:
 
 See BACKLOG.md. Current order:
 
-1. complete the production copy audit across homepage, account, recovery, payment/error and admin-facing views;
-2. activate SMS safely and test one controlled registration;
+1. activate SMS safely and test one controlled registration;
+2. configure runtime SMTP safely and test one controlled password-recovery delivery;
 3. verify real payment with one controlled transaction;
 4. import and clean-build Kotlin client using the sanitized source attachment if the FTP copy remains unavailable;
 5. migrate remaining desktop API routes to Laravel;
@@ -188,3 +188,13 @@ There is no retired source host to fail back to. Rollback means reverting code/r
 - Credential values were read from legacy private.py inside Actions, masked, transferred through a one-time HTTPS synchronizer, stored outside document root, and the public synchronizer was deleted.
 - The next deploy preserved the private runtime-service file.
 - Latest CI / Build / Laravel Legacy SQLite Smoke / Deploy Laravel Stage for the SMS-gate test fix are all green.
+
+
+## Production-copy checkpoint
+
+- Full customer-facing copy audit completed across homepage, authentication, recovery, profile, payment, error and admin-facing views.
+- Internal migration/framework/build language was removed from production UI.
+- Product copy standard: `docs/PRODUCT_COPY.md`.
+- Production Copy Guard workflow is active and passing.
+- Production deploy for the copy revision: run 36263397737 — success.
+- Homepage Asset Audit for the copy revision: run 36263397781 — success.
