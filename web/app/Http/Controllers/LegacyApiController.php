@@ -7,6 +7,7 @@ use App\Models\News;
 use App\Models\Statistic;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class LegacyApiController extends Controller
@@ -32,10 +33,10 @@ class LegacyApiController extends Controller
         return response()->json($rows);
     }
 
-    public function getContents(Request $request): JsonResponse
+    public function getContents(Request $request): JsonResponse|Response
     {
-        if (! $request->filled('password')) {
-            abort(404, 'اطلاعات یافت نشد ;)');
+        if (! $request->isMethod('get') || ! $request->filled('password')) {
+            return $this->legacyNotFound();
         }
 
         $rows = Content::query()
@@ -70,6 +71,10 @@ class LegacyApiController extends Controller
 
     public function statistics(Request $request): JsonResponse
     {
+        if (! $request->isMethod('post')) {
+            return response()->json(['status' => 'error'], 405);
+        }
+
         $systemId = trim((string) $request->input('user_system_id', ''));
         $action = trim((string) $request->input('action', ''));
 
@@ -100,27 +105,43 @@ class LegacyApiController extends Controller
         return $this->downloadStoredFile($request, 'content_cover_image');
     }
 
-    private function downloadStoredFile(Request $request, string $column): BinaryFileResponse
+    private function legacyNotFound(): Response
+    {
+        return response('اطلاعات یافت نشد ;)', 404)
+            ->header('Content-Type', 'text/plain; charset=utf-8')
+            ->header('Cache-Control', 'no-store');
+    }
+
+    private function downloadStoredFile(Request $request, string $column): BinaryFileResponse|Response
     {
         $id = filter_var($request->query('id'), FILTER_VALIDATE_INT);
-        abort_unless($id, 404, 'اطلاعات یافت نشد ;)');
+        if (! $id) {
+            return $this->legacyNotFound();
+        }
 
         $stored = Content::query()->whereKey($id)->value($column);
-        abort_unless(is_string($stored) && $stored !== '', 404, 'اطلاعات یافت نشد ;)');
+        if (! is_string($stored) || $stored === '') {
+            return $this->legacyNotFound();
+        }
 
         $root = realpath((string) env('MATNYAAB_LEGACY_ROOT', base_path('../matnyaab_with_license')));
-        abort_unless($root !== false, 404);
+        if ($root === false) {
+            return $this->legacyNotFound();
+        }
 
         $relative = ltrim(str_replace('\\', '/', $stored), '/');
-        abort_if($relative === '' || str_contains($relative, '../'), 404);
+        if ($relative === '' || str_contains($relative, '../')) {
+            return $this->legacyNotFound();
+        }
 
         $path = realpath($root.DIRECTORY_SEPARATOR.$relative);
-        abort_unless(
-            $path !== false
-            && is_file($path)
-            && str_starts_with($path, $root.DIRECTORY_SEPARATOR),
-            404
-        );
+        if (
+            $path === false
+            || ! is_file($path)
+            || ! str_starts_with($path, $root.DIRECTORY_SEPARATOR)
+        ) {
+            return $this->legacyNotFound();
+        }
 
         return response()->download($path, basename($path), [
             'Cache-Control' => 'private, max-age=0, must-revalidate',
