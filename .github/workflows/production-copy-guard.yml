@@ -1,0 +1,72 @@
+name: Production Copy Guard
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "web/resources/views/**"
+      - "web/app/Http/Controllers/**"
+      - "web/app/Services/**"
+      - "docs/PRODUCT_COPY.md"
+      - ".github/workflows/production-copy-guard.yml"
+  pull_request:
+    paths:
+      - "web/resources/views/**"
+      - "web/app/Http/Controllers/**"
+      - "web/app/Services/**"
+      - "docs/PRODUCT_COPY.md"
+
+permissions:
+  contents: read
+
+jobs:
+  copy-guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reject internal or template-like production copy
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          files=(
+            web/resources/views
+            web/app/Http/Controllers
+            web/app/Services
+          )
+
+          banned=(
+            'در جریان مهاجرت'
+            'سرور جدید'
+            'زیرساخت جدید'
+            'تصویر واقعی برنامه'
+            'نسخه جدید Kotlin'
+            'WELCOME BACK'
+            'CREATE ACCOUNT'
+            'VERIFY MOBILE'
+            'CHECK YOUR EMAIL'
+            'NEW PASSWORD'
+            'PAYMENT VERIFIED'
+            'PAYMENT NOT VERIFIED'
+            'SUPERUSER'
+            'WINDOWS APP'
+            'SERVER ERROR'
+            'MAINTENANCE'
+            '404 / NOT FOUND'
+          )
+
+          failed=0
+          for phrase in "${banned[@]}"; do
+            if grep -RFn --include='*.php' --include='*.blade.php' "$phrase" "${files[@]}"; then
+              echo "::error::Customer-facing copy contains banned internal/template phrase: $phrase"
+              failed=1
+            fi
+          done
+
+          test "$failed" = "0"
+
+      - name: Verify copy standard exists
+        run: test -s docs/PRODUCT_COPY.md
