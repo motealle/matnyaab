@@ -29,9 +29,9 @@ Status legend: DONE, IN PROGRESS, BLOCKED, TODO, DEFERRED.
 - DONE — Registration validation and duplicate handling.
 - DONE — SMS confirmation logic and retry/delete behavior in tests.
 - DONE — Verify legacy SMS config keys exist on the destination host copy.
-- BLOCKED — Move SMS values into Laravel runtime secret configuration; legacy keys are confirmed present.
-- TODO — Send one controlled real SMS from Laravel.
-- TODO — Enable production registration after real SMS success.
+- DONE — Legacy SMS values are synchronized into private runtime configuration outside the public document root; values never enter Git.
+- BLOCKED — Send one controlled real SMS from Laravel; production sending remains explicitly gated until a safe test recipient is chosen.
+- TODO — Enable `SMS_PRODUCTION_ENABLED` and production registration only after the controlled SMS succeeds.
 - DONE — Password-recovery backend and UI; stateless 30-minute HMAC links tested on copied production SQLite.
 - DONE — Superuser migration dashboard, user search and gift-subscription flow; tested on copied production SQLite.
 
