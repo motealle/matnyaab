@@ -54,32 +54,61 @@ jobs:
           esac
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
+      - name: Protect legacy SQLite from direct HTTP access
+        shell: bash
+        env:
+          FTP_URL: ${{ steps.endpoint.outputs.url }}
+        run: |
+          set -euo pipefail
+          curl --silent --show-error --fail \
+            --connect-timeout 15 --max-time 45 \
+            --user "$FTP_USER:$FTP_PASSWORD" \
+            --ftp-method nocwd \
+            --upload-file ops/recovery-bridge/legacy-protection.htaccess \
+            "$FTP_URL/matnyaab_with_license/.htaccess"
+
       - name: Backup live SQLite and root htaccess on destination
         shell: bash
         env:
           FTP_URL: ${{ steps.endpoint.outputs.url }}
         run: |
           set -euo pipefail
-          backup=".private-backups/recovery-${GITHUB_RUN_ID}"
           mkdir -p /tmp/matnyaab-backup
+          suffix="recovery-${GITHUB_RUN_ID}"
 
-          curl --silent --show-error --fail             --connect-timeout 15 --max-time 90             --user "$FTP_USER:$FTP_PASSWORD"             --ftp-method nocwd             "$FTP_URL/matnyaab_with_license/db.sqlite3"             --output /tmp/matnyaab-backup/db.sqlite3
+          curl --silent --show-error --fail \
+            --connect-timeout 15 --max-time 90 \
+            --user "$FTP_USER:$FTP_PASSWORD" \
+            --ftp-method nocwd \
+            "$FTP_URL/matnyaab_with_license/db.sqlite3" \
+            --output /tmp/matnyaab-backup/db.sqlite3
 
           test -s /tmp/matnyaab-backup/db.sqlite3
           test "$(sqlite3 /tmp/matnyaab-backup/db.sqlite3 'PRAGMA integrity_check;')" = "ok"
 
-          printf 'Require all denied\n' > /tmp/matnyaab-backup/deny.htaccess
+          curl --silent --show-error --fail \
+            --connect-timeout 15 --max-time 90 \
+            --user "$FTP_USER:$FTP_PASSWORD" \
+            --ftp-method nocwd \
+            --upload-file /tmp/matnyaab-backup/db.sqlite3 \
+            "$FTP_URL/matnyaab_with_license/db.sqlite3.$suffix.bak"
 
-          curl --silent --show-error --fail             --connect-timeout 15 --max-time 90             --user "$FTP_USER:$FTP_PASSWORD"             --ftp-method nocwd --ftp-create-dirs             --upload-file /tmp/matnyaab-backup/db.sqlite3             "$FTP_URL/$backup/db.sqlite3.bak"
-
-          curl --silent --show-error --fail             --connect-timeout 15 --max-time 45             --user "$FTP_USER:$FTP_PASSWORD"             --ftp-method nocwd --ftp-create-dirs             --upload-file /tmp/matnyaab-backup/deny.htaccess             "$FTP_URL/$backup/.htaccess"
-
-          if curl --silent --show-error --fail             --connect-timeout 15 --max-time 30             --user "$FTP_USER:$FTP_PASSWORD"             --ftp-method nocwd             "$FTP_URL/.htaccess"             --output /tmp/matnyaab-backup/root.htaccess; then
-              curl --silent --show-error --fail                 --connect-timeout 15 --max-time 30                 --user "$FTP_USER:$FTP_PASSWORD"                 --ftp-method nocwd --ftp-create-dirs                 --upload-file /tmp/matnyaab-backup/root.htaccess                 "$FTP_URL/$backup/root.htaccess.bak"
+          if curl --silent --show-error --fail \
+            --connect-timeout 15 --max-time 30 \
+            --user "$FTP_USER:$FTP_PASSWORD" \
+            --ftp-method nocwd \
+            "$FTP_URL/.htaccess" \
+            --output /tmp/matnyaab-backup/root.htaccess; then
+              curl --silent --show-error --fail \
+                --connect-timeout 15 --max-time 30 \
+                --user "$FTP_USER:$FTP_PASSWORD" \
+                --ftp-method nocwd \
+                --upload-file /tmp/matnyaab-backup/root.htaccess \
+                "$FTP_URL/matnyaab_with_license/root.htaccess.$suffix.bak"
           fi
 
           rm -f /tmp/matnyaab-backup/db.sqlite3
-          echo "Backup completed at FTP path: $backup"
+          echo "Protected backup completed next to the legacy database."
 
       - name: Assemble production-safe bridge
         shell: bash
