@@ -169,3 +169,35 @@ The repository is currently public. Never commit:
 - Verified capabilities: authenticate, list remote root, upload a temporary marker, remove the marker
 - No secret values are stored in Git.
 - Next deployment blocker: determine the correct application document root / remote deploy path, then add release + rollback deployment.
+
+
+## Production checkpoint — 2026-09-26
+
+- DNS points to the destination host; there is no active dependency on the retired source host.
+- Production PHP: 8.2; strict TLS is passing.
+- Production database remains the original SQLite database by design for this migration phase.
+- SQLite integrity check is passing.
+- Laravel 12 is staged outside the public document root and reads the production SQLite schema directly.
+- Laravel canary currently serves account/web routes while desktop API traffic still uses the compatibility bridge.
+- Django PBKDF2 login compatibility is tested against a copied production database.
+- Subscription activation and legacy AES/Base32 serial compatibility are tested.
+- IDPay create/verify behavior is covered by mocked HTTP tests; live merchant activation remains a production gate.
+- Registration/SMS confirmation code is implemented and tested. Legacy SMS configuration was verified to exist in `matnyaab_with_license/Django_Project/private.py`, but values have not been copied into Laravel runtime configuration yet.
+- The broken saved-HTML homepage was replaced by a self-contained Laravel homepage. Live link audit went from 15 broken local URLs to 0.
+- The current installer URL responds successfully.
+- A daily encrypted backup workflow now verifies SQLite integrity and produces:
+  - full `db.sqlite3`
+  - customer summary CSV
+  - purchase history CSV
+  - Excel workbook
+- Current data snapshot: 153 accounts, 94 distinct purchasers, 116 subscription-history rows, 137 completed orders, 66 gateway transaction rows.
+
+### Remaining go-live work
+
+1. Move legacy SMS credentials into Laravel runtime configuration without committing them.
+2. Validate one controlled real SMS registration flow.
+3. Configure/validate the real payment merchant and perform a controlled payment/refund-safe verification.
+4. Port remaining legacy web flows (password recovery/admin functions that are still required).
+5. Import sanitized Kotlin client source and obtain a reproducible Windows clean build in GitHub Actions.
+6. Verify updater/install packaging and publish the Kotlin client only after server parity is stable.
+7. Move remaining desktop API routes from the compatibility bridge to Laravel, then remove the bridge.
