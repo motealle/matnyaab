@@ -1,0 +1,54 @@
+name: FTP Inventory
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - migration/source-import
+    paths:
+      - ".github/workflows/ftp-inventory.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USER: ${{ secrets.FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD_MATNYAAB_IR }}
+
+    steps:
+      - name: Install lftp
+        run: sudo apt-get update && sudo apt-get install -y lftp
+
+      - name: Build remote inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$FTP_SERVER"
+          test -n "$FTP_USER"
+          test -n "$FTP_PASSWORD"
+
+          server="$FTP_SERVER"
+          server="${server#ftp://}"
+          server="${server#ftps://}"
+          server="${server%/}"
+
+          lftp -u "$FTP_USER","$FTP_PASSWORD" "$server" -e '
+            set cmd:fail-exit yes
+            set net:timeout 20
+            set net:max-retries 1
+            cls -1R
+            bye
+          ' > ftp-inventory.txt
+
+          echo "Inventory lines: $(wc -l < ftp-inventory.txt)"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ftp-inventory-${{ github.run_id }}
+          path: ftp-inventory.txt
+          retention-days: 7
