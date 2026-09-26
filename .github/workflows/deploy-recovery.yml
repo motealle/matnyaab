@@ -6,6 +6,7 @@ on:
       - migration/source-import
     paths:
       - ".github/workflows/deploy-recovery.yml"
+      - "ops/recovery-bridge/**"
   workflow_dispatch:
 
 permissions:
