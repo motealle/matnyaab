@@ -135,3 +135,42 @@ After recovery is stable:
 - replace the shared content API password with a stronger client API scheme;
 - add signed Windows builds and updater artifacts;
 - correct bare-domain TLS and canonical redirect.
+
+
+## Production recovery checkpoint — 2026-09-26
+
+The emergency SQLite-first recovery layer is now deployed to the destination host.
+
+Verified through GitHub Actions against production:
+
+- PHP runtime is 8.1.34.
+- PDO SQLite and SQLite3 extensions are enabled.
+- The live SQLite database passed integrity checks before deployment.
+- A protected on-host backup is created before each recovery deployment.
+- Direct HTTP download of the SQLite database is blocked.
+- Health endpoint reads the live database successfully.
+- Live database currently exposes 9 visible content packages to the recovery API.
+- News endpoint returns valid JSON.
+- Content-list endpoint returns both legacy Django field names and Kotlin-port field names for compatibility.
+- Content cover download supports normal and Range requests.
+- Existing root `/update/version.txt` and `/update/MATNYAAB_x64_setup.exe` are kept as static files and are not proxied through PHP.
+- Deployment uses a root-only PHP front controller because the FTP account permits file writes but rejects creating new directories from CI.
+
+### Current external blocker
+
+TLS hostname validation is currently failing for both `matnyaab.ir` and `www.matnyaab.ir`.
+
+Functional smoke tests pass when certificate verification is bypassed diagnostically. This bypass is **not** used by the application and must not become part of the client.
+
+The hosting control panel must issue/install a certificate covering both hostnames before existing HTTPS clients can be considered operational.
+
+### Recovery implementation
+
+Production compatibility layer:
+
+- `recovery.php` — root PHP front controller for legacy desktop API routes
+- root `.htaccess` — routes legacy endpoints and blocks sensitive database/backup extensions
+- `matnyaab_with_license/.htaccess` — blocks direct access to SQLite and sensitive legacy configuration files
+- root `index.php` — temporary public entry point while the full Laravel web UI is completed
+
+This bridge is deliberately temporary. The next backend milestone is a complete Laravel 10 application mapped to the existing Django SQLite tables without changing database technology.
