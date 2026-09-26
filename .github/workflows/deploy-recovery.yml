@@ -3,6 +3,7 @@ name: Deploy Recovery Bridge
 on:
   push:
     branches:
+      - main
       - migration/source-import
     paths:
       - ".github/workflows/deploy-recovery.yml"
