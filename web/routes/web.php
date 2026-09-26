@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LegacyApiController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\SubscriptionController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,9 +26,13 @@ Route::match(['get', 'post'], 'callback-gateway', [SubscriptionController::class
 Route::middleware('guest')->group(function () {
     Route::get('login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('login', [AuthController::class, 'login'])->name('login.submit');
+    Route::get('register', [RegistrationController::class, 'showRegister'])->name('register');
+    Route::post('register', [RegistrationController::class, 'register'])->name('register.submit');
 });
 
 Route::middleware('auth')->group(function () {
+    Route::get('smsconfirm', [RegistrationController::class, 'showSmsConfirm'])->name('smsconfirm');
+    Route::post('smsconfirm', [RegistrationController::class, 'smsConfirm'])->name('smsconfirm.submit');
     Route::get('profile', ProfileController::class)->name('profile');
     Route::post('buysubscription', [SubscriptionController::class, 'buySubscription'])->name('buysubscription');
     Route::match(['get', 'post'], 'logout', [AuthController::class, 'logout'])->name('logout');

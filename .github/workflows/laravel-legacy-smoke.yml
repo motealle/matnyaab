@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - migration/source-import
+      - migration/backend-auth
     paths:
       - "web/**"
       - ".github/workflows/laravel-legacy-smoke.yml"

@@ -4,7 +4,9 @@ on:
   workflow_dispatch:
   push:
     branches:
+      - main
       - migration/source-import
+      - migration/backend-auth
     paths:
       - "web/**"
       - "ops/laravel-stage-deployer.php"

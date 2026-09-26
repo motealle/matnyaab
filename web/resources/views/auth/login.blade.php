@@ -16,5 +16,6 @@
     <p><label>رمز عبور<br><input type="password" name="password" required></label></p>
     <button type="submit">ورود</button>
 </form>
+<p><a href="{{ route('register') }}">حساب ندارید؟ ثبت‌نام</a></p>
 </body>
 </html>
