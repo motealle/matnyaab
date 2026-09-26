@@ -46,6 +46,8 @@ Important tables include users_accountmodel, users_subscriptionmodel, users_subs
 - Django PBKDF2 login compatibility
 - profile/subscription display
 - password change
+- password-recovery controller/UI with expiring single-use HMAC reset links
+- superuser migration dashboard with user search and gift-subscription support
 - subscription/order/history mapping
 - legacy AES/Base32 serial compatibility
 - IDPay create/verify logic covered by fake HTTP tests
@@ -64,6 +66,8 @@ Expected keys are SMS_PANEL_USERNAME, SMS_PANEL_PASSWORD, and SMS_PANEL_NUMBER.
 The old provider endpoint is http://tsms.ir/url/tsmshttp.php.
 
 Values must not be committed or printed in CI logs. Laravel registration remains gated until runtime SMS settings are configured and one controlled real SMS is verified.
+
+Legacy mail configuration keys were also verified without exposing values: EMAIL_BACKEND, EMAIL_HOST, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_PORT, EMAIL_USE_TLS. Password recovery is code-complete but production email delivery remains gated on runtime mail configuration.
 
 ## Payment
 
@@ -122,6 +126,8 @@ Do not remove the bridge until the Windows client and Laravel API contracts are 
 - Tika
 
 Before release: import source only, remove generated/IDE output and hard-coded credentials, clean-build in Windows Actions, package installer, verify updater and license/content compatibility.
+
+Latest Laravel compatibility suite result: 16 tests passed / 85 assertions against an isolated copy of production SQLite.
 
 ## Immediate next work
 
