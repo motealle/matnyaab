@@ -211,6 +211,9 @@
 
         <div class="nav-actions">
             @auth
+                @if (auth()->user()->is_superuser)
+                    <a class="btn desktop-only" href="{{ route('admin.dashboard') }}">مدیریت</a>
+                @endif
                 <a class="btn desktop-only" href="{{ route('profile') }}">پروفایل</a>
                 <form method="post" action="{{ route('logout') }}">
                     @csrf
