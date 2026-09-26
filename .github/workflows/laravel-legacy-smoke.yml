@@ -71,7 +71,7 @@ jobs:
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: /tmp/matnyaab-test.sqlite3
-        run: php artisan test --testsuite=Feature
+        run: php artisan test
 
       - name: Start Laravel locally
         working-directory: web
