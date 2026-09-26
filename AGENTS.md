@@ -44,8 +44,11 @@ Preserve these behaviors unless a deliberate migration is documented and tested:
 - desktop API response shapes
 - content-pack paths and authorization
 
-## Web UI rules
+## Web UI and product-copy rules
 
+- Read and follow `docs/PRODUCT_COPY.md` for every production-facing string.
+- Production UI must speak to customers, not to the migration team. Do not expose internal migration, framework, provider, build, or implementation language unless the customer genuinely needs it.
+- Do not use self-justifying labels such as "real screenshot", "new infrastructure", "Kotlin version", or generic presentation labels when natural product copy is available.
 - Use the shared Blade layout/design system.
 - Vazirmatn is the preferred typeface; do not commit font binaries.
 - Support dark and light themes.
