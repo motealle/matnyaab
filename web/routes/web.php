@@ -20,6 +20,7 @@ Route::get('get_contents', [LegacyApiController::class, 'getContents']);
 Route::post('statistics', [LegacyApiController::class, 'statistics']);
 Route::get('download_content', [LegacyApiController::class, 'downloadContent']);
 Route::get('download_content_img', [LegacyApiController::class, 'downloadContentImage']);
+Route::match(['get', 'post'], 'callback-gateway', [SubscriptionController::class, 'callbackGateway'])->name('callback_gateway');
 
 Route::middleware('guest')->group(function () {
     Route::get('login', [AuthController::class, 'showLogin'])->name('login');
