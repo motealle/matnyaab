@@ -71,12 +71,16 @@ Rules:
 - verify DB side effects and idempotency;
 - keep backup before payment tests.
 
-## 6. Web UI and homepage
+## 6. Web UI, homepage and product copy
 
 Use for UX changes.
 
 Checklist:
 
+- read `docs/PRODUCT_COPY.md` before changing customer-facing text;
+- review copy from the customer's point of view, not the engineering team's;
+- remove migration/framework/provider/build terminology from production pages unless necessary;
+- prefer clear, polished Persian product language over template-like labels and presentation copy;
 - build on `layouts.app`;
 - keep Vazirmatn;
 - provide dark/light theme parity;
