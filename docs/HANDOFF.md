@@ -127,19 +127,41 @@ Do not remove the bridge until the Windows client and Laravel API contracts are 
 
 Before release: import source only, remove generated/IDE output and hard-coded credentials, clean-build in Windows Actions, package installer, verify updater and license/content compatibility.
 
-Latest Laravel compatibility suite result: 16 tests passed / 85 assertions against an isolated copy of production SQLite.
+Latest verified backend state:
+- Laravel compatibility suite is running on main against an isolated copy of production SQLite.
+- Password recovery is implemented with 30-minute stateless HMAC links and tested.
+- Superuser migration dashboard and gift-subscription flow are implemented and tested.
+- Latest Kotlin archive probe completed successfully as a workflow, but found no client source archive in the destination-host FTP root/candidate paths. This is a discovery blocker, not a build failure.
 
 ## Immediate next work
 
 See BACKLOG.md. Current order:
 
-1. activate SMS safely and test one controlled registration;
-2. verify real payment with one controlled transaction;
-3. import and clean-build Kotlin client;
-4. finish password-recovery/admin parity;
+1. finish theme switcher, hero motion and restoration of the original homepage screenshot/image;
+2. activate SMS safely and test one controlled registration;
+3. verify real payment with one controlled transaction;
+4. import and clean-build Kotlin client using the sanitized source attachment if the FTP copy remains unavailable;
 5. migrate remaining desktop API routes to Laravel;
 6. remove the bridge after parity.
+
+## Current blockers
+
+### Runtime secrets
+SMS, SMTP and real IDPay values exist only in legacy/private configuration or need to be supplied as runtime secrets. Do not copy them into Git. Until runtime SMS is configured, new registration remains intentionally gated. Until SMTP is configured, password-recovery email remains intentionally gated. Until the merchant value is configured, real paid checkout remains intentionally gated.
+
+### Kotlin source location
+The destination host FTP does not currently expose a discoverable Kotlin/Java source archive at the probed names/paths. The project conversation contains the original NEW JAVA PROJECT archive and a sanitized source bundle, so the practical fallback is to import from that bundle into a migration branch and let Windows CI clean-build it.
 
 ## Rollback principle
 
 There is no retired source host to fail back to. Rollback means reverting code/routing on the destination host while preserving SQLite and persistent content. Never overwrite production SQLite as part of a code rollback.
+
+
+## UI contract
+
+- Vazirmatn is the preferred web typeface; do not commit font binaries.
+- Both dark and light themes must be supported.
+- Theme preference must persist locally in the browser and respect OS preference on first visit.
+- Motion must respect `prefers-reduced-motion`.
+- Homepage visual assets must be verified by the live asset audit.
+- Keep the original product screenshot/image as authentic visual proof; decorative mock UI should not replace all real product imagery.
