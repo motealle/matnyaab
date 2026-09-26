@@ -1,21 +1,37 @@
-<!doctype html>
-<html lang="fa" dir="rtl">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>ورود | متن‌یاب</title>
-</head>
-<body style="font-family:Tahoma,sans-serif;max-width:520px;margin:4rem auto;padding:1rem">
-<h1>ورود به متن‌یاب</h1>
-@if ($errors->any())
-    <div style="color:#a00;margin:1rem 0">{{ $errors->first() }}</div>
-@endif
-<form method="post" action="{{ route('login.submit') }}">
-    @csrf
-    <p><label>نام کاربری<br><input name="username" value="{{ old('username') }}" required autofocus></label></p>
-    <p><label>رمز عبور<br><input type="password" name="password" required></label></p>
-    <button type="submit">ورود</button>
-</form>
-<p><a href="{{ route('register') }}">حساب ندارید؟ ثبت‌نام</a></p>
-</body>
-</html>
+@extends('layouts.app')
+
+@section('title', 'ورود | متن‌یاب')
+
+@section('content')
+<div class="container auth-shell">
+    <section class="panel panel-pad">
+        <div class="panel-header">
+            <span class="eyebrow">WELCOME BACK</span>
+            <h1 class="page-title">ورود به متن‌یاب</h1>
+            <p class="page-subtitle">با همان حساب قبلی وارد شوید. اطلاعات و اشتراک‌های شما حفظ شده‌اند.</p>
+        </div>
+
+        @if ($errors->any())
+            <div class="alert alert-error">{{ $errors->first() }}</div>
+        @endif
+
+        <form method="post" action="{{ route('login.submit') }}">
+            @csrf
+            <label class="field">
+                <span class="field-label">نام کاربری یا ایمیل</span>
+                <input class="input" name="username" value="{{ old('username') }}" autocomplete="username" required autofocus>
+            </label>
+
+            <label class="field">
+                <span class="field-label">رمز عبور</span>
+                <input class="input" type="password" name="password" autocomplete="current-password" required>
+            </label>
+
+            <button class="btn btn-primary btn-block" type="submit">ورود به حساب</button>
+        </form>
+
+        <div class="divider"></div>
+        <p class="center muted" style="margin:0">حساب ندارید؟ <a class="text-link" href="{{ route('register') }}">ثبت‌نام</a></p>
+    </section>
+</div>
+@endsection
