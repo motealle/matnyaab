@@ -1,5 +1,13 @@
 DirectoryIndex index.php index.html
-Options -Indexes
+
+RewriteEngine On
+RewriteRule ^health/?$ recovery.php?_route=health [QSA,L]
+RewriteRule ^news/?$ recovery.php?_route=news [QSA,L]
+RewriteRule ^get_contents/?$ recovery.php?_route=get_contents [QSA,L]
+RewriteRule ^statistics/?$ recovery.php?_route=statistics [QSA,L]
+RewriteRule ^download_content/?$ recovery.php?_route=download_content [QSA,L]
+RewriteRule ^download_content_img/?$ recovery.php?_route=download_content_img [QSA,L]
+RewriteRule ^update/(.+)$ recovery.php?_route=update&file=$1 [QSA,L]
 
 <FilesMatch "(^\.env$|\.sqlite3?$|\.db$|\.bak$|^private\.py$)">
     Require all denied
