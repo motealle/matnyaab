@@ -2,6 +2,8 @@
 
 return [
 
+    'production_enabled' => env('MAIL_PRODUCTION_ENABLED', false),
+
     /*
     |--------------------------------------------------------------------------
     | Default Mailer
