@@ -41,4 +41,5 @@ Operational docs:
 - [Engineering handoff](docs/HANDOFF.md)
 - [Migration backlog](docs/BACKLOG.md)
 - [Engineering skills / playbooks](docs/SKILLS.md)
+- [Product copy standard](docs/PRODUCT_COPY.md)
 - [Migration status / go-live gates](docs/MIGRATION_STATUS.md)
