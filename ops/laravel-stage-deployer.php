@@ -17,6 +17,7 @@ $appKey = '__APP_KEY__';
 $docRoot = __DIR__;
 $stageRoot = dirname($docRoot) . DIRECTORY_SEPARATOR . 'matnyaab-laravel-stage';
 $releaseDir = $stageRoot . DIRECTORY_SEPARATOR . 'releases' . DIRECTORY_SEPARATOR . $releaseId;
+$sharedDir = $stageRoot . DIRECTORY_SEPARATOR . 'shared';
 $zipPath = $docRoot . DIRECTORY_SEPARATOR . '.matnyaab-laravel-release.zip';
 
 try {
@@ -31,6 +32,7 @@ try {
     foreach ([
         $stageRoot,
         $stageRoot . DIRECTORY_SEPARATOR . 'releases',
+        $sharedDir,
         $releaseDir,
     ] as $dir) {
         if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
@@ -71,10 +73,24 @@ try {
         throw new RuntimeException('legacy SQLite database is missing');
     }
 
+    $keyFile = $sharedDir . DIRECTORY_SEPARATOR . 'app.key';
+    if (is_file($keyFile)) {
+        $persistentAppKey = trim((string) file_get_contents($keyFile));
+    } else {
+        $persistentAppKey = $appKey;
+        if (file_put_contents($keyFile, $persistentAppKey . PHP_EOL, LOCK_EX) === false) {
+            throw new RuntimeException('cannot persist application key');
+        }
+    }
+
+    if ($persistentAppKey === '') {
+        throw new RuntimeException('application key is empty');
+    }
+
     $env = implode(PHP_EOL, [
         'APP_NAME=MATNYAAB',
-        'APP_ENV=staging',
-        'APP_KEY=' . $appKey,
+        'APP_ENV=production',
+        'APP_KEY=' . $persistentAppKey,
         'APP_DEBUG=false',
         'APP_URL=https://www.matnyaab.ir',
         'APP_TIMEZONE=Asia/Tehran',
