@@ -1,64 +1,147 @@
-<!doctype html>
-<html lang="fa" dir="rtl">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>پروفایل | متن‌یاب</title>
-</head>
-<body style="font-family:Tahoma,sans-serif;max-width:900px;margin:3rem auto;padding:1rem">
-<h1>پروفایل</h1>
+@extends('layouts.app')
 
-@if (session('status'))
-    <p style="color:#075">{{ session('status') }}</p>
-@endif
-@if ($errors->any())
-    <p style="color:#a00">{{ $errors->first() }}</p>
-@endif
+@section('title', 'پروفایل | متن‌یاب')
 
-<p>کاربر: <strong>{{ $user->username }}</strong></p>
-<p>موبایل: {{ $user->phone_number }}</p>
-<p>شناسه سیستم: {{ $user->user_system_id }}</p>
-<p>وضعیت اشتراک: {{ $isSubscriptionEnded ? 'پایان‌یافته / بدون اشتراک' : 'فعال' }}</p>
-@if ($user->subscription)
-    <p>اشتراک: {{ $user->subscription->subscription_title }}</p>
-@endif
-@if ($user->user_serial_number)
-    <p>سریال فعلی: <code dir="ltr">{{ $user->user_serial_number }}</code></p>
-@endif
+@push('styles')
+<style>
+    .profile-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:22px}
+    .profile-grid{display:grid;grid-template-columns:1.12fr .88fr;gap:14px;align-items:start}
+    .stack{display:grid;gap:14px}
+    .status-pill{display:inline-flex;align-items:center;gap:7px;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:700;border:1px solid var(--line)}
+    .status-pill:before{content:"";width:6px;height:6px;border-radius:50%}
+    .status-active{color:#a7f3d0;background:rgba(16,185,129,.07);border-color:rgba(52,211,153,.17)}
+    .status-active:before{background:#34d399;box-shadow:0 0 13px #34d399}
+    .status-off{color:#fcd34d;background:rgba(245,158,11,.06);border-color:rgba(251,191,36,.15)}
+    .status-off:before{background:#fbbf24}
+    .section-label{font-size:13px;color:#d6d6df;font-weight:700;margin-bottom:13px}
+    .subscription-cards{display:grid;gap:8px;margin-bottom:15px}
+    .subscription-option{display:flex;justify-content:space-between;gap:15px;align-items:center;padding:13px;border:1px solid var(--line);border-radius:12px;background:#0b0b0f}
+    .subscription-option strong{font-size:13px}.subscription-option span{font-size:12px;color:#b9b9c6}
+    @media(max-width:900px){.profile-grid{grid-template-columns:1fr}.profile-head{flex-direction:column}}
+</style>
+@endpush
 
-<h2>خرید اشتراک</h2>
-<form method="post" action="{{ route('buysubscription') }}">
-    @csrf
-    <p>
-        <label>طرح اشتراک
-            <select name="subscription_id" required>
-            @foreach ($subscriptions as $subscription)
-                <option value="{{ $subscription->id }}">
-                    {{ $subscription->subscription_title }} —
-                    {{ number_format($subscription->subscription_price) }}
-                </option>
-            @endforeach
-            </select>
-        </label>
-    </p>
-    <p><label>کد تخفیف <input name="coupon_code"></label></p>
-    <button type="submit">ادامه خرید</button>
-</form>
+@section('content')
+<div class="container page-shell">
+    <div class="profile-head">
+        <div>
+            <span class="eyebrow">DASHBOARD</span>
+            <h1 class="page-title" style="margin-bottom:3px">حساب شما</h1>
+            <p class="page-subtitle">اشتراک، سریال و سوابق خرید متن‌یاب را از اینجا مدیریت کنید.</p>
+        </div>
+        <div class="nav-actions">
+            <a class="btn" href="{{ route('password.change') }}">تغییر رمز عبور</a>
+        </div>
+    </div>
 
-<h2>تاریخچه خرید</h2>
-<ul>
-@forelse ($history as $item)
-    <li>{{ $item->subscription_buy_time }} — {{ number_format($item->amount_paid) }}</li>
-@empty
-    <li>تاریخچه‌ای ثبت نشده است.</li>
-@endforelse
-</ul>
+    @if (session('status'))
+        <div class="alert alert-success">{{ session('status') }}</div>
+    @endif
+    @if ($errors->any())
+        <div class="alert alert-error">{{ $errors->first() }}</div>
+    @endif
 
-<p style="margin-top:18px"><a href="{{ route('password.change') }}">تغییر رمز عبور</a></p>
+    <div class="profile-grid">
+        <div class="stack">
+            <section class="panel panel-pad">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:18px">
+                    <div>
+                        <div class="section-label" style="margin:0 0 3px">وضعیت حساب</div>
+                        <div class="muted" style="font-size:12px">{{ $user->username }}</div>
+                    </div>
+                    @if ($isSubscriptionEnded)
+                        <span class="status-pill status-off">بدون اشتراک فعال</span>
+                    @else
+                        <span class="status-pill status-active">اشتراک فعال</span>
+                    @endif
+                </div>
 
-<form method="post" action="{{ route('logout') }}">
-    @csrf
-    <button type="submit">خروج</button>
-</form>
-</body>
-</html>
+                <div class="stat-grid">
+                    <div class="stat">
+                        <div class="stat-label">موبایل</div>
+                        <div class="stat-value" dir="ltr">{{ $user->phone_number }}</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">اشتراک فعلی</div>
+                        <div class="stat-value">{{ $user->subscription?->subscription_title ?? '—' }}</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">انقضای مجوز</div>
+                        <div class="stat-value" style="font-size:14px">{{ $user->license_end_time ? $user->license_end_time->format('Y-m-d') : '—' }}</div>
+                    </div>
+                </div>
+
+                @if ($user->user_serial_number)
+                    <div class="divider"></div>
+                    <div class="section-label">سریال فعلی</div>
+                    <code class="serial">{{ $user->user_serial_number }}</code>
+                @endif
+            </section>
+
+            <section class="panel panel-pad">
+                <div class="panel-header" style="margin-bottom:18px">
+                    <span class="eyebrow">HISTORY</span>
+                    <h2 style="font-size:21px;margin:5px 0 0">تاریخچه خرید</h2>
+                </div>
+
+                @if ($history->isEmpty())
+                    <div class="muted" style="font-size:13px">هنوز سابقه خریدی برای این حساب ثبت نشده است.</div>
+                @else
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>تاریخ</th><th>اشتراک</th><th>مبلغ</th><th>کد پیگیری</th></tr></thead>
+                            <tbody>
+                            @foreach ($history as $item)
+                                <tr>
+                                    <td>{{ $item->subscription_buy_time?->format('Y-m-d H:i') ?? $item->subscription_buy_time }}</td>
+                                    <td>{{ $item->subscription?->subscription_title ?? 'اشتراک' }}</td>
+                                    <td>{{ number_format($item->amount_paid) }}</td>
+                                    <td dir="ltr">{{ $item->tracking_code ?: '—' }}</td>
+                                </tr>
+                            @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </section>
+        </div>
+
+        <aside class="stack">
+            <section class="panel panel-pad">
+                <div class="panel-header" style="margin-bottom:17px">
+                    <span class="eyebrow">SUBSCRIPTION</span>
+                    <h2 style="font-size:21px;margin:5px 0 0">خرید یا تمدید اشتراک</h2>
+                    <p class="page-subtitle">طرح موردنظر را انتخاب کنید و خرید را ادامه دهید.</p>
+                </div>
+
+                <form method="post" action="{{ route('buysubscription') }}">
+                    @csrf
+                    <label class="field">
+                        <span class="field-label">طرح اشتراک</span>
+                        <select class="select" name="subscription_id" required>
+                            @foreach ($subscriptions as $subscription)
+                                <option value="{{ $subscription->id }}">
+                                    {{ $subscription->subscription_title }} — {{ number_format($subscription->subscription_price) }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </label>
+
+                    <label class="field">
+                        <span class="field-label">کد تخفیف</span>
+                        <input class="input" name="coupon_code" autocomplete="off" placeholder="اختیاری">
+                    </label>
+
+                    <button class="btn btn-primary btn-block" type="submit">ادامه خرید</button>
+                </form>
+            </section>
+
+            <section class="panel panel-pad">
+                <div class="section-label">شناسه سیستم</div>
+                <code class="serial">{{ $user->user_system_id }}</code>
+                <div class="help">این شناسه برای سازگاری مجوز و کلاینت ویندوز نگهداری می‌شود.</div>
+            </section>
+        </aside>
+    </div>
+</div>
+@endsection
