@@ -4,7 +4,9 @@ on:
   workflow_dispatch:
   push:
     branches:
+      - main
       - migration/source-import
+      - migration/backend-auth
     paths:
       - "web/**"
       - "ops/laravel-stage-deployer.php"
@@ -26,6 +28,13 @@ jobs:
       FTP_USER: ${{ secrets.FTP_USER }}
       FTP_PASSWORD: ${{ secrets.FTP_PASSWORD_MATNYAAB_IR }}
       SITE_URL: https://www.matnyaab.ir
+      IDPAY_MERCHANT_CODE: ${{ secrets.IDPAY_MERCHANT_CODE }}
+      IDPAY_SANDBOX: ${{ secrets.IDPAY_SANDBOX }}
+      SMS_PANEL_URL: ${{ secrets.SMS_PANEL_URL }}
+      SMS_PANEL_USERNAME: ${{ secrets.SMS_PANEL_USERNAME }}
+      SMS_PANEL_PASSWORD: ${{ secrets.SMS_PANEL_PASSWORD }}
+      SMS_PANEL_NUMBER: ${{ secrets.SMS_PANEL_NUMBER }}
+      CONTENTS_API_PASSWORD: ${{ secrets.CONTENTS_API_PASSWORD }}
 
     steps:
       - uses: actions/checkout@v4
@@ -104,7 +113,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          response="$(curl --silent --show-error --fail             --connect-timeout 15 --max-time 180             -H "X-Matnyaab-Deploy-Token: $DEPLOY_TOKEN"             "$SITE_URL/.matnyaab-laravel-stage-deploy.php")"
+          response="$(curl --silent --show-error --fail             --connect-timeout 15 --max-time 180             -H "X-Matnyaab-Deploy-Token: $DEPLOY_TOKEN"             -H "X-Matnyaab-Idpay-Merchant-Code: $IDPAY_MERCHANT_CODE"             -H "X-Matnyaab-Idpay-Sandbox: $IDPAY_SANDBOX"             -H "X-Matnyaab-Sms-Panel-Url: $SMS_PANEL_URL"             -H "X-Matnyaab-Sms-Panel-Username: $SMS_PANEL_USERNAME"             -H "X-Matnyaab-Sms-Panel-Password: $SMS_PANEL_PASSWORD"             -H "X-Matnyaab-Sms-Panel-Number: $SMS_PANEL_NUMBER"             -H "X-Matnyaab-Contents-Api-Password: $CONTENTS_API_PASSWORD"             "$SITE_URL/.matnyaab-laravel-stage-deploy.php")"
 
           echo "$response" | python3 -m json.tool
 
