@@ -2,6 +2,8 @@ name: Private Data Backup
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "20 2 * * *"
   push:
     branches:
       - main
@@ -157,4 +159,4 @@ jobs:
         with:
           name: matnyaab-private-backup-${{ github.run_id }}
           path: /tmp/matnyaab-private-backup.7z
-          retention-days: 1
+          retention-days: 7
