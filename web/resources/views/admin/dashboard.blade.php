@@ -17,9 +17,9 @@
 <div class="container page-shell">
     <div class="admin-head">
         <div>
-            <span class="eyebrow">SUPERUSER</span>
-            <h1 class="page-title" style="margin-bottom:3px">پنل مدیریت مهاجرت</h1>
-            <p class="page-subtitle">جستجوی کاربران و تخصیص امن اشتراک روی دیتابیس فعلی.</p>
+            <span class="eyebrow">مدیریت متن‌یاب</span>
+            <h1 class="page-title" style="margin-bottom:3px">مدیریت کاربران و اشتراک‌ها</h1>
+            <p class="page-subtitle">کاربران را پیدا کنید و در صورت نیاز اشتراک موردنظر را برایشان فعال کنید.</p>
         </div>
     </div>
 
@@ -33,7 +33,7 @@
     <div class="stat-grid" style="margin-bottom:14px">
         <div class="stat"><div class="stat-label">کل کاربران</div><div class="stat-value">{{ number_format($counts['users']) }}</div></div>
         <div class="stat"><div class="stat-label">موبایل تأییدشده</div><div class="stat-value">{{ number_format($counts['confirmed']) }}</div></div>
-        <div class="stat"><div class="stat-label">رکوردهای خرید/اشتراک</div><div class="stat-value">{{ number_format($counts['histories']) }}</div></div>
+        <div class="stat"><div class="stat-label">سوابق خرید و اشتراک</div><div class="stat-value">{{ number_format($counts['histories']) }}</div></div>
     </div>
 
     <section class="panel panel-pad">
@@ -66,7 +66,7 @@
                                 <option value="{{ $subscription->id }}">{{ $subscription->subscription_title }}</option>
                             @endforeach
                         </select>
-                        <button class="btn" type="submit">هدیه اشتراک</button>
+                        <button class="btn" type="submit">فعال‌سازی اشتراک</button>
                     </form>
                 </div>
             @empty
