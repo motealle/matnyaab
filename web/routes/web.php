@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LegacyApiController;
 use App\Http\Controllers\ProfileController;
@@ -36,6 +37,9 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    Route::get('adminarea', [AdminController::class, 'index'])->name('admin.dashboard');
+    Route::post('adminarea/gift', [AdminController::class, 'gift'])->name('admin.gift');
+
     Route::get('smsconfirm', [RegistrationController::class, 'showSmsConfirm'])->name('smsconfirm');
     Route::post('smsconfirm', [RegistrationController::class, 'smsConfirm'])->name('smsconfirm.submit');
     Route::get('profile', ProfileController::class)->name('profile');
