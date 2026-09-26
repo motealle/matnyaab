@@ -41,7 +41,7 @@ class SubscriptionController extends Controller
                 ->first();
 
             if (! $discount || ! $discount->isValidNow()) {
-                return back()->withErrors(['coupon_code' => 'کد تخفیف اشتباه یا نامعتبر است']);
+                return back()->withErrors(['coupon_code' => 'این کد تخفیف معتبر نیست یا زمان استفاده از آن به پایان رسیده است.']);
             }
 
             $amount = (int) ($amount * (1 - ((float) $discount->discount_rate / 100)));
@@ -49,7 +49,7 @@ class SubscriptionController extends Controller
 
         if ($amount > 0 && (string) config('services.idpay.merchant_code', '') === '') {
             return back()->withErrors([
-                'payment' => 'درگاه پرداخت هنوز روی نسخه جدید پیکربندی نشده است.',
+                'payment' => 'پرداخت آنلاین موقتاً در دسترس نیست. لطفاً کمی بعد دوباره تلاش کنید.',
             ]);
         }
 
@@ -68,7 +68,7 @@ class SubscriptionController extends Controller
                 $this->activateSubscription($user, $order, $serials, '0', 0);
             });
 
-            return redirect()->route('profile')->with('status', 'اشتراک شما با موفقیت فعال شد');
+            return redirect()->route('profile')->with('status', 'اشتراک شما فعال شد.');
         }
 
         try {
@@ -124,7 +124,7 @@ class SubscriptionController extends Controller
         }
 
         if (Auth::id() === $user->id) {
-            return redirect()->route('profile')->with('status', 'پرداخت با موفقیت انجام شد و اشتراک فعال شد.');
+            return redirect()->route('profile')->with('status', 'پرداخت انجام شد و اشتراک شما فعال شد.');
         }
 
         return response()->view('payments.result', [
