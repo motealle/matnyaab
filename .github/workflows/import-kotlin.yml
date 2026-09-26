@@ -1,0 +1,66 @@
+name: Import Kotlin Source
+
+on:
+  push:
+    branches:
+      - migration/kotlin-cleanbuild
+    paths:
+      - ".import/KOTLIN_READY"
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reconstruct sanitized source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f .import/KOTLIN_READY
+          parts=(.import/kotlin.b64.part-*)
+          test "${#parts[@]}" -gt 0
+          cat "${parts[@]}" | tr -d '\n\r' | base64 -d > /tmp/kotlin-source.zip
+          unzip -t /tmp/kotlin-source.zip >/dev/null
+
+      - name: Import source only
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf client/windows
+          mkdir -p client/windows
+          unzip -q /tmp/kotlin-source.zip -d client/windows
+
+          test -f client/windows/settings.gradle.kts
+          test -f client/windows/app/build.gradle.kts
+
+          if find client/windows \( -type d -name .idea -o -type d -name .gradle -o -type d -name build \) -print -quit | grep -q .; then
+            echo "::error::Generated/IDE directory found in imported client"
+            exit 1
+          fi
+
+          if find client/windows -type f \( -iname '*.ttf' -o -iname '*.otf' \) -print -quit | grep -q .; then
+            echo "::error::Font binaries must not be committed"
+            exit 1
+          fi
+
+          if grep -RniE '(password\s*=|api[_-]?key\s*=|secret\s*=|token\s*=)' client/windows/app/src/main/kotlin; then
+            echo "::warning::Review credential-like strings above before release."
+          fi
+
+          rm -rf .import
+
+      - name: Commit imported Kotlin source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A client/windows .import
+          git commit -m "client: import sanitized Kotlin Windows source"
+          git push origin HEAD:migration/kotlin-cleanbuild
