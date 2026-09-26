@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LegacyApiController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PasswordRecoveryController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\SubscriptionController;
 use Illuminate\Support\Facades\Route;
@@ -26,6 +27,12 @@ Route::middleware('guest')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->name('login.submit');
     Route::get('register', [RegistrationController::class, 'showRegister'])->name('register');
     Route::post('register', [RegistrationController::class, 'register'])->name('register.submit');
+
+    Route::get('restore_password', [PasswordRecoveryController::class, 'showRequest'])->name('password.restore');
+    Route::post('restore_password', [PasswordRecoveryController::class, 'send'])->name('password.restore.send');
+    Route::get('restore_password_done', [PasswordRecoveryController::class, 'done'])->name('password.restore.done');
+    Route::get('restore/{user}/{expires}/{token}', [PasswordRecoveryController::class, 'showConfirm'])->name('password.restore.confirm');
+    Route::post('restore/{user}/{expires}/{token}', [PasswordRecoveryController::class, 'confirm'])->name('password.restore.confirm.submit');
 });
 
 Route::middleware('auth')->group(function () {
