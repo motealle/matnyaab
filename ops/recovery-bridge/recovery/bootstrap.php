@@ -5,7 +5,7 @@ date_default_timezone_set('Asia/Tehran');
 
 function matnyaab_root(): string
 {
-    return dirname(__DIR__, 2);
+    return dirname(__DIR__);
 }
 
 function matnyaab_legacy_root(): string
