@@ -6,9 +6,9 @@
 <div class="container auth-shell">
     <section class="panel panel-pad">
         <div class="panel-header">
-            <span class="eyebrow">SECURITY</span>
+            <span class="eyebrow">امنیت حساب</span>
             <h1 class="page-title">تغییر رمز عبور</h1>
-            <p class="page-subtitle">پس از تأیید رمز فعلی، رمز جدید حساب شما ذخیره می‌شود.</p>
+            <p class="page-subtitle">برای انتخاب رمز تازه، ابتدا رمز عبور فعلی‌تان را وارد کنید.</p>
         </div>
 
         @if ($errors->any())
