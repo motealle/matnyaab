@@ -25,6 +25,12 @@ class RegistrationController extends Controller
 
     public function register(Request $request, SmsService $sms): RedirectResponse
     {
+        if (! (bool) config('services.sms.production_enabled')) {
+            return back()->withErrors([
+                'register' => 'ثبت‌نام جدید تا پایان تست کنترل‌شده پیامک موقتاً غیرفعال است.',
+            ]);
+        }
+
         if (Auth::check()) {
             return redirect()->route(Auth::user()->is_phone_confirmed ? 'profile' : 'smsconfirm');
         }
