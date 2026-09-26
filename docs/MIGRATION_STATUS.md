@@ -54,9 +54,11 @@ This is the least complete area:
 - the legacy application database remains SQLite;
 - no verified SQLite → target DB import has been completed;
 - production CI/CD is not configured yet;
-- DNS/FTP credentials are pending.
+- GitHub Actions FTP credentials are configured;
+- FTP smoke test passed from GitHub Actions on 2026-09-26: authentication, remote listing, temporary upload and cleanup succeeded;
+- the exact production deploy path and release/rollback workflow still need to be fixed before automatic deployment is enabled.
 
-Readiness estimate for data/infrastructure: **20–30%**.
+Readiness estimate for data/infrastructure: **30–40%**.
 
 ## Highest-risk compatibility gates
 
@@ -156,3 +158,14 @@ The repository is currently public. Never commit:
 - large content packs
 - generated installers
 - Gradle/Laravel dependency/build directories
+
+
+## Latest operational checkpoint
+
+- Repository bootstrap branch: `migration/bootstrap-2026-09-26`
+- FTP workflow: `.github/workflows/ftp-smoke.yml`
+- Required secret names: `FTP_SERVER`, `FTP_USER`, `FTP_PASSWORD_MATNYAAB_IR`
+- FTP smoke run: GitHub Actions run `36221102295` — **passed**
+- Verified capabilities: authenticate, list remote root, upload a temporary marker, remove the marker
+- No secret values are stored in Git.
+- Next deployment blocker: determine the correct application document root / remote deploy path, then add release + rollback deployment.
