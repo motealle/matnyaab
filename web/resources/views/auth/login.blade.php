@@ -27,6 +27,9 @@
                 <input class="input" type="password" name="password" autocomplete="current-password" required>
             </label>
 
+            <div style="display:flex;justify-content:flex-end;margin:-5px 0 14px">
+                <a class="text-link" style="font-size:12px" href="{{ route('password.restore') }}">رمز عبور را فراموش کرده‌اید؟</a>
+            </div>
             <button class="btn btn-primary btn-block" type="submit">ورود به حساب</button>
         </form>
 
