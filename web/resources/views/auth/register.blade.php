@@ -6,9 +6,9 @@
 <div class="container auth-shell" style="max-width:620px">
     <section class="panel panel-pad">
         <div class="panel-header">
-            <span class="eyebrow">CREATE ACCOUNT</span>
+            <span class="eyebrow">عضویت در متن‌یاب</span>
             <h1 class="page-title">ساخت حساب متن‌یاب</h1>
-            <p class="page-subtitle">برای مدیریت اشتراک، سریال و دریافت سرویس‌های متن‌یاب حساب بسازید.</p>
+            <p class="page-subtitle">برای خرید و مدیریت اشتراک، حساب خود را بسازید.</p>
         </div>
 
         @if ($errors->any())
@@ -16,17 +16,18 @@
         @endif
 
         @php
-            $smsReady = filled(config('services.sms.username'))
+            $smsReady = (bool) config('services.sms.production_enabled')
+                && filled(config('services.sms.username'))
                 && filled(config('services.sms.password'))
                 && filled(config('services.sms.number'));
         @endphp
 
         @if (! $smsReady)
             <div class="alert alert-warn">
-                <strong>ثبت‌نام جدید موقتاً در حال فعال‌سازی است.</strong>
-                <div style="margin-top:5px">حساب‌های قبلی بدون تغییر در دسترس هستند. اگر قبلاً عضو بوده‌اید، وارد حساب خود شوید.</div>
+                <strong>ثبت‌نام آنلاین موقتاً در دسترس نیست.</strong>
+                <div style="margin-top:5px">اگر پیش‌تر حساب ساخته‌اید، می‌توانید همین حالا وارد شوید.</div>
             </div>
-            <a class="btn btn-primary btn-block" href="{{ route('login') }}">ورود به حساب موجود</a>
+            <a class="btn btn-primary btn-block" href="{{ route('login') }}">ورود به حساب</a>
         @else
             <form method="post" action="{{ route('register.submit') }}">
                 @csrf
