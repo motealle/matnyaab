@@ -14,7 +14,7 @@ final class SmsService
         $from = (string) config('services.sms.number', '');
 
         if ($url === '' || $username === '' || $password === '' || $from === '') {
-            throw new \RuntimeException('سرویس پیامک هنوز پیکربندی نشده است.');
+            throw new \RuntimeException('ارسال کد تأیید در حال حاضر در دسترس نیست. لطفاً کمی بعد دوباره تلاش کنید.');
         }
 
         $response = Http::timeout(20)->get($url, [
@@ -22,11 +22,11 @@ final class SmsService
             'to' => $phoneNumber,
             'username' => $username,
             'password' => $password,
-            'message' => ' کد تایید: '.$confirmCode,
+            'message' => 'کد تأیید متن‌یاب: '.$confirmCode,
         ]);
 
         if (! $response->successful()) {
-            throw new \RuntimeException('ارسال پیامک تأیید ناموفق بود. دوباره تلاش کنید.');
+            throw new \RuntimeException('ارسال کد تأیید انجام نشد. لطفاً دوباره تلاش کنید.');
         }
     }
 }
