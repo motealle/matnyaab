@@ -49,6 +49,7 @@ class PasswordRecoveryTest extends TestCase
         $this->user();
 
         config([
+            'mail.production_enabled' => true,
             'mail.default' => 'smtp',
             'mail.mailers.smtp.host' => 'smtp.example.invalid',
             'mail.from.address' => 'noreply@example.invalid',
