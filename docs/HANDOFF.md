@@ -1,0 +1,138 @@
+# Matnyaab — Engineering Handoff
+
+Last updated: 2026-09-26
+
+This file is the operational handoff for matnyaab.ir. Keep it current whenever production architecture, deployment behavior, or migration gates change.
+
+## Current production state
+
+- DNS points to the destination shared host.
+- HTTPS/TLS is valid.
+- Production PHP is 8.2.
+- Production data remains on the original Django SQLite database.
+- SQLite integrity checks are passing.
+- Laravel 12 is deployed outside the public document root and reads the existing Django schema directly.
+- Homepage and account/web routes are progressively served by Laravel.
+- Desktop/API compatibility routes still use the PHP recovery bridge until parity is complete.
+- The old saved-HTML homepage and its broken local assets are no longer used.
+- Live homepage audit currently reports zero broken local URLs.
+- The existing Windows installer URL is still available.
+
+## Production data snapshot
+
+Latest verified snapshot:
+
+- accounts: 153
+- distinct purchasers: 94
+- subscription history rows: 116
+- completed orders: 137
+- gateway transaction rows: 66
+
+Production customer data must never be committed to Git.
+
+## Database
+
+Current DB path:
+
+    matnyaab_with_license/db.sqlite3
+
+Laravel maps directly to the legacy tables. Do not run destructive Laravel migrations against production SQLite during this phase.
+
+Important tables include users_accountmodel, users_subscriptionmodel, users_subscriptionhistorymodel, users_ordermodel, orderdiscount_orderdiscountmodel, azbankgateways_bank, matnyaab_contentsmodel, matnyaab_statistics, and news_news.
+
+## Compatibility already implemented
+
+- Django PBKDF2 login compatibility
+- profile/subscription display
+- password change
+- subscription/order/history mapping
+- legacy AES/Base32 serial compatibility
+- IDPay create/verify logic covered by fake HTTP tests
+- registration and four-digit SMS confirmation logic
+- desktop content/news/statistics/update bridge
+- content download compatibility
+
+## SMS
+
+Legacy SMS settings are confirmed to exist in:
+
+    matnyaab_with_license/Django_Project/private.py
+
+Expected keys are SMS_PANEL_USERNAME, SMS_PANEL_PASSWORD, and SMS_PANEL_NUMBER.
+
+The old provider endpoint is http://tsms.ir/url/tsmshttp.php.
+
+Values must not be committed or printed in CI logs. Laravel registration remains gated until runtime SMS settings are configured and one controlled real SMS is verified.
+
+## Payment
+
+Laravel has an IDPay adapter mapped onto azbankgateways_bank.
+
+Before enabling real paid purchases:
+
+1. configure the real merchant credential outside Git;
+2. perform one controlled transaction;
+3. verify callback idempotency and amount checks;
+4. verify subscription/history/serial updates;
+5. keep a fresh DB snapshot before the test.
+
+## CI/CD
+
+Important workflows:
+
+- CI
+- Build
+- Deploy Laravel Stage
+- Deploy Recovery Bridge
+- Homepage Asset Audit
+- Laravel Legacy SQLite Smoke
+- Private Data Backup
+- Legacy SMS Config Audit
+
+## Backup / recovery
+
+Daily encrypted backups include the full SQLite DB, customer summary CSV, purchase history CSV, and Excel workbook. Current retention is seven days.
+
+Before any risky production write:
+
+1. verify a fresh backup;
+2. verify SQLite integrity;
+3. note the workflow run ID;
+4. make the change;
+5. smoke-test the affected route and unchanged desktop API routes.
+
+## Public routing model
+
+- homepage/account UX → Laravel
+- login/profile/password change → Laravel
+- registration/SMS → Laravel code exists; production activation remains gated by SMS runtime config
+- desktop API compatibility → recovery bridge until parity is finished
+- updater/installer → preserved compatibility paths
+
+Do not remove the bridge until the Windows client and Laravel API contracts are fully tested.
+
+## Windows client target
+
+- Kotlin/JVM
+- JDK 17
+- Gradle 8.7
+- JavaFX
+- Lucene
+- Tika
+
+Before release: import source only, remove generated/IDE output and hard-coded credentials, clean-build in Windows Actions, package installer, verify updater and license/content compatibility.
+
+## Immediate next work
+
+See BACKLOG.md. Current order:
+
+1. finish unified production UI/design system;
+2. activate SMS safely and test one controlled registration;
+3. verify real payment with one controlled transaction;
+4. import and clean-build Kotlin client;
+5. migrate remaining desktop API routes to Laravel;
+6. remove the bridge after parity.
+
+## Rollback principle
+
+There is no retired source host to fail back to. Rollback means reverting code/routing on the destination host while preserving SQLite and persistent content. Never overwrite production SQLite as part of a code rollback.
