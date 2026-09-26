@@ -7,13 +7,11 @@ use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\SubscriptionController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return response(
-        '<!doctype html><html lang="fa" dir="rtl"><meta charset="utf-8"><title>متن‌یاب</title><body style="font-family:Tahoma,sans-serif;max-width:800px;margin:4rem auto;padding:1rem"><h1>متن‌یاب</h1><p><a href="/login">ورود به حساب کاربری</a></p><p>نسخه جدید سرویس در حال استقرار مرحله‌ای است.</p></body></html>',
-        200,
-        ['Content-Type' => 'text/html; charset=utf-8']
-    );
-});
+Route::view('/', 'home')->name('home');
+Route::redirect('/index', '/#features');
+Route::redirect('/download', '/#download');
+Route::redirect('/screenshots', '/#screenshots');
+Route::redirect('/contact', '/#contact');
 
 Route::get('health', [LegacyApiController::class, 'health']);
 Route::get('news', [LegacyApiController::class, 'news']);
