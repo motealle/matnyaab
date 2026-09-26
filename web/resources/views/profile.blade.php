@@ -25,9 +25,9 @@
 <div class="container page-shell">
     <div class="profile-head">
         <div>
-            <span class="eyebrow">DASHBOARD</span>
+            <span class="eyebrow">حساب کاربری</span>
             <h1 class="page-title" style="margin-bottom:3px">حساب شما</h1>
-            <p class="page-subtitle">اشتراک، سریال و سوابق خرید متن‌یاب را از اینجا مدیریت کنید.</p>
+            <p class="page-subtitle">وضعیت اشتراک، سریال و سوابق خریدتان را در یک نگاه ببینید.</p>
         </div>
         <div class="nav-actions">
             <a class="btn" href="{{ route('password.change') }}">تغییر رمز عبور</a>
@@ -80,7 +80,7 @@
 
             <section class="panel panel-pad">
                 <div class="panel-header" style="margin-bottom:18px">
-                    <span class="eyebrow">HISTORY</span>
+                    <span class="eyebrow">خریدهای شما</span>
                     <h2 style="font-size:21px;margin:5px 0 0">تاریخچه خرید</h2>
                 </div>
 
@@ -109,9 +109,9 @@
         <aside class="stack">
             <section class="panel panel-pad">
                 <div class="panel-header" style="margin-bottom:17px">
-                    <span class="eyebrow">SUBSCRIPTION</span>
+                    <span class="eyebrow">اشتراک متن‌یاب</span>
                     <h2 style="font-size:21px;margin:5px 0 0">خرید یا تمدید اشتراک</h2>
-                    <p class="page-subtitle">طرح موردنظر را انتخاب کنید و خرید را ادامه دهید.</p>
+                    <p class="page-subtitle">طرح مناسب را انتخاب کنید و برای خرید یا تمدید ادامه دهید.</p>
                 </div>
 
                 <form method="post" action="{{ route('buysubscription') }}">
@@ -139,7 +139,7 @@
             <section class="panel panel-pad">
                 <div class="section-label">شناسه سیستم</div>
                 <code class="serial">{{ $user->user_system_id }}</code>
-                <div class="help">این شناسه برای سازگاری مجوز و کلاینت ویندوز نگهداری می‌شود.</div>
+                <div class="help">این شناسه برای صدور و بررسی مجوز نسخه ویندوز استفاده می‌شود.</div>
             </section>
         </aside>
     </div>
