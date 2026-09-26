@@ -87,7 +87,7 @@ try {
         throw new RuntimeException('application key is empty');
     }
 
-    $env = implode(PHP_EOL, [
+    $envLines = [
         'APP_NAME=MATNYAAB',
         'APP_ENV=production',
         'APP_KEY=' . $persistentAppKey,
@@ -102,8 +102,42 @@ try {
         'SESSION_LIFETIME=18000',
         'CACHE_STORE=file',
         'QUEUE_CONNECTION=sync',
-        '',
-    ]);
+    ];
+
+    $runtimeEnvFile = $sharedDir . DIRECTORY_SEPARATOR . 'runtime-services.env';
+    if (is_file($runtimeEnvFile) && is_readable($runtimeEnvFile)) {
+        $allowedRuntimeKeys = [
+            'SMS_PANEL_URL',
+            'SMS_PANEL_USERNAME',
+            'SMS_PANEL_PASSWORD',
+            'SMS_PANEL_NUMBER',
+            'MAIL_MAILER',
+            'MAIL_HOST',
+            'MAIL_PORT',
+            'MAIL_USERNAME',
+            'MAIL_PASSWORD',
+            'MAIL_ENCRYPTION',
+            'MAIL_FROM_ADDRESS',
+            'MAIL_FROM_NAME',
+            'IDPAY_MERCHANT_CODE',
+            'IDPAY_SANDBOX',
+            'CONTENTS_API_PASSWORD',
+        ];
+
+        foreach (file($runtimeEnvFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [] as $line) {
+            if (!str_contains($line, '=')) {
+                continue;
+            }
+
+            [$key] = explode('=', $line, 2);
+            if (in_array($key, $allowedRuntimeKeys, true)) {
+                $envLines[] = $line;
+            }
+        }
+    }
+
+    $envLines[] = '';
+    $env = implode(PHP_EOL, $envLines);
 
     if (file_put_contents($releaseDir . DIRECTORY_SEPARATOR . '.env', $env, LOCK_EX) === false) {
         throw new RuntimeException('cannot write stage environment');
