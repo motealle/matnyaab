@@ -27,7 +27,7 @@ class RegistrationController extends Controller
     {
         if (! (bool) config('services.sms.production_enabled')) {
             return back()->withErrors([
-                'register' => 'ثبت‌نام جدید تا پایان تست کنترل‌شده پیامک موقتاً غیرفعال است.',
+                'register' => 'ثبت‌نام آنلاین موقتاً در دسترس نیست. لطفاً کمی بعد دوباره تلاش کنید.',
             ]);
         }
 
@@ -156,11 +156,11 @@ class RegistrationController extends Controller
             $user->delete();
 
             return redirect()->route('register')
-                ->withErrors(['confirm_code' => 'کد منقضی شد. ثبت‌نام را دوباره انجام دهید.']);
+                ->withErrors(['confirm_code' => 'فرصت وارد کردن کد به پایان رسید. لطفاً ثبت‌نام را از ابتدا انجام دهید.']);
         }
 
         $user->forceFill(['confirm_code_tried' => $tried + 1])->save();
 
-        return back()->withErrors(['confirm_code' => 'کد تأیید اشتباه است.']);
+        return back()->withErrors(['confirm_code' => 'کد واردشده درست نیست.']);
     }
 }
