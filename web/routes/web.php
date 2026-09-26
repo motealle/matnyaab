@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LegacyApiController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SubscriptionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -27,5 +28,6 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('profile', ProfileController::class)->name('profile');
+    Route::post('buysubscription', [SubscriptionController::class, 'buySubscription'])->name('buysubscription');
     Route::match(['get', 'post'], 'logout', [AuthController::class, 'logout'])->name('logout');
 });
