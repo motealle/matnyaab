@@ -33,8 +33,15 @@ class AdminDashboardTest extends TestCase
         parent::tearDown();
     }
 
-    private function makeUser(string $username, string $phone, string $systemId, bool $superuser = false): User
+    private function makeUser(string $username, string $phone, bool $superuser = false): User
     {
+        User::query()
+            ->where('username', $username)
+            ->orWhere('phone_number', $phone)
+            ->delete();
+
+        $systemId = strtoupper(md5('matnyaab-ci-admin-test|'.$username));
+
         return User::query()->create([
             'password' => Hash::make('Admin-CI-Password!'),
             'last_login' => null,
@@ -64,8 +71,7 @@ class AdminDashboardTest extends TestCase
     {
         $normal = $this->makeUser(
             self::NORMAL,
-            '09999999994',
-            '11111111111111111111111111111111'
+            '09999999994'
         );
 
         $this->actingAs($normal)
@@ -78,14 +84,12 @@ class AdminDashboardTest extends TestCase
         $admin = $this->makeUser(
             self::ADMIN,
             '09999999993',
-            '22222222222222222222222222222222',
             true
         );
 
         $target = $this->makeUser(
             self::TARGET,
-            '09999999992',
-            '33333333333333333333333333333333'
+            '09999999992'
         );
 
         $subscription = Subscription::query()->firstOrFail();
