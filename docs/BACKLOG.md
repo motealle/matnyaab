@@ -64,7 +64,8 @@ Status legend: DONE, IN PROGRESS, BLOCKED, TODO, DEFERRED.
 
 ## P1 — Kotlin / Windows client
 
-- IN PROGRESS — Prepare sanitized source import.
+- DONE — Probe destination-host FTP for likely Kotlin/Java archives; no candidate archive found.
+- IN PROGRESS — Import sanitized source bundle from conversation/project attachment into a migration branch.
 - TODO — Import Kotlin source under client/windows/.
 - TODO — Exclude .idea/, .gradle/ and old build/ output.
 - TODO — Remove/harden hard-coded server credentials.
@@ -84,6 +85,9 @@ Status legend: DONE, IN PROGRESS, BLOCKED, TODO, DEFERRED.
 - DONE — Remove dependency on broken matnyaab.ir_files snapshot.
 - DONE — Restore old navigation aliases.
 - DONE — Dark professional design system with Vazirmatn.
+- IN PROGRESS — Add persistent dark/light theme toggle with OS-preference fallback.
+- IN PROGRESS — Replace static hero headline treatment with lightweight search-oriented motion/type effect.
+- IN PROGRESS — Restore the authentic original homepage/product screenshot image.
 - TODO — Responsive QA on mobile/tablet/desktop.
 - TODO — Accessibility contrast/focus/keyboard pass.
 - DONE — Improve profile/subscription/history presentation.
