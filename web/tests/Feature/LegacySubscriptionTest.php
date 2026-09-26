@@ -19,6 +19,7 @@ class LegacySubscriptionTest extends TestCase
 
         if ($user) {
             DB::table('users_subscriptionhistorymodel')->where('user_id', $user->id)->delete();
+            DB::table('users_accountmodel')->where('id', $user->id)->update(['new_order_id' => null]);
             DB::table('users_ordermodel')->where('user_id', $user->id)->delete();
             DB::table('users_accountmodel')->where('id', $user->id)->delete();
         }
