@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
+      - main
       - migration/source-import
       - migration/backend-auth
     paths:
