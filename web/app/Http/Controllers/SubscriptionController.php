@@ -47,6 +47,12 @@ class SubscriptionController extends Controller
             $amount = (int) ($amount * (1 - ((float) $discount->discount_rate / 100)));
         }
 
+        if ($amount > 0 && (string) config('services.idpay.merchant_code', '') === '') {
+            return back()->withErrors([
+                'payment' => 'درگاه پرداخت هنوز روی نسخه جدید پیکربندی نشده است.',
+            ]);
+        }
+
         $order = Order::query()->create([
             'wanted_subscription_id' => $subscription->id,
             'user_id' => $user->id,
