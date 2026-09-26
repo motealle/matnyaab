@@ -1,40 +1,68 @@
-<!doctype html>
-<html lang="fa" dir="rtl">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>ثبت‌نام | متن‌یاب</title>
-</head>
-<body style="font-family:Tahoma,sans-serif;max-width:620px;margin:3rem auto;padding:1rem">
-<h1>ثبت‌نام متن‌یاب</h1>
+@extends('layouts.app')
 
-@if ($errors->any())
-    <div style="color:#a00;margin:1rem 0">{{ $errors->first() }}</div>
-@endif
+@section('title', 'ثبت‌نام | متن‌یاب')
 
-@php
-    $smsReady = filled(config('services.sms.username'))
-        && filled(config('services.sms.password'))
-        && filled(config('services.sms.number'));
-@endphp
+@section('content')
+<div class="container auth-shell" style="max-width:620px">
+    <section class="panel panel-pad">
+        <div class="panel-header">
+            <span class="eyebrow">CREATE ACCOUNT</span>
+            <h1 class="page-title">ساخت حساب متن‌یاب</h1>
+            <p class="page-subtitle">برای مدیریت اشتراک، سریال و دریافت سرویس‌های متن‌یاب حساب بسازید.</p>
+        </div>
 
-@if (! $smsReady)
-    <div style="background:#fff7dd;border:1px solid #f0d78b;border-radius:12px;padding:18px;line-height:1.9">
-        <strong>ثبت‌نام جدید موقتاً در حال فعال‌سازی است.</strong>
-        <div>حساب‌های قبلی بدون تغییر در دسترس هستند و می‌توانید از صفحه ورود استفاده کنید.</div>
-    </div>
-    <p><a href="{{ route('login') }}">ورود به حساب موجود</a></p>
-@else
-    <form method="post" action="{{ route('register.submit') }}">
-        @csrf
-        <p><label>ایمیل / نام کاربری<br><input type="email" name="username" value="{{ old('username') }}" required></label></p>
-        <p><label>نام و نام خانوادگی<br><input name="first_name" value="{{ old('first_name') }}" required></label></p>
-        <p><label>شماره موبایل<br><input name="phone_number" inputmode="numeric" maxlength="11" value="{{ old('phone_number') }}" placeholder="09123456789" required></label></p>
-        <p><label>شناسه سیستمی ۳۲ کاراکتری<br><input name="user_system_id" maxlength="32" value="{{ old('user_system_id') }}" required></label></p>
-        <p><label>رمز عبور<br><input type="password" name="password" minlength="8" maxlength="20" required></label></p>
-        <button type="submit">ثبت‌نام و ارسال کد</button>
-    </form>
-    <p><a href="{{ route('login') }}">قبلاً ثبت‌نام کرده‌اید؟ ورود</a></p>
-@endif
-</body>
-</html>
+        @if ($errors->any())
+            <div class="alert alert-error">{{ $errors->first() }}</div>
+        @endif
+
+        @php
+            $smsReady = filled(config('services.sms.username'))
+                && filled(config('services.sms.password'))
+                && filled(config('services.sms.number'));
+        @endphp
+
+        @if (! $smsReady)
+            <div class="alert alert-warn">
+                <strong>ثبت‌نام جدید موقتاً در حال فعال‌سازی است.</strong>
+                <div style="margin-top:5px">حساب‌های قبلی بدون تغییر در دسترس هستند. اگر قبلاً عضو بوده‌اید، وارد حساب خود شوید.</div>
+            </div>
+            <a class="btn btn-primary btn-block" href="{{ route('login') }}">ورود به حساب موجود</a>
+        @else
+            <form method="post" action="{{ route('register.submit') }}">
+                @csrf
+                <div class="form-row">
+                    <label class="field">
+                        <span class="field-label">ایمیل / نام کاربری</span>
+                        <input class="input" type="email" name="username" value="{{ old('username') }}" autocomplete="email" required>
+                    </label>
+                    <label class="field">
+                        <span class="field-label">نام و نام خانوادگی</span>
+                        <input class="input" name="first_name" value="{{ old('first_name') }}" autocomplete="name" required>
+                    </label>
+                </div>
+
+                <label class="field">
+                    <span class="field-label">شماره موبایل</span>
+                    <input class="input" name="phone_number" inputmode="numeric" maxlength="11" value="{{ old('phone_number') }}" placeholder="09123456789" autocomplete="tel" required>
+                    <div class="help">کد تأیید چهاررقمی به این شماره ارسال می‌شود.</div>
+                </label>
+
+                <label class="field">
+                    <span class="field-label">شناسه سیستمی ۳۲ کاراکتری</span>
+                    <input class="input" name="user_system_id" maxlength="32" value="{{ old('user_system_id') }}" required>
+                </label>
+
+                <label class="field">
+                    <span class="field-label">رمز عبور</span>
+                    <input class="input" type="password" name="password" minlength="8" maxlength="20" autocomplete="new-password" required>
+                </label>
+
+                <button class="btn btn-primary btn-block" type="submit">ثبت‌نام و ارسال کد تأیید</button>
+            </form>
+
+            <div class="divider"></div>
+            <p class="center muted" style="margin:0">قبلاً عضو شده‌اید؟ <a class="text-link" href="{{ route('login') }}">ورود</a></p>
+        @endif
+    </section>
+</div>
+@endsection
