@@ -121,6 +121,38 @@ jobs:
           print("Laravel stage release booted against production SQLite.")
           PY
 
+      - name: Verify live web and compatibility routes
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          curl --silent --show-error --fail --location "$SITE_URL/" -o /tmp/home.html
+          grep -q "دانشتان گم نمی‌شود" /tmp/home.html
+
+          curl --silent --show-error --fail --location "$SITE_URL/login" -o /tmp/login.html
+          grep -q "ورود به متن‌یاب" /tmp/login.html
+
+          curl --silent --show-error --fail --location "$SITE_URL/register" -o /tmp/register.html
+          grep -q "ساخت حساب متن‌یاب" /tmp/register.html
+
+          curl --silent --show-error --fail --location "$SITE_URL/restore_password" -o /tmp/restore.html
+          grep -q "بازیابی رمز عبور" /tmp/restore.html
+
+          profile_code="$(curl --silent --show-error -o /dev/null -w '%{http_code}' "$SITE_URL/profile")"
+          test "$profile_code" = "302"
+
+          curl --silent --show-error --fail "$SITE_URL/health/" -o /tmp/health.json
+          python3 - <<'PY'
+          import json
+          x=json.load(open('/tmp/health.json', encoding='utf-8'))
+          assert x.get('ok') is True
+          PY
+
+          curl --silent --show-error --fail "$SITE_URL/news/" -o /tmp/news.json
+          python3 -m json.tool /tmp/news.json >/dev/null
+
+          echo "Live Laravel web + recovery bridge smoke passed."
+
       - name: Remove public temporary deployment files
         if: always()
         env:
