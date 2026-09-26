@@ -18,7 +18,7 @@ Status legend: DONE, IN PROGRESS, BLOCKED, TODO, DEFERRED.
 - DONE — Live homepage link audit; current broken local URLs: 0.
 - DONE — Unified professional dark UI for homepage and account pages.
 - DONE — Style 404/500/maintenance states.
-- TODO — Add broader production health checks to deploy gate.
+- IN PROGRESS — Add broader production health checks to deploy gate.
 
 ## P0 — Authentication and customer continuity
 
@@ -29,11 +29,11 @@ Status legend: DONE, IN PROGRESS, BLOCKED, TODO, DEFERRED.
 - DONE — Registration validation and duplicate handling.
 - DONE — SMS confirmation logic and retry/delete behavior in tests.
 - DONE — Verify legacy SMS config keys exist on the destination host copy.
-- BLOCKED — Move SMS values into Laravel runtime secret configuration.
+- BLOCKED — Move SMS values into Laravel runtime secret configuration; legacy keys are confirmed present.
 - TODO — Send one controlled real SMS from Laravel.
 - TODO — Enable production registration after real SMS success.
-- TODO — Port password recovery still required from Django.
-- TODO — Review/administer required superuser/admin workflow.
+- DONE — Password-recovery backend and UI; stateless 30-minute HMAC links tested on copied production SQLite.
+- DONE — Superuser migration dashboard, user search and gift-subscription flow; tested on copied production SQLite.
 
 ## P0 — Subscription, license and payment
 
