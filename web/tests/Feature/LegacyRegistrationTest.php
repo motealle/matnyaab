@@ -28,6 +28,7 @@ class LegacyRegistrationTest extends TestCase
     private function configureSms(): void
     {
         config([
+            'services.sms.production_enabled' => true,
             'services.sms.url' => 'http://tsms.test/url/tsmshttp.php',
             'services.sms.username' => 'ci-user',
             'services.sms.password' => 'ci-password',
@@ -81,6 +82,7 @@ class LegacyRegistrationTest extends TestCase
     public function test_missing_sms_configuration_does_not_create_user(): void
     {
         config([
+            'services.sms.production_enabled' => true,
             'services.sms.url' => null,
             'services.sms.username' => null,
             'services.sms.password' => null,
