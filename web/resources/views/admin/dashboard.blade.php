@@ -6,7 +6,7 @@
 <style>
     .admin-head{display:flex;justify-content:space-between;gap:24px;align-items:end;margin-bottom:22px}
     .admin-grid{display:grid;grid-template-columns:1fr;gap:14px}
-    .user-row{display:grid;grid-template-columns:1.2fr .8fr .8fr auto;gap:12px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:13px;background:#0b0b0f}
+    .user-row{display:grid;grid-template-columns:1.2fr .8fr .8fr auto;gap:12px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:13px;background:var(--surface)}
     .user-name{font-weight:750;font-size:13px}.user-meta{color:var(--muted);font-size:11px;overflow-wrap:anywhere}
     .gift-form{display:flex;gap:8px;align-items:center}.gift-form .select{height:40px;min-width:160px}
     @media(max-width:900px){.user-row{grid-template-columns:1fr}.gift-form{align-items:stretch;flex-direction:column}.gift-form .select{width:100%}}
