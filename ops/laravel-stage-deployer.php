@@ -20,32 +20,6 @@ $releaseDir = $stageRoot . DIRECTORY_SEPARATOR . 'releases' . DIRECTORY_SEPARATO
 $sharedDir = $stageRoot . DIRECTORY_SEPARATOR . 'shared';
 $zipPath = $docRoot . DIRECTORY_SEPARATOR . '.matnyaab-laravel-release.zip';
 
-function deploy_header_b64(string $name): string
-{
-    $encoded = trim((string) ($_SERVER[$name] ?? ''));
-    if ($encoded === '') {
-        return '';
-    }
-
-    $decoded = base64_decode($encoded, true);
-    if ($decoded === false) {
-        throw new RuntimeException('invalid deployment secret encoding');
-    }
-
-    return $decoded;
-}
-
-function env_quote(string $value): string
-{
-    $escaped = str_replace(
-        ['\\', '"', '$'],
-        ['\\\\', '\\"', '\\$'],
-        $value
-    );
-
-    return '"' . $escaped . '"';
-}
-
 try {
     if (!extension_loaded('zip')) {
         throw new RuntimeException('zip extension is unavailable');
@@ -113,7 +87,7 @@ try {
         throw new RuntimeException('application key is empty');
     }
 
-    $envLines = [
+    $env = implode(PHP_EOL, [
         'APP_NAME=MATNYAAB',
         'APP_ENV=production',
         'APP_KEY=' . $persistentAppKey,
@@ -123,31 +97,13 @@ try {
         'LOG_CHANNEL=stack',
         'LOG_LEVEL=warning',
         'DB_CONNECTION=sqlite',
-        'DB_DATABASE=' . env_quote($database),
+        'DB_DATABASE=' . $database,
         'SESSION_DRIVER=file',
         'SESSION_LIFETIME=18000',
         'CACHE_STORE=file',
         'QUEUE_CONNECTION=sync',
-    ];
-
-    $secretEnv = [
-        'IDPAY_MERCHANT_CODE' => deploy_header_b64('HTTP_X_MATNYAAB_IDPAY_MERCHANT_CODE_B64'),
-        'IDPAY_SANDBOX' => deploy_header_b64('HTTP_X_MATNYAAB_IDPAY_SANDBOX_B64'),
-        'SMS_PANEL_URL' => deploy_header_b64('HTTP_X_MATNYAAB_SMS_PANEL_URL_B64'),
-        'SMS_PANEL_USERNAME' => deploy_header_b64('HTTP_X_MATNYAAB_SMS_PANEL_USERNAME_B64'),
-        'SMS_PANEL_PASSWORD' => deploy_header_b64('HTTP_X_MATNYAAB_SMS_PANEL_PASSWORD_B64'),
-        'SMS_PANEL_NUMBER' => deploy_header_b64('HTTP_X_MATNYAAB_SMS_PANEL_NUMBER_B64'),
-        'CONTENTS_API_PASSWORD' => deploy_header_b64('HTTP_X_MATNYAAB_CONTENTS_API_PASSWORD_B64'),
-    ];
-
-    foreach ($secretEnv as $key => $value) {
-        if ($value !== '') {
-            $envLines[] = $key . '=' . env_quote($value);
-        }
-    }
-
-    $envLines[] = '';
-    $env = implode(PHP_EOL, $envLines);
+        '',
+    ]);
 
     if (file_put_contents($releaseDir . DIRECTORY_SEPARATOR . '.env', $env, LOCK_EX) === false) {
         throw new RuntimeException('cannot write stage environment');
