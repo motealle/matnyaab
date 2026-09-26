@@ -31,7 +31,7 @@ class PasswordRecoveryController extends Controller
         if (! $this->mailReady()) {
             return back()
                 ->withInput()
-                ->withErrors(['email' => 'بازیابی ایمیلی هنوز روی سرور جدید فعال نشده است.']);
+                ->withErrors(['email' => 'ارسال لینک بازیابی موقتاً در دسترس نیست. لطفاً کمی بعد دوباره تلاش کنید.']);
         }
 
         $user = User::query()
@@ -49,11 +49,11 @@ class PasswordRecoveryController extends Controller
             ]);
 
             Mail::raw(
-                "برای تعیین رمز عبور جدید متن‌یاب، تا ۳۰ دقیقه آینده این لینک را باز کنید:\n\n{$url}\n\nاگر این درخواست از طرف شما نبوده، این پیام را نادیده بگیرید.",
+                "برای انتخاب رمز عبور جدید متن‌یاب، این لینک را تا ۳۰ دقیقه آینده باز کنید:\n\n{$url}\n\nاگر این درخواست از طرف شما نبوده، این پیام را نادیده بگیرید.",
                 function ($message) use ($user): void {
                     $message
                         ->to($user->username)
-                        ->subject('بازیابی گذرواژه متن‌یاب');
+                        ->subject('بازیابی رمز عبور متن‌یاب');
                 }
             );
         }
@@ -95,7 +95,7 @@ class PasswordRecoveryController extends Controller
 
         return redirect()
             ->route('login')
-            ->with('status', 'گذرواژه تغییر کرد. اکنون می‌توانید با رمز جدید وارد شوید.');
+            ->with('status', 'رمز عبور شما تغییر کرد. اکنون می‌توانید با رمز جدید وارد شوید.');
     }
 
     private function validToken(User $user, int $expires, string $token): bool
