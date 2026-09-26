@@ -1,0 +1,165 @@
+name: Deploy Recovery Bridge
+
+on:
+  push:
+    branches:
+      - migration/source-import
+    paths:
+      - ".github/workflows/deploy-recovery.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: matnyaab-production-recovery
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USER: ${{ secrets.FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD_MATNYAAB_IR }}
+      SITE_URL: https://www.matnyaab.ir
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: PHP 8.1 syntax gate
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.1"
+          extensions: pdo_sqlite, sqlite3, mbstring, fileinfo
+          coverage: none
+
+      - name: Lint recovery source
+        shell: bash
+        run: |
+          set -euo pipefail
+          find ops/recovery-bridge -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Normalize FTP endpoint
+        id: endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          server="$FTP_SERVER"
+          server="${server%/}"
+          case "$server" in
+            ftp://*|ftps://*) url="$server" ;;
+            *) url="ftp://$server" ;;
+          esac
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Backup live SQLite and root htaccess on destination
+        shell: bash
+        env:
+          FTP_URL: ${{ steps.endpoint.outputs.url }}
+        run: |
+          set -euo pipefail
+          backup=".private-backups/recovery-${GITHUB_RUN_ID}"
+          mkdir -p /tmp/matnyaab-backup
+
+          curl --silent --show-error --fail             --connect-timeout 15 --max-time 90             --user "$FTP_USER:$FTP_PASSWORD"             --ftp-method nocwd             "$FTP_URL/matnyaab_with_license/db.sqlite3"             --output /tmp/matnyaab-backup/db.sqlite3
+
+          test -s /tmp/matnyaab-backup/db.sqlite3
+          test "$(sqlite3 /tmp/matnyaab-backup/db.sqlite3 'PRAGMA integrity_check;')" = "ok"
+
+          printf 'Require all denied\n' > /tmp/matnyaab-backup/deny.htaccess
+
+          curl --silent --show-error --fail             --connect-timeout 15 --max-time 90             --user "$FTP_USER:$FTP_PASSWORD"             --ftp-method nocwd --ftp-create-dirs             --upload-file /tmp/matnyaab-backup/db.sqlite3             "$FTP_URL/$backup/db.sqlite3.bak"
+
+          curl --silent --show-error --fail             --connect-timeout 15 --max-time 45             --user "$FTP_USER:$FTP_PASSWORD"             --ftp-method nocwd --ftp-create-dirs             --upload-file /tmp/matnyaab-backup/deny.htaccess             "$FTP_URL/$backup/.htaccess"
+
+          if curl --silent --show-error --fail             --connect-timeout 15 --max-time 30             --user "$FTP_USER:$FTP_PASSWORD"             --ftp-method nocwd             "$FTP_URL/.htaccess"             --output /tmp/matnyaab-backup/root.htaccess; then
+              curl --silent --show-error --fail                 --connect-timeout 15 --max-time 30                 --user "$FTP_USER:$FTP_PASSWORD"                 --ftp-method nocwd --ftp-create-dirs                 --upload-file /tmp/matnyaab-backup/root.htaccess                 "$FTP_URL/$backup/root.htaccess.bak"
+          fi
+
+          rm -f /tmp/matnyaab-backup/db.sqlite3
+          echo "Backup completed at FTP path: $backup"
+
+      - name: Assemble production-safe bridge
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/release
+          mkdir -p /tmp/release
+          cp -a ops/recovery-bridge/recovery /tmp/release/
+          cp -a ops/recovery-bridge/get_contents /tmp/release/
+          cp -a ops/recovery-bridge/news /tmp/release/
+          cp -a ops/recovery-bridge/statistics /tmp/release/
+          cp -a ops/recovery-bridge/download_content /tmp/release/
+          cp -a ops/recovery-bridge/download_content_img /tmp/release/
+          cp -a ops/recovery-bridge/update /tmp/release/
+          cp -a ops/recovery-bridge/health /tmp/release/
+          cp ops/recovery-bridge/index.php /tmp/release/index.php
+          cp ops/recovery-bridge/root.htaccess /tmp/release/.htaccess
+
+      - name: Deploy bridge files over FTP
+        shell: bash
+        env:
+          FTP_URL: ${{ steps.endpoint.outputs.url }}
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' file; do
+            rel="${file#/tmp/release/}"
+            curl --silent --show-error --fail               --connect-timeout 15 --max-time 90               --user "$FTP_USER:$FTP_PASSWORD"               --ftp-method nocwd --ftp-create-dirs               --upload-file "$file"               "$FTP_URL/$rel"
+          done < <(find /tmp/release -type f -print0)
+
+          curl --silent --show-error --fail             --connect-timeout 15 --max-time 45             --user "$FTP_USER:$FTP_PASSWORD"             --ftp-method nocwd --ftp-create-dirs             --upload-file ops/recovery-bridge/legacy-protection.htaccess             "$FTP_URL/matnyaab_with_license/.htaccess"
+
+      - name: Production smoke test via canonical www hostname
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for i in {1..12}; do
+            if curl --silent --show-error --fail --location               --connect-timeout 10 --max-time 30               "$SITE_URL/health/" > /tmp/health.json; then
+              break
+            fi
+            sleep 2
+          done
+
+          cat /tmp/health.json
+          python3 - <<'PY'
+          import json
+          with open('/tmp/health.json', encoding='utf-8') as f:
+              x=json.load(f)
+          assert x["ok"] is True
+          assert x["sqlite"] is True
+          assert x["contents"] >= 1
+          PY
+
+          curl --silent --show-error --fail             "$SITE_URL/news/" -o /tmp/news.json
+          python3 -m json.tool /tmp/news.json >/dev/null
+
+          curl --silent --show-error --fail             "$SITE_URL/get_contents/?password=compat" -o /tmp/contents.json
+          python3 - <<'PY'
+          import json
+          with open('/tmp/contents.json', encoding='utf-8') as f:
+              x=json.load(f)
+          assert isinstance(x, list)
+          assert len(x) >= 1
+          first=x[0]
+          for k in ("content_id","content_title","title","filesize","package_file"):
+              assert k in first, k
+          print("Content contract OK; rows:", len(x))
+          PY
+
+          curl --silent --show-error --fail             --range 0-15             "$SITE_URL/download_content_img/?id=1"             --output /tmp/cover-prefix.bin
+
+          test -s /tmp/cover-prefix.bin
+
+          curl --silent --show-error --fail             "$SITE_URL/update/version.txt"             --output /tmp/version.txt
+          test -s /tmp/version.txt
+
+          echo "Production recovery smoke test passed."
+
+      - name: Deployment summary
+        run: |
+          echo "Recovery bridge deployed."
+          echo "SQLite was preserved and backed up before deployment."
+          echo "Canonical smoke target: https://www.matnyaab.ir"
