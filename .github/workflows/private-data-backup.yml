@@ -1,0 +1,115 @@
+name: Private Data Backup
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/private-data-backup.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USER: ${{ secrets.FTP_USER }}
+      FTP_PASS: ${{ secrets.FTP_PASSWORD_MATNYAAB_IR }}
+
+    steps:
+      - name: Normalize endpoint
+        id: ftp
+        shell: bash
+        run: |
+          set -euo pipefail
+          server="$FTP_SERVER"
+          server="${server%/}"
+          case "$server" in
+            ftp://*|ftps://*) url="$server" ;;
+            *) url="ftp://$server" ;;
+          esac
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Download and verify database
+        env:
+          FTP_URL: ${{ steps.ftp.outputs.url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --silent --show-error --fail             --connect-timeout 15 --max-time 90             --user "$FTP_USER:$FTP_PASS"             --ftp-method nocwd             "$FTP_URL/matnyaab_with_license/db.sqlite3"             --output /tmp/db.sqlite3
+          test -s /tmp/db.sqlite3
+          test "$(sqlite3 /tmp/db.sqlite3 'PRAGMA integrity_check;')" = "ok"
+
+      - name: Export purchase reports
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/export
+
+          sqlite3 -header -csv /tmp/db.sqlite3 "
+          SELECT
+            u.id AS customer_id,
+            trim(u.first_name || ' ' || u.last_name) AS customer_name,
+            u.username AS account_email,
+            u.phone_number,
+            COUNT(h.id) AS purchase_count,
+            SUM(h.amount_paid) AS total_amount_paid,
+            MIN(h.subscription_buy_time) AS first_purchase,
+            MAX(h.subscription_buy_time) AS last_purchase
+          FROM users_subscriptionhistorymodel h
+          JOIN users_accountmodel u ON u.id = h.user_id
+          GROUP BY u.id, u.first_name, u.last_name, u.username, u.phone_number
+          ORDER BY last_purchase DESC;
+          " > /tmp/export/customers.csv
+
+          sqlite3 -header -csv /tmp/db.sqlite3 "
+          SELECT
+            h.id AS purchase_id,
+            h.subscription_buy_time,
+            u.id AS customer_id,
+            trim(u.first_name || ' ' || u.last_name) AS customer_name,
+            u.username AS account_email,
+            u.phone_number,
+            s.subscription_title,
+            h.amount_paid,
+            h.tracking_code
+          FROM users_subscriptionhistorymodel h
+          JOIN users_accountmodel u ON u.id = h.user_id
+          JOIN users_subscriptionmodel s ON s.id = h.subscription_id
+          ORDER BY h.subscription_buy_time DESC;
+          " > /tmp/export/purchase_history.csv
+
+          cp /tmp/db.sqlite3 /tmp/export/db.sqlite3
+
+          distinct_customers="$(sqlite3 /tmp/db.sqlite3 'SELECT COUNT(DISTINCT user_id) FROM users_subscriptionhistorymodel;')"
+          purchases="$(sqlite3 /tmp/db.sqlite3 'SELECT COUNT(*) FROM users_subscriptionhistorymodel;')"
+          named_customers="$(sqlite3 /tmp/db.sqlite3 "SELECT COUNT(DISTINCT h.user_id) FROM users_subscriptionhistorymodel h JOIN users_accountmodel u ON u.id=h.user_id WHERE trim(u.first_name || ' ' || u.last_name) <> '';")"
+          completed_orders="$(sqlite3 /tmp/db.sqlite3 'SELECT COUNT(*) FROM users_ordermodel WHERE is_complete=1;')"
+          gateway_rows="$(sqlite3 /tmp/db.sqlite3 'SELECT COUNT(*) FROM azbankgateways_bank;')"
+
+          echo "Distinct purchasers: $distinct_customers"
+          echo "Purchase history rows: $purchases"
+          echo "Purchasers with a non-empty name: $named_customers"
+          echo "Completed orders: $completed_orders"
+          echo "Gateway transaction rows: $gateway_rows"
+
+      - name: Encrypt private export with the FTP credential
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq p7zip-full
+          7z a -t7z -mhe=on -p"$FTP_PASS"             /tmp/matnyaab-private-backup.7z             /tmp/export/* >/dev/null
+          test -s /tmp/matnyaab-private-backup.7z
+          rm -rf /tmp/export /tmp/db.sqlite3
+
+      - name: Upload encrypted package
+        uses: actions/upload-artifact@v4
+        with:
+          name: matnyaab-private-backup-${{ github.run_id }}
+          path: /tmp/matnyaab-private-backup.7z
+          retention-days: 1
