@@ -54,7 +54,18 @@ jobs:
           test "$code" = "206" -o "$code" = "200"
           test -s /tmp/cover.bin
 
-          curl --insecure --silent --show-error --fail             "$SITE_URL/update/version.txt" -o /tmp/version.txt
+          direct_code="$(curl --insecure --silent --show-error             -o /tmp/version-direct.txt -w '%{http_code}'             "$SITE_URL/matnyaab_with_license/update/version.txt")"
+          echo "legacy direct update file status: $direct_code"
+
+          controller_code="$(curl --insecure --silent --show-error             -o /tmp/version-controller.txt -w '%{http_code}'             "$SITE_URL/recovery.php?_route=update&file=version.txt")"
+          echo "front-controller update status: $controller_code"
+
+          public_code="$(curl --insecure --silent --show-error             -o /tmp/version.txt -w '%{http_code}'             "$SITE_URL/update/version.txt")"
+          echo "public update route status: $public_code"
+
+          test "$controller_code" = "200"
+          test -s /tmp/version-controller.txt
+          test "$public_code" = "200"
           test -s /tmp/version.txt
           echo "remote version: $(cat /tmp/version.txt)"
 
