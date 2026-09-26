@@ -25,6 +25,7 @@ jobs:
           parts=(.import/kotlin.b64.part-*)
           test "${#parts[@]}" -gt 0
           cat "${parts[@]}" | tr -d '\n\r' | base64 -d > /tmp/kotlin-source.zip
+          echo "a986d7787d75ab43c8987f5771564e6a8e9d75b72ae5872b0238945027b9f3f8  /tmp/kotlin-source.zip" | sha256sum -c -
           unzip -t /tmp/kotlin-source.zip >/dev/null
 
       - name: Import source only
