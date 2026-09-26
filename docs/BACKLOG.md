@@ -16,8 +16,8 @@ Status legend: DONE, IN PROGRESS, BLOCKED, TODO, DEFERRED.
 - DONE — Daily encrypted DB/customer backup with seven-day retention.
 - DONE — Replace broken saved-HTML homepage.
 - DONE — Live homepage link audit; current broken local URLs: 0.
-- IN PROGRESS — Unified professional dark UI for homepage and account pages.
-- TODO — Style 404/500/maintenance states.
+- DONE — Unified professional dark UI for homepage and account pages.
+- DONE — Style 404/500/maintenance states.
 - TODO — Add broader production health checks to deploy gate.
 
 ## P0 — Authentication and customer continuity
@@ -83,10 +83,10 @@ Status legend: DONE, IN PROGRESS, BLOCKED, TODO, DEFERRED.
 
 - DONE — Remove dependency on broken matnyaab.ir_files snapshot.
 - DONE — Restore old navigation aliases.
-- IN PROGRESS — Dark professional design system with Vazirmatn.
+- DONE — Dark professional design system with Vazirmatn.
 - TODO — Responsive QA on mobile/tablet/desktop.
 - TODO — Accessibility contrast/focus/keyboard pass.
-- TODO — Improve profile/subscription/history presentation.
+- DONE — Improve profile/subscription/history presentation.
 - TODO — Add polished payment success/failure pages.
 - TODO — Improve password recovery UX after backend parity.
 - TODO — Replace empty favicon with branded icon strategy.
