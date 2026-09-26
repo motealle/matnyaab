@@ -37,6 +37,8 @@ Large content packs, production databases, secrets, generated installers and bui
 
 Operational docs:
 
+- [Repository operating rules](AGENTS.md)
 - [Engineering handoff](docs/HANDOFF.md)
 - [Migration backlog](docs/BACKLOG.md)
+- [Engineering skills / playbooks](docs/SKILLS.md)
 - [Migration status / go-live gates](docs/MIGRATION_STATUS.md)
