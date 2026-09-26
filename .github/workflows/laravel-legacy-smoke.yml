@@ -66,6 +66,10 @@ jobs:
           php artisan config:clear
           php artisan route:list
 
+      - name: Run Laravel feature tests on copied legacy database
+        working-directory: web
+        run: php artisan test --testsuite=Feature
+
       - name: Start Laravel locally
         working-directory: web
         shell: bash
