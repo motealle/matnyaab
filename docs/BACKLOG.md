@@ -33,6 +33,7 @@ Status legend: DONE, IN PROGRESS, BLOCKED, TODO, DEFERRED.
 - BLOCKED — Send one controlled real SMS from Laravel; production sending remains explicitly gated until a safe test recipient is chosen.
 - TODO — Enable `SMS_PRODUCTION_ENABLED` and production registration only after the controlled SMS succeeds.
 - DONE — Password-recovery backend and UI; stateless 30-minute HMAC links tested on copied production SQLite.
+- BLOCKED — Configure runtime SMTP values and perform one controlled delivery; `MAIL_PRODUCTION_ENABLED` remains false.
 - DONE — Superuser migration dashboard, user search and gift-subscription flow; tested on copied production SQLite.
 
 ## P0 — Subscription, license and payment
@@ -82,8 +83,9 @@ Status legend: DONE, IN PROGRESS, BLOCKED, TODO, DEFERRED.
 
 ## P1 — Web UX
 
-- IN PROGRESS — Full production-copy audit: remove internal/migration/template language and rewrite all visible text in polished product Persian.
+- DONE — Full production-copy audit across homepage, account, recovery, payment/error and admin-facing pages.
 - DONE — Add product-copy standard and repository review gate.
+- DONE — Add Production Copy Guard CI workflow to reject internal/template language.
 - DONE — Remove dependency on broken matnyaab.ir_files snapshot.
 - DONE — Restore old navigation aliases.
 - DONE — Dark professional design system with Vazirmatn.
@@ -94,7 +96,7 @@ Status legend: DONE, IN PROGRESS, BLOCKED, TODO, DEFERRED.
 - TODO — Accessibility contrast/focus/keyboard pass.
 - DONE — Improve profile/subscription/history presentation.
 - TODO — Add polished payment success/failure pages.
-- IN PROGRESS — Refine password recovery copy and unavailable-state guidance for production.
+- DONE — Refine password recovery copy and unavailable-state guidance for production.
 - TODO — Replace empty favicon with branded icon strategy.
 
 ## P1 — Operations and security
