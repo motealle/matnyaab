@@ -68,6 +68,9 @@ jobs:
 
       - name: Run Laravel feature tests on copied legacy database
         working-directory: web
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: /tmp/matnyaab-test.sqlite3
         run: php artisan test --testsuite=Feature
 
       - name: Start Laravel locally
