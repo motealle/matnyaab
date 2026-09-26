@@ -1,0 +1,114 @@
+name: Runtime Probe (TLS diagnostic)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - migration/source-import
+    paths:
+      - ".github/workflows/runtime-probe-tls-diagnostic.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USER: ${{ secrets.FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD_MATNYAAB_IR }}
+      SITE_URL: https://matnyaab.ir
+
+    steps:
+      - name: Create temporary PHP runtime probe
+        shell: bash
+        run: |
+          cat > /tmp/matnyaab-runtime-probe.php <<'PHP'
+          <?php
+          header('Content-Type: application/json; charset=utf-8');
+
+          $rw = false;
+          $err = null;
+          try {
+              if (extension_loaded('pdo_sqlite')) {
+                  $tmp = tempnam(sys_get_temp_dir(), 'matnyaab-sqlite-');
+                  @unlink($tmp);
+                  $pdo = new PDO('sqlite:' . $tmp);
+                  $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                  $pdo->exec('CREATE TABLE smoke (id INTEGER PRIMARY KEY, value TEXT)');
+                  $pdo->exec("INSERT INTO smoke(value) VALUES ('ok')");
+                  $rw = ($pdo->query('SELECT value FROM smoke LIMIT 1')->fetchColumn() === 'ok');
+                  $pdo = null;
+                  @unlink($tmp);
+              }
+          } catch (Throwable $e) {
+              $err = get_class($e);
+          }
+
+          echo json_encode([
+              'ok' => true,
+              'php_version' => PHP_VERSION,
+              'sapi' => PHP_SAPI,
+              'extensions' => [
+                  'pdo_sqlite' => extension_loaded('pdo_sqlite'),
+                  'sqlite3' => extension_loaded('sqlite3'),
+                  'pdo_mysql' => extension_loaded('pdo_mysql'),
+                  'curl' => extension_loaded('curl'),
+                  'openssl' => extension_loaded('openssl'),
+                  'mbstring' => extension_loaded('mbstring'),
+                  'fileinfo' => extension_loaded('fileinfo'),
+                  'zip' => extension_loaded('zip'),
+              ],
+              'sqlite_read_write' => $rw,
+              'sqlite_error_class' => $err,
+              'filesystem' => [
+                  'document_root_writable' => is_writable(__DIR__),
+                  'parent_exists' => is_dir(dirname(__DIR__)),
+                  'parent_writable' => is_writable(dirname(__DIR__)),
+              ],
+          ], JSON_UNESCAPED_SLASHES);
+          PHP
+
+      - name: Normalize FTP endpoint
+        id: endpoint
+        shell: bash
+        run: |
+          server="$FTP_SERVER"
+          server="${server%/}"
+          case "$server" in
+            ftp://*|ftps://*) url="$server" ;;
+            *) url="ftp://$server" ;;
+          esac
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Upload probe
+        env:
+          FTP_URL: ${{ steps.endpoint.outputs.url }}
+        run: |
+          curl --silent --show-error --fail             --connect-timeout 15 --max-time 45             --user "$FTP_USER:$FTP_PASSWORD"             --ftp-method nocwd             --upload-file /tmp/matnyaab-runtime-probe.php             "$FTP_URL/matnyaab-runtime-probe.php"
+
+      - name: Probe runtime despite known TLS hostname mismatch
+        shell: bash
+        run: |
+          set -euo pipefail
+          response="$(curl --insecure --silent --show-error --fail --location             --connect-timeout 15 --max-time 45             "$SITE_URL/matnyaab-runtime-probe.php")"
+
+          echo "$response" | python3 -m json.tool
+
+          python3 - "$response" <<'PY'
+          import json, sys
+          data = json.loads(sys.argv[1])
+          assert data.get("ok") is True
+          assert data["extensions"]["pdo_sqlite"] is True, "pdo_sqlite is not enabled"
+          assert data["sqlite_read_write"] is True, "SQLite read/write smoke test failed"
+          print("PHP runtime and SQLite read/write test passed.")
+          PY
+
+      - name: Remove temporary probe
+        if: always()
+        env:
+          FTP_URL: ${{ steps.endpoint.outputs.url }}
+        run: |
+          curl --silent --show-error             --connect-timeout 15 --max-time 30             --user "$FTP_USER:$FTP_PASSWORD"             --ftp-method nocwd             --quote "DELE matnyaab-runtime-probe.php"             "$FTP_URL/"             --output /dev/null || true
