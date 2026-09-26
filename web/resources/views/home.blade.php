@@ -179,7 +179,11 @@
         </div>
         <div class="account-grid">
             <div class="account-card"><h3>پیش‌تر در متن‌یاب حساب ساخته‌اید؟</h3><p>با ایمیل و رمز عبور خود وارد شوید و جزئیات اشتراک و سریال را ببینید.</p><a class="btn btn-primary" href="{{ route('login') }}">ورود به حساب</a></div>
-            <div class="account-card"><h3>می‌خواهید حساب تازه‌ای بسازید؟</h3><p>هر زمان ثبت‌نام آنلاین در دسترس باشد، از همین بخش می‌توانید حساب تازه‌ای بسازید.</p><a class="btn" href="{{ route('register') }}">صفحه ثبت‌نام</a></div>
+            @if ((bool) config('services.sms.production_enabled'))
+                <div class="account-card"><h3>می‌خواهید حساب تازه‌ای بسازید؟</h3><p>ثبت‌نام را آغاز کنید و پس از تأیید شماره موبایل، حساب‌تان آماده استفاده خواهد بود.</p><a class="btn" href="{{ route('register') }}">ساخت حساب</a></div>
+            @else
+                <div class="account-card"><h3>ثبت‌نام آنلاین موقتاً در دسترس نیست</h3><p>اگر پیش‌تر حساب ساخته‌اید، از بخش ورود به حساب خود دسترسی دارید.</p><a class="btn" href="{{ route('login') }}">ورود به حساب</a></div>
+            @endif
         </div>
     </div>
 </section>
