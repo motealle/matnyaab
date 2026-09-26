@@ -1,0 +1,66 @@
+name: FTP Update Path Audit
+
+on:
+  push:
+    branches:
+      - migration/source-import
+    paths:
+      - ".github/workflows/ftp-update-path-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USER: ${{ secrets.FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD_MATNYAAB_IR }}
+
+    steps:
+      - name: Normalize FTP endpoint
+        id: endpoint
+        shell: bash
+        run: |
+          server="$FTP_SERVER"
+          server="${server%/}"
+          case "$server" in
+            ftp://*|ftps://*) url="$server" ;;
+            *) url="ftp://$server" ;;
+          esac
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Check known legacy update locations
+        shell: bash
+        env:
+          FTP_URL: ${{ steps.endpoint.outputs.url }}
+        run: |
+          set -euo pipefail
+          candidates=(
+            "update/version.txt"
+            "matnyaab_with_license/update/version.txt"
+            "version.txt"
+            "update/MATNYAAB_x64_setup.exe"
+            "matnyaab_with_license/update/MATNYAAB_x64_setup.exe"
+          )
+          found=0
+          for rel in "${candidates[@]}"; do
+            if curl --silent --show-error --fail               --connect-timeout 10 --max-time 30               --user "$FTP_USER:$FTP_PASSWORD"               --ftp-method nocwd               "$FTP_URL/$rel" -o /tmp/candidate.bin; then
+                bytes="$(stat -c%s /tmp/candidate.bin)"
+                echo "FOUND $rel ($bytes bytes)"
+                found=1
+            else
+                echo "MISSING $rel"
+            fi
+          done
+          echo "found_any=$found"
+
+      - name: List top-level FTP names
+        shell: bash
+        env:
+          FTP_URL: ${{ steps.endpoint.outputs.url }}
+        run: |
+          curl --silent --show-error --fail             --connect-timeout 10 --max-time 30             --user "$FTP_USER:$FTP_PASSWORD"             --ftp-method nocwd             --list-only "$FTP_URL/" || true

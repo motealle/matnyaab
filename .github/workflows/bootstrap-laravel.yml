@@ -1,0 +1,77 @@
+name: Bootstrap Laravel 12
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - migration/source-import
+    paths:
+      - ".github/workflows/bootstrap-laravel.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: migration/source-import
+
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mbstring, pdo_sqlite, sqlite3, curl, openssl, fileinfo
+          coverage: none
+
+      - name: Create clean Laravel 12 scaffold
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -e web || { echo "::error::web/ already exists"; exit 1; }
+
+          composer create-project laravel/laravel:^12.0 /tmp/matnyaab-laravel             --no-interaction --prefer-dist
+
+          rm -rf /tmp/matnyaab-laravel/.git
+          rm -rf /tmp/matnyaab-laravel/vendor
+          rm -f /tmp/matnyaab-laravel/.env
+
+          mkdir -p web
+          cp -a /tmp/matnyaab-laravel/. web/
+
+          cat > web/.env.example <<'ENV'
+          APP_NAME=Matnyaab
+          APP_ENV=production
+          APP_KEY=
+          APP_DEBUG=false
+          APP_URL=https://www.matnyaab.ir
+
+          LOG_CHANNEL=stack
+          LOG_LEVEL=warning
+
+          DB_CONNECTION=sqlite
+          DB_DATABASE=/absolute/path/to/db.sqlite3
+
+          CACHE_DRIVER=file
+          FILESYSTEM_DISK=local
+          QUEUE_CONNECTION=sync
+          SESSION_DRIVER=file
+          SESSION_LIFETIME=120
+          ENV
+
+          php -r 'json_decode(file_get_contents("web/composer.json"), true, 512, JSON_THROW_ON_ERROR);'
+          test -f web/artisan
+          test -f web/config/database.php
+
+      - name: Commit scaffold
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web
+          git commit -m "web: bootstrap Laravel 12 on PHP 8.2"
+          git push origin HEAD:migration/source-import

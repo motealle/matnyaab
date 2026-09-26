@@ -1,0 +1,5 @@
+Options -Indexes
+
+<FilesMatch "(^private\.py$|\.sqlite3?$|\.db$|\.bak$|^settings\.py$)">
+    Require all denied
+</FilesMatch>

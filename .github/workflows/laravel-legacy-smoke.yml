@@ -1,0 +1,133 @@
+name: Laravel Legacy SQLite Smoke
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - migration/source-import
+    paths:
+      - "web/**"
+      - ".github/workflows/laravel-legacy-smoke.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USER: ${{ secrets.FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD_MATNYAAB_IR }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mbstring, pdo_sqlite, sqlite3, curl, openssl, fileinfo
+          coverage: none
+
+      - name: Install Laravel dependencies
+        working-directory: web
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Download production SQLite as an isolated test copy
+        shell: bash
+        run: |
+          set -euo pipefail
+          server="$FTP_SERVER"
+          server="${server%/}"
+          case "$server" in
+            ftp://*|ftps://*) url="$server" ;;
+            *) url="ftp://$server" ;;
+          esac
+
+          curl --silent --show-error --fail             --connect-timeout 15 --max-time 90             --user "$FTP_USER:$FTP_PASSWORD"             --ftp-method nocwd             "$url/matnyaab_with_license/db.sqlite3"             --output /tmp/matnyaab-test.sqlite3
+
+          test -s /tmp/matnyaab-test.sqlite3
+          test "$(sqlite3 /tmp/matnyaab-test.sqlite3 'PRAGMA integrity_check;')" = "ok"
+
+      - name: Configure Laravel for copied legacy SQLite
+        working-directory: web
+        shell: bash
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          {
+            echo "DB_CONNECTION=sqlite"
+            echo "DB_DATABASE=/tmp/matnyaab-test.sqlite3"
+            echo "APP_ENV=testing"
+            echo "APP_DEBUG=true"
+          } >> .env
+          php artisan config:clear
+          php artisan route:list
+
+      - name: Run Laravel feature tests on copied legacy database
+        working-directory: web
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: /tmp/matnyaab-test.sqlite3
+        run: php artisan test
+
+      - name: Start Laravel locally
+        working-directory: web
+        shell: bash
+        run: |
+          php artisan serve --host=127.0.0.1 --port=8080 > /tmp/laravel.log 2>&1 &
+          echo $! > /tmp/laravel.pid
+          for i in {1..20}; do
+            if curl --silent --fail http://127.0.0.1:8080/health >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/laravel.log
+          exit 1
+
+      - name: Verify legacy API compatibility
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          curl --silent --show-error --fail             http://127.0.0.1:8080/health             -o /tmp/health.json
+
+          python3 - <<'PY'
+          import json
+          x=json.load(open('/tmp/health.json'))
+          assert x["ok"] is True
+          assert x["sqlite"] is True
+          assert x["contents"] >= 1
+          PY
+
+          curl --silent --show-error --fail             http://127.0.0.1:8080/news             -o /tmp/news.json
+          python3 -m json.tool /tmp/news.json >/dev/null
+
+          curl --silent --show-error --fail             "http://127.0.0.1:8080/get_contents?password=compat"             -o /tmp/contents.json
+
+          python3 - <<'PY'
+          import json
+          x=json.load(open('/tmp/contents.json'))
+          assert isinstance(x, list) and x
+          r=x[0]
+          for k in ("content_id","content_title","title","filesize","package_file"):
+              assert k in r, k
+          print("Laravel visible content rows:", len(x))
+          PY
+
+          curl --silent --show-error --fail             -X POST             -d "user_system_id=ci-smoke"             -d "action=laravel-smoke"             -d "has_subscription=0"             -d "app_version=ci"             http://127.0.0.1:8080/statistics             -o /tmp/stat.json
+
+          python3 - <<'PY'
+          import json
+          x=json.load(open('/tmp/stat.json'))
+          assert x["status"] == "success"
+          PY
+
+          test "$(sqlite3 /tmp/matnyaab-test.sqlite3 "SELECT COUNT(*) FROM matnyaab_statistics WHERE user_system_id='ci-smoke';")" -ge 1
+
+      - name: Print Laravel log on failure
+        if: failure()
+        run: cat /tmp/laravel.log || true

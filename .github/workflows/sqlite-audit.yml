@@ -1,0 +1,97 @@
+name: Legacy SQLite Audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - migration/source-import
+    paths:
+      - ".github/workflows/sqlite-audit.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USER: ${{ secrets.FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD_MATNYAAB_IR }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Normalize FTP endpoint
+        id: endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          server="$FTP_SERVER"
+          server="${server%/}"
+          case "$server" in
+            ftp://*|ftps://*) url="$server" ;;
+            *) url="ftp://$server" ;;
+          esac
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Download legacy SQLite privately
+        shell: bash
+        env:
+          FTP_URL: ${{ steps.endpoint.outputs.url }}
+        run: |
+          set -euo pipefail
+          curl --silent --show-error --fail \
+            --connect-timeout 15 --max-time 90 \
+            --user "$FTP_USER:$FTP_PASSWORD" \
+            --ftp-method nocwd \
+            "$FTP_URL/matnyaab_with_license/db.sqlite3" \
+            --output /tmp/db.sqlite3
+          test -s /tmp/db.sqlite3
+          file /tmp/db.sqlite3
+
+      - name: Audit integrity, schema and row counts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p audit
+          integrity="$(sqlite3 /tmp/db.sqlite3 'PRAGMA integrity_check;')"
+          {
+            echo "# Legacy SQLite audit"
+            echo
+            echo "Integrity: $integrity"
+            echo "Database size: $(stat -c%s /tmp/db.sqlite3) bytes"
+            echo
+            echo "## Tables and row counts"
+            echo
+            echo '| Table | Rows |'
+            echo '|---|---:|'
+          } > audit/legacy-sqlite.md
+
+          sqlite3 /tmp/db.sqlite3 \
+            "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name;" \
+            > /tmp/tables.txt
+
+          while IFS= read -r table; do
+            safe="${table//\"/\"\"}"
+            count="$(sqlite3 /tmp/db.sqlite3 "SELECT COUNT(*) FROM \"$safe\";" 2>/dev/null || echo ERROR)"
+            printf '| `%s` | %s |\n' "$table" "$count" >> audit/legacy-sqlite.md
+          done < /tmp/tables.txt
+
+          {
+            echo
+            echo "## Schema"
+            echo
+            sqlite3 /tmp/db.sqlite3 '.schema'
+          } >> audit/legacy-sqlite.md
+
+          rm -f /tmp/db.sqlite3
+
+      - name: Upload sanitized audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: legacy-sqlite-audit-${{ github.run_id }}
+          path: audit/legacy-sqlite.md
+          retention-days: 7

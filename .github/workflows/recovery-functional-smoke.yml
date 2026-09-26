@@ -1,0 +1,82 @@
+name: Recovery Functional Smoke
+
+on:
+  push:
+    branches:
+      - migration/source-import
+    paths:
+      - ".github/workflows/recovery-functional-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SITE_URL: https://www.matnyaab.ir
+
+    steps:
+      - name: Verify recovery endpoints behind current TLS mismatch
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          curl --silent --show-error --fail             "$SITE_URL/health/" -o /tmp/health.json
+          cat /tmp/health.json
+          python3 - <<'PY'
+          import json
+          x=json.load(open('/tmp/health.json', encoding='utf-8'))
+          assert x["ok"] is True
+          assert x["sqlite"] is True
+          assert x["contents"] >= 1
+          PY
+
+          curl --silent --show-error --fail             "$SITE_URL/news/" -o /tmp/news.json
+          python3 -m json.tool /tmp/news.json >/dev/null
+
+          curl --silent --show-error --fail             "$SITE_URL/get_contents/?password=compat" -o /tmp/contents.json
+          python3 - <<'PY'
+          import json
+          x=json.load(open('/tmp/contents.json', encoding='utf-8'))
+          assert isinstance(x, list) and x
+          r=x[0]
+          for k in ("content_id","content_title","title","filesize","package_file"):
+              assert k in r, k
+          open('/tmp/content-id.txt','w').write(str(r["content_id"]))
+          print("visible content rows:", len(x))
+          PY
+
+          id="$(cat /tmp/content-id.txt)"
+          code="$(curl --silent --show-error             --range 0-15 -o /tmp/cover.bin -w '%{http_code}'             "$SITE_URL/download_content_img/?id=$id")"
+          test "$code" = "206" -o "$code" = "200"
+          test -s /tmp/cover.bin
+
+          direct_code="$(curl --silent --show-error             -o /tmp/version-direct.txt -w '%{http_code}'             "$SITE_URL/matnyaab_with_license/update/version.txt")"
+          echo "legacy direct update file status: $direct_code"
+
+          public_code="$(curl --silent --show-error             -o /tmp/version.txt -w '%{http_code}'             "$SITE_URL/update/version.txt")"
+          echo "public update route status: $public_code"
+
+          test "$public_code" = "200"
+          test -s /tmp/version.txt
+          echo "remote version: $(cat /tmp/version.txt)"
+
+      - name: Verify SQLite is blocked from direct web download
+        shell: bash
+        run: |
+          set -euo pipefail
+          code="$(curl --silent --show-error             -o /tmp/db-response.bin -w '%{http_code}'             "$SITE_URL/matnyaab_with_license/db.sqlite3")"
+          echo "direct SQLite HTTP status: $code"
+          case "$code" in
+            401|403|404) ;;
+            *) echo "::error::SQLite database is not adequately blocked"; exit 1 ;;
+          esac
+
+      - name: Verify strict TLS
+        shell: bash
+        run: |
+          curl --silent --show-error --fail             --connect-timeout 10 --max-time 20             "$SITE_URL/health/" >/dev/null
+          echo "Strict TLS validation passed."

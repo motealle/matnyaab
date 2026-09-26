@@ -1,0 +1,119 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - migration/source-import
+    paths:
+      - "web/**"
+      - "client/windows/**"
+      - ".github/workflows/build.yml"
+  pull_request:
+    paths:
+      - "web/**"
+      - "client/windows/**"
+      - ".github/workflows/build.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      web: ${{ steps.detect.outputs.web }}
+      client: ${{ steps.detect.outputs.client }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: detect
+        shell: bash
+        run: |
+          [[ -f web/composer.json ]] && echo "web=true" >> "$GITHUB_OUTPUT" || echo "web=false" >> "$GITHUB_OUTPUT"
+          [[ -f client/windows/gradlew || -f client/windows/gradlew.bat ]] && echo "client=true" >> "$GITHUB_OUTPUT" || echo "client=false" >> "$GITHUB_OUTPUT"
+
+  laravel:
+    needs: detect
+    if: needs.detect.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mbstring, pdo_mysql, pdo_sqlite, curl, openssl, fileinfo
+          coverage: none
+
+      - name: Validate Composer manifest
+        run: composer validate --no-check-publish
+
+      - name: Install production dependencies
+        run: composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader
+
+      - name: Laravel bootstrap smoke
+        run: php artisan --version
+
+      - name: Package web release
+        shell: bash
+        run: |
+          tar             --exclude='.env'             --exclude='storage/logs/*'             --exclude='storage/framework/cache/*'             --exclude='storage/framework/sessions/*'             --exclude='storage/framework/views/*'             -czf ../matnyaab-web-${GITHUB_SHA}.tar.gz .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: matnyaab-web-${{ github.sha }}
+          path: matnyaab-web-${{ github.sha }}.tar.gz
+          retention-days: 14
+
+  windows-client:
+    needs: detect
+    if: needs.detect.outputs.client == 'true'
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: client/windows
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Clean build from source
+        shell: pwsh
+        run: |
+          if (Test-Path ".\gradlew.bat") {
+            .\gradlew.bat --no-daemon clean build
+          } elseif (Test-Path ".\gradlew") {
+            .\gradlew --no-daemon clean build
+          } else {
+            throw "Gradle wrapper not found"
+          }
+
+      - name: Collect outputs
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "..\..\..\client-artifacts" | Out-Null
+          if (Test-Path "build\libs") {
+            Copy-Item "build\libs\*" "..\..\..\client-artifacts" -Recurse -Force
+          }
+          if (Test-Path "build\distributions") {
+            Copy-Item "build\distributions\*" "..\..\..\client-artifacts" -Recurse -Force
+          }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: matnyaab-windows-${{ github.sha }}
+          path: client-artifacts
+          if-no-files-found: warn
+          retention-days: 14

@@ -1,0 +1,151 @@
+name: Recovery Bridge CI
+
+on:
+  push:
+    branches:
+      - migration/source-import
+    paths:
+      - "ops/recovery-bridge/**"
+      - ".github/workflows/recovery-bridge-ci.yml"
+  pull_request:
+    paths:
+      - "ops/recovery-bridge/**"
+      - ".github/workflows/recovery-bridge-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP 8.1
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.1"
+          extensions: pdo_sqlite, sqlite3, mbstring, fileinfo
+          coverage: none
+
+      - name: PHP syntax check
+        shell: bash
+        run: |
+          set -euo pipefail
+          find ops/recovery-bridge -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Create isolated legacy fixture
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/matnyaab-site
+          mkdir -p /tmp/matnyaab-site
+          cp -a ops/recovery-bridge/. /tmp/matnyaab-site/
+          mkdir -p /tmp/matnyaab-site/matnyaab_with_license/contents
+          mkdir -p /tmp/matnyaab-site/matnyaab_with_license/update
+
+          sqlite3 /tmp/matnyaab-site/matnyaab_with_license/db.sqlite3 <<'SQL'
+          CREATE TABLE matnyaab_contentsmodel (
+            id INTEGER PRIMARY KEY,
+            content_title varchar(500) NOT NULL,
+            content_filesize integer,
+            content_date_added datetime,
+            content_show bool NOT NULL,
+            content_package_file varchar(100) NOT NULL,
+            content_cover_image varchar(100) NOT NULL
+          );
+          CREATE TABLE news_news (
+            id INTEGER PRIMARY KEY,
+            title varchar(50) NOT NULL,
+            content varchar(2048) NOT NULL,
+            expire_date datetime NOT NULL
+          );
+          CREATE TABLE matnyaab_statistics (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_system_id varchar(500) NOT NULL,
+            has_subscription bool NOT NULL,
+            action varchar(50) NOT NULL,
+            action_datetime datetime NOT NULL,
+            app_version varchar(10)
+          );
+          INSERT INTO matnyaab_contentsmodel VALUES
+            (1, 'بسته آزمایشی', 12, '2026-09-25 10:00:00', 1, 'contents/test.bin', 'contents/test.jpg');
+          INSERT INTO news_news VALUES
+            (1, 'خبر تست', '<p>متن تست</p>', '2099-01-01 00:00:00');
+          SQL
+
+          printf 'hello world!' > /tmp/matnyaab-site/matnyaab_with_license/contents/test.bin
+          printf 'fake-jpeg' > /tmp/matnyaab-site/matnyaab_with_license/contents/test.jpg
+          printf '1.2' > /tmp/matnyaab-site/matnyaab_with_license/update/version.txt
+
+      - name: Start PHP test server
+        shell: bash
+        run: |
+          php -S 127.0.0.1:8080 -t /tmp/matnyaab-site >/tmp/php-server.log 2>&1 &
+          echo $! > /tmp/php-server.pid
+          for i in {1..20}; do
+            if curl -fsS http://127.0.0.1:8080/health/ >/dev/null; then
+              exit 0
+            fi
+            sleep 0.25
+          done
+          cat /tmp/php-server.log
+          exit 1
+
+      - name: Contract smoke tests
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          health="$(curl -fsS http://127.0.0.1:8080/health/)"
+          python3 - "$health" <<'PY'
+          import json,sys
+          x=json.loads(sys.argv[1])
+          assert x["ok"] is True
+          assert x["contents"] == 1
+          PY
+
+          contents="$(curl -fsS 'http://127.0.0.1:8080/get_contents/?password=compat')"
+          python3 - "$contents" <<'PY'
+          import json,sys
+          x=json.loads(sys.argv[1])
+          assert len(x)==1
+          r=x[0]
+          assert r["content_id"]==1
+          assert r["content_title"]=="بسته آزمایشی"
+          assert r["title"]=="بسته آزمایشی"
+          assert r["content_filesize"]==12
+          assert r["filesize"]==12
+          assert r["content_package_file"]=="contents/test.bin"
+          assert r["package_file"]=="contents/test.bin"
+          PY
+
+          news="$(curl -fsS http://127.0.0.1:8080/news/)"
+          python3 - "$news" <<'PY'
+          import json,sys
+          x=json.loads(sys.argv[1])
+          assert x[0]["title"]=="خبر تست"
+          PY
+
+          stat="$(curl -fsS -X POST             -d 'user_system_id=abc123'             -d 'has_subscription=1'             -d 'action=ci-smoke'             -d 'app_version=1.2'             http://127.0.0.1:8080/statistics/)"
+          python3 - "$stat" <<'PY'
+          import json,sys
+          assert json.loads(sys.argv[1])["status"]=="success"
+          PY
+          test "$(sqlite3 /tmp/matnyaab-site/matnyaab_with_license/db.sqlite3             "SELECT COUNT(*) FROM matnyaab_statistics WHERE action='ci-smoke';")" = "1"
+
+          curl -fsS http://127.0.0.1:8080/download_content/?id=1 -o /tmp/download.bin
+          cmp /tmp/download.bin /tmp/matnyaab-site/matnyaab_with_license/contents/test.bin
+
+          code="$(curl -sS -o /tmp/range.bin -w '%{http_code}'             -H 'Range: bytes=0-4' http://127.0.0.1:8080/download_content/?id=1)"
+          test "$code" = "206"
+          test "$(cat /tmp/range.bin)" = "hello"
+
+          curl -fsS 'http://127.0.0.1:8080/update/index.php?file=version.txt' -o /tmp/version.txt
+          test "$(cat /tmp/version.txt)" = "1.2"
+
+      - name: Test summary
+        run: echo "Recovery bridge passed PHP 8.1 syntax, SQLite and endpoint contract tests."
