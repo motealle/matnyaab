@@ -32,6 +32,8 @@ Route::middleware('auth')->group(function () {
     Route::get('smsconfirm', [RegistrationController::class, 'showSmsConfirm'])->name('smsconfirm');
     Route::post('smsconfirm', [RegistrationController::class, 'smsConfirm'])->name('smsconfirm.submit');
     Route::get('profile', ProfileController::class)->name('profile');
+    Route::get('change_password', [AuthController::class, 'showChangePassword'])->name('password.change');
+    Route::post('change_password', [AuthController::class, 'changePassword'])->name('password.change.submit');
     Route::post('buysubscription', [SubscriptionController::class, 'buySubscription'])->name('buysubscription');
     Route::match(['get', 'post'], 'logout', [AuthController::class, 'logout'])->name('logout');
 });
