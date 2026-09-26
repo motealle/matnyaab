@@ -6,9 +6,9 @@
 <div class="container auth-shell">
     <section class="panel panel-pad">
         <div class="panel-header">
-            <span class="eyebrow">WELCOME BACK</span>
+            <span class="eyebrow">حساب کاربری</span>
             <h1 class="page-title">ورود به متن‌یاب</h1>
-            <p class="page-subtitle">با همان حساب قبلی وارد شوید. اطلاعات و اشتراک‌های شما حفظ شده‌اند.</p>
+            <p class="page-subtitle">ایمیل و رمز عبور حساب متن‌یاب‌تان را وارد کنید.</p>
         </div>
 
         @if ($errors->any())
@@ -18,7 +18,7 @@
         <form method="post" action="{{ route('login.submit') }}">
             @csrf
             <label class="field">
-                <span class="field-label">نام کاربری یا ایمیل</span>
+                <span class="field-label">ایمیل یا نام کاربری</span>
                 <input class="input" name="username" value="{{ old('username') }}" autocomplete="username" required autofocus>
             </label>
 
