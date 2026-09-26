@@ -140,7 +140,7 @@ Latest verified backend state:
 
 See BACKLOG.md. Current order:
 
-1. finish theme switcher, hero motion and restoration of the original homepage screenshot/image;
+1. complete the production copy audit across homepage, account, recovery, payment/error and admin-facing views;
 2. activate SMS safely and test one controlled registration;
 3. verify real payment with one controlled transaction;
 4. import and clean-build Kotlin client using the sanitized source attachment if the FTP copy remains unavailable;
@@ -160,8 +160,12 @@ The destination host FTP does not currently expose a discoverable Kotlin/Java so
 There is no retired source host to fail back to. Rollback means reverting code/routing on the destination host while preserving SQLite and persistent content. Never overwrite production SQLite as part of a code rollback.
 
 
-## UI contract
+## UI and product-copy contract
 
+- `docs/PRODUCT_COPY.md` is the source of truth for production-facing language.
+- Customer-facing text must describe the product, task or next action—not the migration, implementation stack, design rationale or internal validation state.
+- Remove self-referential phrases such as "real screenshot" and internal labels such as framework/client technology names from public pages.
+- Use polished, clear Persian that is confident, respectful, inviting and understandable.
 - Vazirmatn is the preferred web typeface; do not commit font binaries.
 - Both dark and light themes must be supported.
 - Theme preference must persist locally in the browser and respect OS preference on first visit.
