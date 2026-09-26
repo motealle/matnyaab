@@ -35,6 +35,7 @@ jobs:
 
           lftp -u "$FTP_USER","$FTP_PASSWORD" "$server" -e '
             set cmd:fail-exit yes
+            set ftp:ssl-allow no
             set net:timeout 20
             set net:max-retries 1
             find .
