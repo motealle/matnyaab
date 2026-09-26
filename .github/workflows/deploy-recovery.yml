@@ -29,10 +29,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: PHP 8.1 syntax gate
+      - name: PHP 8.2 syntax gate
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.1"
+          php-version: "8.2"
           extensions: pdo_sqlite, sqlite3, mbstring, fileinfo
           coverage: none
 
@@ -119,6 +119,7 @@ jobs:
           mkdir -p /tmp/release
           cp ops/recovery-bridge/front-controller.php /tmp/release/recovery.php
           cp ops/recovery-bridge/index.php /tmp/release/index.php
+          cp ops/recovery-bridge/laravel.php /tmp/release/laravel.php
           cp ops/recovery-bridge/root.htaccess /tmp/release/.htaccess
 
       - name: Deploy root-only bridge over FTP
@@ -127,7 +128,7 @@ jobs:
           FTP_URL: ${{ steps.endpoint.outputs.url }}
         run: |
           set -euo pipefail
-          for rel in recovery.php index.php .htaccess; do
+          for rel in recovery.php index.php laravel.php .htaccess; do
             echo "Uploading $rel"
             curl --silent --show-error --fail \
               --connect-timeout 15 --max-time 90 \
@@ -142,7 +143,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          curl --insecure --silent --show-error --fail \
+          curl --silent --show-error --fail \
             --connect-timeout 10 --max-time 30 \
             "$SITE_URL/health/" -o /tmp/health.json
 
@@ -155,11 +156,11 @@ jobs:
           assert x["contents"] >= 1
           PY
 
-          curl --insecure --silent --show-error --fail \
+          curl --silent --show-error --fail \
             "$SITE_URL/news/" -o /tmp/news.json
           python3 -m json.tool /tmp/news.json >/dev/null
 
-          curl --insecure --silent --show-error --fail \
+          curl --silent --show-error --fail \
             "$SITE_URL/get_contents/?password=compat" -o /tmp/contents.json
           python3 - <<'PY'
           import json
@@ -173,17 +174,17 @@ jobs:
           PY
 
           id="$(cat /tmp/content-id.txt)"
-          code="$(curl --insecure --silent --show-error \
+          code="$(curl --silent --show-error \
             --range 0-15 -o /tmp/cover-prefix.bin -w '%{http_code}' \
             "$SITE_URL/download_content_img/?id=$id")"
           test "$code" = "206" -o "$code" = "200"
           test -s /tmp/cover-prefix.bin
 
-          curl --insecure --silent --show-error --fail \
+          curl --silent --show-error --fail \
             "$SITE_URL/update/version.txt" -o /tmp/version.txt
           test -s /tmp/version.txt
 
-          db_code="$(curl --insecure --silent --show-error \
+          db_code="$(curl --silent --show-error \
             -o /tmp/db-test.bin -w '%{http_code}' \
             "$SITE_URL/matnyaab_with_license/db.sqlite3")"
           case "$db_code" in
@@ -191,7 +192,13 @@ jobs:
             *) echo "::error::SQLite is directly downloadable (HTTP $db_code)"; exit 1 ;;
           esac
 
-          echo "Production functional smoke passed."
+          curl --silent --show-error --fail             "$SITE_URL/login" -o /tmp/login.html
+          grep -q "ورود به متن‌یاب" /tmp/login.html
+
+          profile_code="$(curl --silent --show-error             -o /tmp/profile-response.html -w '%{http_code}'             "$SITE_URL/profile")"
+          test "$profile_code" = "302"
+
+          echo "Production bridge + Laravel canary smoke passed."
 
       - name: TLS certificate gate (warning during recovery)
         shell: bash
