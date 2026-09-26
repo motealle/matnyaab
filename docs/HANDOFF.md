@@ -15,6 +15,7 @@ This file is the operational handoff for matnyaab.ir. Keep it current whenever p
 - Homepage and account/web routes are progressively served by Laravel.
 - Desktop/API compatibility routes still use the PHP recovery bridge until parity is complete.
 - The old saved-HTML homepage and its broken local assets are no longer used.
+- Homepage, login, registration, SMS confirmation, profile, password-change, and error pages share the dark Vazirmatn design system.
 - Live homepage audit currently reports zero broken local URLs.
 - The existing Windows installer URL is still available.
 
@@ -126,10 +127,10 @@ Before release: import source only, remove generated/IDE output and hard-coded c
 
 See BACKLOG.md. Current order:
 
-1. finish unified production UI/design system;
-2. activate SMS safely and test one controlled registration;
-3. verify real payment with one controlled transaction;
-4. import and clean-build Kotlin client;
+1. activate SMS safely and test one controlled registration;
+2. verify real payment with one controlled transaction;
+3. import and clean-build Kotlin client;
+4. finish password-recovery/admin parity;
 5. migrate remaining desktop API routes to Laravel;
 6. remove the bridge after parity.
 
