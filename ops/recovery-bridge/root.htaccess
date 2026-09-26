@@ -3,7 +3,7 @@ DirectoryIndex index.php index.html
 RewriteEngine On
 
 # Laravel canary: web/account routes. Desktop/API routes remain on recovery.php.
-RewriteRule ^(index|download|screenshots|contact|login|logout|register|smsconfirm|profile|buysubscription|callback-gateway)/?$ laravel.php [QSA,L]
+RewriteRule ^(index|download|screenshots|contact|login|logout|register|smsconfirm|profile|change_password|buysubscription|callback-gateway)/?$ laravel.php [QSA,L]
 
 RewriteRule ^health/?$ recovery.php?_route=health [QSA,L]
 RewriteRule ^news/?$ recovery.php?_route=news [QSA,L]
