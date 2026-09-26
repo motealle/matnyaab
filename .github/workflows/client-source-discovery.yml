@@ -1,0 +1,54 @@
+name: Client Source Discovery
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/client-source-discovery.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USER: ${{ secrets.FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD_MATNYAAB_IR }}
+
+    steps:
+      - name: Install lftp
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+
+      - name: Find likely client source archives
+        shell: bash
+        run: |
+          set -euo pipefail
+          server="$FTP_SERVER"
+          server="${server#ftp://}"
+          server="${server#ftps://}"
+          server="${server%/}"
+
+          lftp -u "$FTP_USER","$FTP_PASSWORD" "$server" -e '
+            set cmd:fail-exit yes
+            set net:timeout 20
+            set net:max-retries 1
+            find .
+            bye
+          ' > /tmp/all-files.txt
+
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          rows=Path('/tmp/all-files.txt').read_text(errors='replace').splitlines()
+          pat=re.compile(r'(kotlin|java.project|new.java|client.*\.(?:zip|rar|7z)$)', re.I)
+          matches=[x for x in rows if pat.search(x)]
+          print("Likely client source paths:")
+          for x in matches[:100]:
+              print(x)
+          print("Match count:", len(matches))
+          PY
