@@ -1,0 +1,81 @@
+name: Homepage Asset Audit
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/homepage-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SITE_URL: https://www.matnyaab.ir
+
+    steps:
+      - name: Fetch homepage
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --silent --show-error --fail --location             --connect-timeout 15 --max-time 45             "$SITE_URL/" -o /tmp/home.html
+
+      - name: Check local assets and links
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from html.parser import HTMLParser
+          from urllib.parse import urljoin, urlparse
+          import subprocess
+
+          base = "https://www.matnyaab.ir/"
+          html = open("/tmp/home.html", encoding="utf-8", errors="replace").read()
+
+          class P(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.urls = []
+              def handle_starttag(self, tag, attrs):
+                  d = dict(attrs)
+                  for key in ("src", "href"):
+                      u = d.get(key)
+                      if u:
+                          self.urls.append((tag, key, u))
+
+          p = P()
+          p.feed(html)
+
+          seen = set()
+          failures = []
+          for tag, key, raw in p.urls:
+              if raw.startswith(("mailto:", "javascript:", "#")):
+                  continue
+              full = urljoin(base, raw)
+              parsed = urlparse(full)
+              if parsed.netloc not in {"www.matnyaab.ir", "matnyaab.ir"}:
+                  continue
+              if full in seen:
+                  continue
+              seen.add(full)
+              proc = subprocess.run(
+                  ["curl", "-k", "-sS", "-o", "/dev/null", "-w", "%{http_code}", "-L", full],
+                  capture_output=True, text=True
+              )
+              code = proc.stdout.strip()
+              print(f"{code}	{raw}")
+              if not code.startswith(("2", "3")):
+                  failures.append((code, raw))
+
+          print(f"Checked local URLs: {len(seen)}")
+          print(f"Broken local URLs: {len(failures)}")
+          if failures:
+              print("BROKEN:")
+              for code, raw in failures:
+                  print(f"{code}	{raw}")
+          PY
