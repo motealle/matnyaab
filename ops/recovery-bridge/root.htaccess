@@ -1,0 +1,6 @@
+DirectoryIndex index.php index.html
+Options -Indexes
+
+<FilesMatch "(^\.env$|\.sqlite3?$|\.db$|\.bak$|^private\.py$)">
+    Require all denied
+</FilesMatch>
