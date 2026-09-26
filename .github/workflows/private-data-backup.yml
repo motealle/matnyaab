@@ -97,6 +97,51 @@ jobs:
           echo "Completed orders: $completed_orders"
           echo "Gateway transaction rows: $gateway_rows"
 
+      - name: Build Excel workbook
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet openpyxl
+          python3 - <<'PY'
+          import csv
+          from pathlib import Path
+          from openpyxl import Workbook
+          from openpyxl.styles import Font, PatternFill, Alignment
+          from openpyxl.utils import get_column_letter
+
+          root = Path('/tmp/export')
+          wb = Workbook()
+          wb.remove(wb.active)
+
+          for filename, title in [
+              ('customers.csv', 'Customers'),
+              ('purchase_history.csv', 'Purchase History'),
+          ]:
+              ws = wb.create_sheet(title)
+              with (root / filename).open('r', encoding='utf-8-sig', newline='') as fh:
+                  rows = list(csv.reader(fh))
+              for row in rows:
+                  ws.append(row)
+
+              if rows:
+                  for cell in ws[1]:
+                      cell.font = Font(bold=True)
+                      cell.fill = PatternFill('solid', fgColor='D9E2F3')
+                      cell.alignment = Alignment(horizontal='center')
+
+              for col_idx in range(1, ws.max_column + 1):
+                  width = 10
+                  for cell in ws[get_column_letter(col_idx)]:
+                      width = max(width, min(45, len(str(cell.value or '')) + 2))
+                  ws.column_dimensions[get_column_letter(col_idx)].width = width
+
+              ws.freeze_panes = 'A2'
+              ws.sheet_view.rightToLeft = True
+
+          wb.save(root / 'matnyaab-customers.xlsx')
+          PY
+          test -s /tmp/export/matnyaab-customers.xlsx
+
       - name: Encrypt private export with the FTP credential
         shell: bash
         run: |
