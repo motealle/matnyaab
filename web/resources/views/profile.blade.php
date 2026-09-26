@@ -7,6 +7,14 @@
 </head>
 <body style="font-family:Tahoma,sans-serif;max-width:900px;margin:3rem auto;padding:1rem">
 <h1>پروفایل</h1>
+
+@if (session('status'))
+    <p style="color:#075">{{ session('status') }}</p>
+@endif
+@if ($errors->any())
+    <p style="color:#a00">{{ $errors->first() }}</p>
+@endif
+
 <p>کاربر: <strong>{{ $user->username }}</strong></p>
 <p>موبایل: {{ $user->phone_number }}</p>
 <p>شناسه سیستم: {{ $user->user_system_id }}</p>
@@ -14,13 +22,28 @@
 @if ($user->subscription)
     <p>اشتراک: {{ $user->subscription->subscription_title }}</p>
 @endif
+@if ($user->user_serial_number)
+    <p>سریال فعلی: <code dir="ltr">{{ $user->user_serial_number }}</code></p>
+@endif
 
-<h2>اشتراک‌های فعال</h2>
-<ul>
-@foreach ($subscriptions as $subscription)
-    <li>{{ $subscription->subscription_title }} — {{ number_format($subscription->subscription_price) }}</li>
-@endforeach
-</ul>
+<h2>خرید اشتراک</h2>
+<form method="post" action="{{ route('buysubscription') }}">
+    @csrf
+    <p>
+        <label>طرح اشتراک
+            <select name="subscription_id" required>
+            @foreach ($subscriptions as $subscription)
+                <option value="{{ $subscription->id }}">
+                    {{ $subscription->subscription_title }} —
+                    {{ number_format($subscription->subscription_price) }}
+                </option>
+            @endforeach
+            </select>
+        </label>
+    </p>
+    <p><label>کد تخفیف <input name="coupon_code"></label></p>
+    <button type="submit">ادامه خرید</button>
+</form>
 
 <h2>تاریخچه خرید</h2>
 <ul>
