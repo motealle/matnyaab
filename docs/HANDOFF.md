@@ -68,7 +68,7 @@ Expected keys are SMS_PANEL_USERNAME, SMS_PANEL_PASSWORD, and SMS_PANEL_NUMBER.
 
 The old provider endpoint is http://tsms.ir/url/tsmshttp.php.
 
-Values must not be committed or printed in CI logs. Laravel registration remains gated until runtime SMS settings are configured and one controlled real SMS is verified.
+Values must not be committed or printed in CI logs. The legacy values have now been synchronized into `matnyaab-laravel-stage/shared/runtime-services.env` outside the public document root. Production sending is still gated by `SMS_PRODUCTION_ENABLED=false` until one controlled real SMS is verified.
 
 Legacy mail configuration keys were also verified without exposing values: EMAIL_BACKEND, EMAIL_HOST, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_PORT, EMAIL_USE_TLS. Password recovery is code-complete but production email delivery remains gated on runtime mail configuration.
 
@@ -176,3 +176,11 @@ There is no retired source host to fail back to. Rollback means reverting code/r
 - The earlier red deploy after the hero rewrite was a stale smoke assertion, not a Laravel/runtime failure.
 - Corrected deploy workflow run: 36259974807 — success.
 - Homepage Asset Audit run: 36259983113 — success.
+
+
+## Latest SMS checkpoint
+
+- Sync Legacy SMS Runtime run 36260260729 — success.
+- Credential values were read from legacy private.py inside Actions, masked, transferred through a one-time HTTPS synchronizer, stored outside document root, and the public synchronizer was deleted.
+- The next deploy preserved the private runtime-service file.
+- Latest CI / Build / Laravel Legacy SQLite Smoke / Deploy Laravel Stage for the SMS-gate test fix are all green.
