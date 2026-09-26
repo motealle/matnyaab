@@ -54,6 +54,8 @@
 @endforelse
 </ul>
 
+<p style="margin-top:18px"><a href="{{ route('password.change') }}">تغییر رمز عبور</a></p>
+
 <form method="post" action="{{ route('logout') }}">
     @csrf
     <button type="submit">خروج</button>
