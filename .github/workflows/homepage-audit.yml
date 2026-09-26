@@ -77,5 +77,18 @@ jobs:
           if failures:
               print("BROKEN:")
               for code, raw in failures:
-                  print(f"{code}	{raw}")
+                  print(f"{code}\t{raw}")
+              raise SystemExit(1)
           PY
+
+      - name: Verify theme and account pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q "data-theme-toggle" /tmp/home.html
+          grep -q "/static/sc1.png" /tmp/home.html
+          curl --silent --show-error --fail --location "$SITE_URL/static/sc1.png" -o /tmp/sc1.png
+          test "$(wc -c < /tmp/sc1.png)" -gt 10000
+          curl --silent --show-error --fail --location "$SITE_URL/login" | grep -q "ورود به متن‌یاب"
+          curl --silent --show-error --fail --location "$SITE_URL/register" | grep -q "ساخت حساب متن‌یاب"
+          echo "Homepage, original screenshot, theme toggle and account pages passed."
