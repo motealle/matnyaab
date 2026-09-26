@@ -35,4 +35,8 @@ Large content packs, production databases, secrets, generated installers and bui
 5. Deploy code separately from persistent data/content packs.
 6. All production credentials must be supplied through hosting configuration or GitHub Actions secrets.
 
-See [docs/MIGRATION_STATUS.md](docs/MIGRATION_STATUS.md) for the current assessment and go-live gates.
+Operational docs:
+
+- [Engineering handoff](docs/HANDOFF.md)
+- [Migration backlog](docs/BACKLOG.md)
+- [Migration status / go-live gates](docs/MIGRATION_STATUS.md)
