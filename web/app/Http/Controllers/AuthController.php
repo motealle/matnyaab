@@ -7,6 +7,7 @@ use App\Support\DjangoPassword;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
 class AuthController extends Controller
@@ -47,6 +48,35 @@ class AuthController extends Controller
         $user->forceFill(['last_login' => now()->format('Y-m-d H:i:s')])->save();
 
         return redirect()->intended(route('profile'));
+    }
+
+    public function showChangePassword(): View
+    {
+        return view('auth.change-password');
+    }
+
+    public function changePassword(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'current_password' => ['required', 'string', 'max:500'],
+            'password' => ['required', 'string', 'min:8', 'max:100', 'confirmed'],
+        ]);
+
+        $user = $request->user();
+
+        if (! DjangoPassword::verify($data['current_password'], (string) $user->password)) {
+            return back()->withErrors([
+                'current_password' => 'رمز عبور فعلی صحیح نیست.',
+            ]);
+        }
+
+        $user->forceFill([
+            'password' => Hash::make($data['password']),
+        ])->save();
+
+        $request->session()->regenerate();
+
+        return redirect()->route('profile')->with('status', 'رمز عبور با موفقیت تغییر کرد.');
     }
 
     public function logout(Request $request): RedirectResponse
