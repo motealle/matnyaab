@@ -6,7 +6,7 @@
 <div class="container auth-shell">
     <section class="panel panel-pad">
         <div class="panel-header">
-            <span class="eyebrow">VERIFY MOBILE</span>
+            <span class="eyebrow">تأیید حساب</span>
             <h1 class="page-title">تأیید شماره موبایل</h1>
             <p class="page-subtitle">کد چهاررقمی ارسال‌شده به <span dir="ltr">{{ auth()->user()->phone_number }}</span> را وارد کنید.</p>
         </div>
