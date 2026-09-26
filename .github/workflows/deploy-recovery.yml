@@ -110,35 +110,31 @@ jobs:
           rm -f /tmp/matnyaab-backup/db.sqlite3
           echo "Protected backup completed next to the legacy database."
 
-      - name: Assemble production-safe bridge
+      - name: Assemble root-only shared-host release
         shell: bash
         run: |
           set -euo pipefail
           rm -rf /tmp/release
           mkdir -p /tmp/release
-          cp -a ops/recovery-bridge/recovery /tmp/release/
-          cp -a ops/recovery-bridge/get_contents /tmp/release/
-          cp -a ops/recovery-bridge/news /tmp/release/
-          cp -a ops/recovery-bridge/statistics /tmp/release/
-          cp -a ops/recovery-bridge/download_content /tmp/release/
-          cp -a ops/recovery-bridge/download_content_img /tmp/release/
-          cp -a ops/recovery-bridge/update /tmp/release/
-          cp -a ops/recovery-bridge/health /tmp/release/
+          cp ops/recovery-bridge/front-controller.php /tmp/release/recovery.php
           cp ops/recovery-bridge/index.php /tmp/release/index.php
           cp ops/recovery-bridge/root.htaccess /tmp/release/.htaccess
 
-      - name: Deploy bridge files over FTP
+      - name: Deploy root-only bridge over FTP
         shell: bash
         env:
           FTP_URL: ${{ steps.endpoint.outputs.url }}
         run: |
           set -euo pipefail
-          while IFS= read -r -d '' file; do
-            rel="${file#/tmp/release/}"
-            curl --silent --show-error --fail               --connect-timeout 15 --max-time 90               --user "$FTP_USER:$FTP_PASSWORD"               --ftp-method nocwd --ftp-create-dirs               --upload-file "$file"               "$FTP_URL/$rel"
-          done < <(find /tmp/release -type f -print0)
-
-          curl --silent --show-error --fail             --connect-timeout 15 --max-time 45             --user "$FTP_USER:$FTP_PASSWORD"             --ftp-method nocwd --ftp-create-dirs             --upload-file ops/recovery-bridge/legacy-protection.htaccess             "$FTP_URL/matnyaab_with_license/.htaccess"
+          for rel in recovery.php index.php .htaccess; do
+            echo "Uploading $rel"
+            curl --silent --show-error --fail \
+              --connect-timeout 15 --max-time 90 \
+              --user "$FTP_USER:$FTP_PASSWORD" \
+              --ftp-method nocwd \
+              --upload-file "/tmp/release/$rel" \
+              "$FTP_URL/$rel"
+          done
 
       - name: Production smoke test via canonical www hostname
         shell: bash
