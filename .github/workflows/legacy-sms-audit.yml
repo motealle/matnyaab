@@ -1,0 +1,66 @@
+name: Legacy SMS Config Audit
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/legacy-sms-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USER: ${{ secrets.FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD_MATNYAAB_IR }}
+
+    steps:
+      - name: Normalize FTP endpoint
+        id: ftp
+        shell: bash
+        run: |
+          set -euo pipefail
+          server="$FTP_SERVER"
+          server="${server%/}"
+          case "$server" in
+            ftp://*|ftps://*) url="$server" ;;
+            *) url="ftp://$server" ;;
+          esac
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Verify legacy SMS configuration exists
+        env:
+          FTP_URL: ${{ steps.ftp.outputs.url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --silent --show-error --fail             --connect-timeout 15 --max-time 45             --user "$FTP_USER:$FTP_PASSWORD"             --ftp-method nocwd             "$FTP_URL/matnyaab_with_license/Django_Project/private.py"             --output /tmp/private.py
+
+          python3 - <<'PY'
+          import ast
+          from pathlib import Path
+
+          tree=ast.parse(Path('/tmp/private.py').read_text(encoding='utf-8'))
+          wanted={'SMS_PANEL_USERNAME','SMS_PANEL_PASSWORD','SMS_PANEL_NUMBER'}
+          found=set()
+
+          for node in tree.body:
+              if isinstance(node, ast.Assign) and len(node.targets)==1 and isinstance(node.targets[0], ast.Name):
+                  name=node.targets[0].id
+                  if name in wanted and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str) and node.value.value:
+                      found.add(name)
+
+          missing=wanted-found
+          if missing:
+              raise SystemExit('Legacy SMS configuration is incomplete')
+
+          print('Legacy SMS username/password/sender-number are present in private.py. Values were not printed.')
+          PY
+
+          rm -f /tmp/private.py
