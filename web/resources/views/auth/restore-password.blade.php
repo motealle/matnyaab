@@ -6,9 +6,9 @@
 <div class="container auth-shell">
     <section class="panel panel-pad">
         <div class="panel-header">
-            <span class="eyebrow">RECOVERY</span>
+            <span class="eyebrow">دسترسی دوباره به حساب</span>
             <h1 class="page-title">بازیابی رمز عبور</h1>
-            <p class="page-subtitle">ایمیلی که با آن در متن‌یاب ثبت‌نام کرده‌اید وارد کنید.</p>
+            <p class="page-subtitle">ایمیل حساب‌تان را وارد کنید تا در صورت امکان لینک انتخاب رمز جدید برایتان فرستاده شود.</p>
         </div>
 
         @if ($errors->any())
@@ -17,7 +17,7 @@
 
         @if (! $mailReady)
             <div class="alert alert-warn">
-                بازیابی ایمیلی هنوز روی سرور جدید در حال فعال‌سازی است. اگر به حساب دسترسی دارید، از داخل پروفایل می‌توانید رمز را تغییر دهید.
+                ارسال لینک بازیابی موقتاً در دسترس نیست. اگر هنوز به حساب‌تان دسترسی دارید، از بخش پروفایل می‌توانید رمز عبور را تغییر دهید.
             </div>
         @endif
 
