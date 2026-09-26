@@ -15,8 +15,11 @@ This file is the operational handoff for matnyaab.ir. Keep it current whenever p
 - Homepage and account/web routes are progressively served by Laravel.
 - Desktop/API compatibility routes still use the PHP recovery bridge until parity is complete.
 - The old saved-HTML homepage and its broken local assets are no longer used.
-- Homepage, login, registration, SMS confirmation, profile, password-change, and error pages share the dark Vazirmatn design system.
-- Live homepage audit currently reports zero broken local URLs.
+- Homepage, login, registration, SMS confirmation, profile, password-change, and error pages share the Vazirmatn design system.
+- Dark/light switching is live, persists in localStorage, and respects OS preference on first visit.
+- The homepage hero uses a reduced-motion-aware typewriter/fade treatment tied to search behavior.
+- The authentic original product screenshot is restored from `/static/sc1.png`.
+- Live homepage audit currently reports zero broken local URLs and verifies the screenshot/theme marker.
 - The existing Windows installer URL is still available.
 
 ## Production data snapshot
@@ -165,3 +168,11 @@ There is no retired source host to fail back to. Rollback means reverting code/r
 - Motion must respect `prefers-reduced-motion`.
 - Homepage visual assets must be verified by the live asset audit.
 - Keep the original product screenshot/image as authentic visual proof; decorative mock UI should not replace all real product imagery.
+
+
+## Latest UI checkpoint
+
+- Deploy smoke was corrected to use stable product markers instead of mutable marketing copy.
+- The earlier red deploy after the hero rewrite was a stale smoke assertion, not a Laravel/runtime failure.
+- Corrected deploy workflow run: 36259974807 — success.
+- Homepage Asset Audit run: 36259983113 — success.
