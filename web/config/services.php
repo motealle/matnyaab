@@ -35,4 +35,19 @@ return [
         ],
     ],
 
+    'idpay' => [
+        'merchant_code' => env('IDPAY_MERCHANT_CODE'),
+        'sandbox' => env('IDPAY_SANDBOX', 0),
+    ],
+
+    'sms' => [
+        'username' => env('SMS_PANEL_USERNAME'),
+        'password' => env('SMS_PANEL_PASSWORD'),
+        'number' => env('SMS_PANEL_NUMBER'),
+    ],
+
+    'contents' => [
+        'api_password' => env('CONTENTS_API_PASSWORD'),
+    ],
+
 ];
