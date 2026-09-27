@@ -56,3 +56,8 @@ application {
 tasks.withType<KotlinCompile> { kotlinOptions.jvmTarget = "17" }
 java { toolchain.languageVersion.set(JavaLanguageVersion.of(17)) }
 tasks.test { useJUnitPlatform() }
+
+tasks.shadowJar {
+    archiveFileName.set("matnyaab-kotlin-1.2-all.jar")
+    mergeServiceFiles()
+}
