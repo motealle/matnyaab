@@ -168,7 +168,7 @@
             <div>
                 <span class="eyebrow">نسخه‌های ویندوز</span>
                 <h2>نسخه مناسب خودتان را دریافت کنید</h2>
-                <p>نسخه کلاسیک برای کاربران فعلی حفظ شده و نسخه جدید Kotlin/JavaFX نیز جداگانه ارائه می‌شود.</p>
+                <p>نسخه کلاسیک برای کاربران فعلی حفظ شده و نسخه نسل جدید (Kotlin/JavaFX) نیز جداگانه ارائه می‌شود.</p>
                 <div class="download-note"><span>ویندوز x64</span><span>هر دو نسخه قابل استفاده‌اند</span><span>بسته‌های محتوایی از داخل برنامه مدیریت می‌شوند</span></div>
             </div>
 
@@ -184,7 +184,7 @@
                 </article>
 
                 <article class="release-card">
-                    <div><span class="eyebrow">جدید / Kotlin</span><h3>نسخه جدید متن‌یاب</h3></div>
+                    <div><span class="eyebrow">نسل جدید / Kotlin</span><h3>نسخه جدید متن‌یاب</h3></div>
                     <p data-release-content="kotlin">فایل پرتابل شامل خود برنامه، Java/JavaFX، Lucene و Tika است؛ بسته محتوایی پژوهشی داخل فایل قرار ندارد.</p>
                     <div class="release-meta">
                         <span><strong>نوع فایل:</strong> <span data-release-delivery="kotlin">ZIP پرتابل ویندوز x64 با runtime داخلی</span></span>
