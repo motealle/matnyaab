@@ -71,10 +71,35 @@
                     </div>
                 </div>
 
-                @if ($user->user_serial_number)
+                <div class="divider"></div>
+                <div class="section-label">مجوزهای کلاینت ویندوز</div>
+                @if ($clientLicenses['bypassed'])
+                    <div class="alert alert-success">
+                        دسترسی ویژه مدیریتی برای این حساب فعال است؛ سریال‌های زیر تا {{ $clientLicenses['expires_at'] }} معتبرند.
+                    </div>
+                @endif
+
+                @if ($clientLicenses['legacy_system_id'] && $clientLicenses['legacy_serial'])
+                    <div class="help" style="margin-bottom:6px">نسخه کلاسیک — System-ID</div>
+                    <code class="serial">{{ $clientLicenses['legacy_system_id'] }}</code>
+                    <div class="help" style="margin:10px 0 6px">سریال نسخه کلاسیک</div>
+                    <code class="serial">{{ $clientLicenses['legacy_serial'] }}</code>
+                @endif
+
+                @if ($clientLicenses['kotlin_system_id'])
                     <div class="divider"></div>
-                    <div class="section-label">سریال فعلی</div>
-                    <code class="serial">{{ $user->user_serial_number }}</code>
+                    <div class="help" style="margin-bottom:6px">نسخه جدید Kotlin — System-ID</div>
+                    <code class="serial">{{ $clientLicenses['kotlin_system_id'] }}</code>
+                    @if ($clientLicenses['kotlin_serial'])
+                        <div class="help" style="margin:10px 0 6px">سریال نسخه Kotlin</div>
+                        <code class="serial">{{ $clientLicenses['kotlin_serial'] }}</code>
+                    @else
+                        <div class="help">برای صدور سریال این شناسه، اشتراک فعال لازم است.</div>
+                    @endif
+                @else
+                    <div class="help" style="margin-top:10px">
+                        System-ID نسخه Kotlin هنوز برای این حساب ثبت نشده است؛ مدیر سامانه می‌تواند آن را از پنل مدیریت ثبت کند.
+                    </div>
                 @endif
             </section>
 
@@ -137,9 +162,11 @@
             </section>
 
             <section class="panel panel-pad">
-                <div class="section-label">شناسه سیستم</div>
-                <code class="serial">{{ $user->user_system_id }}</code>
-                <div class="help">این شناسه برای صدور و بررسی مجوز نسخه ویندوز استفاده می‌شود.</div>
+                <div class="section-label">سازگاری دو نسخه ویندوز</div>
+                <div class="help">
+                    نسخه کلاسیک و نسخه Kotlin می‌توانند System-ID متفاوت داشته باشند. پنل مدیریت هر دو شناسه را مستقل نگه می‌دارد
+                    و برای هرکدام سریال سازگار با همان کلاینت صادر می‌کند.
+                </div>
             </section>
         </aside>
     </div>
