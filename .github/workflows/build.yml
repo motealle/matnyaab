@@ -56,8 +56,12 @@ jobs:
       - name: Install production dependencies
         run: composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader
 
-      - name: Laravel bootstrap smoke
-        run: php artisan --version
+      - name: Laravel bootstrap and view smoke
+        run: |
+          php artisan --version
+          php artisan route:list >/dev/null
+          php artisan view:cache
+          php artisan view:clear
 
       - name: Package web release
         shell: bash
