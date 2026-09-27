@@ -221,3 +221,16 @@ There is no retired source host to fail back to. Rollback means reverting code/r
 - Found a pre-cutover mismatch: recovery compares news expiry in Asia/Tehran, while Laravel used the application UTC clock. Scoped correction to news only; no global timezone or customer-data changes.
 - News now preserves explicit legacy field types and no-store caching. Synthetic golden expectations cover expiry before/at/after the Tehran boundary, Persian text, ordering and an empty list.
 - Verified: PR #5 merged; Desktop API Contracts, Build, CI and Production Copy Guard passed. Deploy run 36290096487 passed full compatibility, deployed successfully and passed live web/API smoke. Public /news remains on recovery; a separate routing cutover and smoke test is next.
+
+
+## Dual-client release checkpoint — 2026-09-27
+
+- PR #7 is merged and production Laravel deploy passed its full copied-production-SQLite compatibility suite.
+- Classic Windows client is still public at `/update/MATNYAAB_x64_setup.exe` (11,590,002 bytes during release audit).
+- Kotlin 1.2 is public at `/downloadFiles/MATNYAAB-Kotlin-1.2-win-x64-portable.zip`. It is a portable ZIP with bundled Java runtime; it passed an executable package smoke that exercises Tika text extraction and Lucene tokenization.
+- The earlier ~503 MB figure was a GitHub build artifact containing multiple Gradle outputs. The user-facing portable package is much smaller (about 160 MiB in the validated package run).
+- Neither client download is intended to bundle the site's research/content packs. Those packs remain separate and are downloaded from inside the application.
+- `/downloadFiles/releases.json` records exact current download size, SHA-256, delivery type and content description for both clients; the homepage consumes this manifest.
+- Superusers can enter through `/login` with an existing legacy superuser account and then open `/adminarea`. No admin password is stored in Git or documentation.
+- Admin now supports global bypass, per-user bypass, and a separate Kotlin System-ID while preserving the user's legacy System-ID/serial.
+- Next: live homepage re-audit after upload completion, Windows same-machine System-ID comparison, representative Persian Lucene/Tika tests, content-pack end-to-end tests, and optional Kotlin installer packaging.
