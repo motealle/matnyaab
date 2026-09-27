@@ -179,3 +179,12 @@ Migration is complete only when Laravel serves all required web/API behavior, ex
 - Generated 10 revised preview candidates after user feedback: 5 warm and 5 blue, panoramic 2:1, realistic contemporary settings, with generous right-side negative space for live Persian headline/CTA.
 - Several candidates show an ordinary young religious user from behind at a monitor; the screen displays “متن یاب”. Female subjects wear complete modest hijab/chador. The user has not selected images; no site asset or homepage was changed.
 - Await numbered selection, then only prepare/optimize the selected image(s) and implement the animated HTML text separately. Keep exact screen text in any refinement and test mobile crop.
+
+
+## HERO-01 implementation — 2026-09-27
+
+- User selected latest blue candidates 7 and 8 plus the attached blue cleric image. Implemented three slides with per-image left/right copy placement, thin Vazirmatn headlines, typewriter text, wipe/fade transition and 1.8% subject-centered zoom.
+- Added coherent navy header, blue light/dark palette, mobile navigation, manual controls, swipe, pause and reduced-motion handling. Preserved original product screenshot and both client download cards.
+- Versioned WebP assets and CSS/JS are published by the existing release deployer before switching the release pointer. Live audit now follows successful deployment and includes srcset assets.
+- User explicitly requested stopping tests to conserve tokens. No completed browser/visual validation: local PHP/browser setup was unavailable. JavaScript syntax and diff whitespace checks had passed before that instruction. Do not describe the UI as fully tested.
+- TODO — Final visual/mobile verification only when requested; automatic existing deployment gates remain in place.

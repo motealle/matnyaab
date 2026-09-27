@@ -1,14 +1,10 @@
 name: Homepage Asset Audit
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "web/resources/views/**"
-      - "web/routes/**"
-      - "ops/recovery-bridge/**"
-      - ".github/workflows/homepage-audit.yml"
+  workflow_run:
+    workflows: ["Deploy Laravel Stage"]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -16,6 +12,7 @@ permissions:
 
 jobs:
   audit:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
@@ -50,6 +47,9 @@ jobs:
                       u = d.get(key)
                       if u:
                           self.urls.append((tag, key, u))
+                  for item in d.get("srcset", "").split(","):
+                      if item.strip():
+                          self.urls.append((tag, "srcset", item.strip().split()[0]))
 
           p = P()
           p.feed(html)
@@ -67,7 +67,7 @@ jobs:
                   continue
               seen.add(full)
               proc = subprocess.run(
-                  ["curl", "-k", "-sS", "-o", "/dev/null", "-w", "%{http_code}", "-L", full],
+                  ["curl", "--head", "--max-time", "30", "-sS", "-o", "/dev/null", "-w", "%{http_code}", "-L", full],
                   capture_output=True, text=True
               )
               code = proc.stdout.strip()
@@ -89,6 +89,7 @@ jobs:
         run: |
           set -euo pipefail
           grep -q "data-theme-toggle" /tmp/home.html
+          grep -q "data-hero" /tmp/home.html
           grep -q "/static/sc1.png" /tmp/home.html
           grep -q 'data-release-link="classic"' /tmp/home.html
           grep -q 'data-release-link="kotlin"' /tmp/home.html

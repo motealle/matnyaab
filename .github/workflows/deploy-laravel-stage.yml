@@ -165,6 +165,12 @@ jobs:
           curl --silent --show-error --fail "$SITE_URL/news/" -o /tmp/news.json
           python3 -m json.tool /tmp/news.json >/dev/null
 
+          grep -q 'data-hero' /tmp/home.html
+          for asset in scholar-800.webp scholar-1600.webp researcher-800.webp researcher-1600.webp reader-800.webp reader-1600.webp hero.css hero.js; do
+            curl --silent --show-error --fail --location --max-time 30 "$SITE_URL/assets/matnyaab-hero-v1/$asset" -o /tmp/hero-asset
+            test "$(wc -c < /tmp/hero-asset)" -gt 1000
+          done
+
           echo "Live Laravel web + recovery bridge smoke passed."
 
       - name: Remove public temporary deployment files

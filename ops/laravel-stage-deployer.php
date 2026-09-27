@@ -167,6 +167,25 @@ try {
     $contents = App\Models\Content::query()->count();
     $users = App\Models\User::query()->count();
 
+    // The application lives outside document root; publish its versioned hero assets explicitly.
+    $assetSource = $releaseDir . '/public/assets/matnyaab-hero-v1';
+    $assetTarget = $docRoot . '/assets/matnyaab-hero-v1';
+    if (!is_dir($assetSource)) {
+        throw new RuntimeException('hero assets are missing from release');
+    }
+    if (!is_dir($assetTarget) && !mkdir($assetTarget, 0755, true) && !is_dir($assetTarget)) {
+        throw new RuntimeException('cannot create public hero asset directory');
+    }
+    foreach (glob($assetSource . '/*') ?: [] as $asset) {
+        if (!is_file($asset) || !in_array(pathinfo($asset, PATHINFO_EXTENSION), ['webp', 'css', 'js'], true)) {
+            throw new RuntimeException('unexpected hero asset');
+        }
+        $target = $assetTarget . '/' . basename($asset);
+        if (!copy($asset, $target . '.tmp') || !rename($target . '.tmp', $target)) {
+            throw new RuntimeException('cannot publish hero asset');
+        }
+    }
+
     file_put_contents(
         $stageRoot . DIRECTORY_SEPARATOR . 'current.txt',
         $releaseId . PHP_EOL,

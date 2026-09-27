@@ -234,3 +234,12 @@ There is no retired source host to fail back to. Rollback means reverting code/r
 - Superusers can enter through `/login` with an existing legacy superuser account and then open `/adminarea`. No admin password is stored in Git or documentation.
 - Admin now supports global bypass, per-user bypass, and a separate Kotlin System-ID while preserving the user's legacy System-ID/serial.
 - Next: live homepage re-audit after upload completion, Windows same-machine System-ID comparison, representative Persian Lucene/Tika tests, content-pack end-to-end tests, and optional Kotlin installer packaging.
+
+
+## HERO-01 implementation — 2026-09-27
+
+- User selected latest blue candidates 7 and 8 plus the attached blue cleric image. Implemented three slides with per-image left/right copy placement, thin Vazirmatn headlines, typewriter text, wipe/fade transition and 1.8% subject-centered zoom.
+- Added coherent navy header, blue light/dark palette, mobile navigation, manual controls, swipe, pause and reduced-motion handling. Preserved original product screenshot and both client download cards.
+- Versioned WebP assets and CSS/JS are published by the existing release deployer before switching the release pointer. Live audit now follows successful deployment and includes srcset assets.
+- User explicitly requested stopping tests to conserve tokens. No completed browser/visual validation: local PHP/browser setup was unavailable. JavaScript syntax and diff whitespace checks had passed before that instruction. Do not describe the UI as fully tested.
+- TODO — Final visual/mobile verification only when requested; automatic existing deployment gates remain in place.

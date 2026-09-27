@@ -4,74 +4,32 @@
 @section('meta_description', 'متن‌یاب؛ جستجوی سریع و محلی درون فایل‌های Word، PDF، PowerPoint، Excel، متن ساده و صفحات وب.')
 
 @push('styles')
+<link rel="stylesheet" href="/assets/matnyaab-hero-v1/hero.css">
 <style>
-    .hero{padding:92px 0 70px;position:relative;overflow:hidden}
-    .hero:before{
-        content:"";position:absolute;inset:auto auto -150px 50%;transform:translateX(-50%);
-        width:850px;height:400px;border-radius:50%;
-        background:radial-gradient(circle,rgba(124,58,237,.13),transparent 68%);filter:blur(24px);pointer-events:none
-    }
-    .hero-grid{display:grid;grid-template-columns:1.03fr .97fr;gap:70px;align-items:center;position:relative}
-    .hero-kicker{
-        display:inline-flex;align-items:center;gap:9px;padding:7px 11px;border-radius:999px;
-        background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.17);
-        color:var(--violet-2);font-size:12px;font-weight:650
-    }
-    .pulse{width:7px;height:7px;background:var(--violet-2);border-radius:50%;box-shadow:0 0 20px var(--violet)}
-    .hero-title{
-        margin:24px 0 20px;max-width:760px;font-weight:250;
-        font-size:clamp(39px,4.7vw,67px);line-height:1.42;letter-spacing:-1.8px
-    }
-    .hero-title .quiet{display:block;color:var(--text)}
-    .type-line{
-        display:flex;align-items:center;gap:8px;min-height:1.6em;color:var(--violet-2);
-        font-weight:300;opacity:0;transform:translateY(10px);animation:heroReveal .8s .18s ease forwards
-    }
-    .type-caret{display:inline-block;width:1px;height:.9em;background:var(--violet-2);animation:caretBlink .85s step-end infinite}
-    .hero-copy{font-size:16px;font-weight:300;color:var(--muted);max-width:700px;line-height:2.15;margin:0;opacity:0;transform:translateY(12px);animation:heroReveal .8s .3s ease forwards}
-    .hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px;opacity:0;transform:translateY(12px);animation:heroReveal .8s .42s ease forwards}
-    .hero-meta{display:flex;gap:24px;flex-wrap:wrap;margin-top:27px;color:var(--muted-2);font-size:12px;opacity:0;animation:fadeOnly .8s .55s ease forwards}
-    .hero-meta span{display:flex;align-items:center;gap:7px}.hero-meta i{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block}
-    @keyframes heroReveal{to{opacity:1;transform:translateY(0)}} @keyframes fadeOnly{to{opacity:1}} @keyframes caretBlink{50%{opacity:0}}
-
-    .product-stage{
-        position:relative;border:1px solid var(--line);border-radius:26px;padding:12px;background:linear-gradient(145deg,var(--soft-card),transparent);
-        box-shadow:var(--shadow),0 0 90px rgba(124,58,237,.07);opacity:0;transform:translateX(-18px);animation:stageIn .9s .18s cubic-bezier(.2,.75,.2,1) forwards
-    }
-    @keyframes stageIn{to{opacity:1;transform:translateX(0)}}
-    .real-shot{
-        position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:var(--surface-2);min-height:320px;
-        display:grid;place-items:center
-    }
-    .real-shot img{display:block;width:100%;height:auto;max-height:470px;object-fit:contain;background:var(--surface-2)}
-    .real-shot:after{
-        content:"";position:absolute;inset:0;pointer-events:none;
-        background:linear-gradient(110deg,transparent 25%,rgba(139,92,246,.09) 46%,transparent 66%);
-        transform:translateX(110%);animation:scanImage 5.6s 1.4s ease-in-out infinite
-    }
-    @keyframes scanImage{0%,55%{transform:translateX(110%)}78%{transform:translateX(-110%)}100%{transform:translateX(-110%)}}
-    .stage-caption{
-        position:absolute;left:-18px;bottom:24px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;
-        background:var(--header-bg);backdrop-filter:blur(16px);box-shadow:var(--shadow);font-size:11px;color:var(--muted)
-    }
-    .stage-caption b{color:var(--text);font-weight:650}
-
+    .product-stage{margin:0;border:1px solid var(--line);border-radius:22px;padding:12px;background:var(--surface);box-shadow:var(--shadow)}
+    .real-shot{border-radius:14px;overflow:hidden;background:var(--surface-2)}
+    .real-shot img{display:block;width:100%;height:auto;object-fit:contain}
+    .stage-caption{padding:14px 8px 2px;font-size:12px;color:var(--muted)}
+    .product-overview{display:grid;grid-template-columns:.8fr 1.2fr;align-items:center;gap:60px}
+    .product-overview h2{font-weight:300;font-size:34px;line-height:1.7;margin:12px 0}
+    .product-overview p{color:var(--muted);font-size:14px;line-height:2.1}
+    @media(max-width:800px){.product-overview{grid-template-columns:1fr;gap:26px}}
     .section{padding:72px 0}.section-head{display:flex;justify-content:space-between;align-items:end;gap:24px;margin-bottom:28px}
     .section-head h2{font-size:34px;font-weight:400;line-height:1.5;letter-spacing:-.7px;margin:5px 0 0}.section-head p{max-width:530px;color:var(--muted);margin:0;font-size:14px;font-weight:300}
     .feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
     .feature-card{min-height:215px;padding:22px;border-radius:18px;border:1px solid var(--line);background:linear-gradient(155deg,var(--soft-card),transparent);transition:.25s ease;position:relative;overflow:hidden}
-    .feature-card:hover{transform:translateY(-3px);border-color:rgba(139,92,246,.24)}
-    .feature-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.14);margin-bottom:34px}
-    .feature-icon svg{width:20px;height:20px;stroke:var(--violet-2);fill:none;stroke-width:1.7}
+    .feature-card:hover{transform:translateY(-3px);border-color:rgba(73,155,224,.24)}
+    .feature-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:rgba(73,155,224,.08);border:1px solid rgba(73,155,224,.14);margin-bottom:34px}
+    .feature-icon svg{width:20px;height:20px;stroke:var(--accent-soft);fill:none;stroke-width:1.7}
     .feature-card h3{font-size:17px;font-weight:550;margin:0 0 5px}.feature-card p{font-size:13px;font-weight:300;color:var(--muted);margin:0;line-height:1.95}
 
     .workflow{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;counter-reset:step}.workflow-card{border-top:1px solid var(--line-strong);padding-top:20px;counter-increment:step}
-    .workflow-card:before{content:"0" counter(step);font-size:11px;color:var(--violet);font-weight:700;letter-spacing:.12em}
+    .workflow-card:before{content:"0" counter(step);font-size:11px;color:var(--accent);font-weight:700;letter-spacing:.12em}
     .workflow-card h3{margin:8px 0 5px;font-size:17px;font-weight:550}.workflow-card p{margin:0;color:var(--muted);font-size:13px;font-weight:300}
 
     .download-panel{
-        border:1px solid rgba(139,92,246,.17);border-radius:24px;padding:32px;
-        background:radial-gradient(600px 300px at 100% 0,rgba(124,58,237,.12),transparent 60%),linear-gradient(145deg,var(--surface),var(--surface-2))
+        border:1px solid rgba(73,155,224,.17);border-radius:24px;padding:32px;
+        background:radial-gradient(600px 300px at 100% 0,rgba(26,104,181,.12),transparent 60%),linear-gradient(145deg,var(--surface),var(--surface-2))
     }
     .download-panel h2{margin:0 0 6px;font-size:29px;font-weight:450}.download-panel p{margin:0;color:var(--muted);font-size:14px;font-weight:300}
     .download-note{display:flex;gap:18px;flex-wrap:wrap;color:var(--muted-2);font-size:11px;margin-top:14px}.download-note span:before{content:"✓";color:var(--green);margin-left:6px}
@@ -99,34 +57,19 @@
 @endpush
 
 @section('content')
-<section class="hero">
-    <div class="container hero-grid">
-        <div>
-            <div class="hero-kicker"><span class="pulse"></span> جست‌وجو در محتوای فایل‌های شما</div>
-            <h1 class="hero-title">
-                <span class="quiet">اگر فقط چند واژه از یک متن را به یاد دارید،</span>
-                <span class="type-line"><span id="hero-phrase">همان چند واژه را جست‌وجو کنید</span><span class="type-caret" aria-hidden="true"></span></span>
-            </h1>
-            <p class="hero-copy">
-                آرشیو فایل‌های شما می‌تواند مثل یک کتابخانه یکپارچه جست‌وجو شود؛
-                در Word، PDF، PowerPoint، Excel، متن ساده و صفحات وب، بدون اینکه فایل‌ها را یکی‌یکی باز کنید.
-            </p>
-            <div class="hero-actions">
-                <a class="btn btn-primary" href="#download">دانلود برای ویندوز</a>
-                <a class="btn" href="#workflow">نحوه کار</a>
-            </div>
-            <div class="hero-meta">
-                <span><i></i> پردازش محلی فایل‌ها</span>
-                <span><i></i> مناسب مجموعه‌های بزرگ</span>
-                <span><i></i> جست‌وجو روی رایانه شما انجام می‌شود</span>
-            </div>
-        </div>
+@include('partials.home-hero')
 
-        <figure class="product-stage" aria-label="تصویر واقعی نرم‌افزار متن‌یاب">
-            <div class="real-shot">
-                <img src="/static/sc1.png" alt="تصویر واقعی محیط نرم‌افزار متن‌یاب" loading="eager" fetchpriority="high">
-            </div>
-            <figcaption class="stage-caption"><b>نمای محیط متن‌یاب</b><br>نتایج جست‌وجو در نسخه ویندوز</figcaption>
+<section class="section" id="screenshots">
+    <div class="container product-overview">
+        <div>
+            <span class="eyebrow">از یادآوری تا یافتن</span>
+            <h2>کتابخانه‌تان را<br>از نو کشف کنید.</h2>
+            <p>نام فایل را به یاد ندارید؟ چند واژه از متن را جست‌وجو کنید. متن‌یاب درون فایل‌های شما می‌گردد و نتیجه‌های مرتبط را پیش رویتان می‌گذارد.</p>
+            <a class="text-link" href="#workflow">آشنایی با روش جست‌وجو ←</a>
+        </div>
+        <figure class="product-stage">
+            <div class="real-shot"><img src="/static/sc1.png" alt="محیط نرم‌افزار متن‌یاب و نتایج جست‌وجو" loading="lazy"></div>
+            <figcaption class="stage-caption">نمای محیط متن‌یاب · جست‌وجو در نسخه ویندوز</figcaption>
         </figure>
     </div>
 </section>
@@ -168,14 +111,14 @@
             <div>
                 <span class="eyebrow">نسخه‌های ویندوز</span>
                 <h2>نسخه مناسب خودتان را دریافت کنید</h2>
-                <p>نسخه کلاسیک برای کاربران فعلی حفظ شده و نسخه نسل جدید (Kotlin/JavaFX) نیز جداگانه ارائه می‌شود.</p>
+                <p>نسخه کلاسیک یا نسخه جدید متن‌یاب را برای رایانه ویندوزی خود دریافت کنید.</p>
                 <div class="download-note"><span>ویندوز x64</span><span>هر دو نسخه قابل استفاده‌اند</span><span>بسته‌های محتوایی از داخل برنامه مدیریت می‌شوند</span></div>
             </div>
 
             <div class="release-grid">
                 <article class="release-card">
                     <div><span class="eyebrow">پایدار / کلاسیک</span><h3>نسخه کلاسیک متن‌یاب</h3></div>
-                    <p data-release-content="classic">نصب‌کننده قبلی ویندوز؛ جزئیات فایل و محتوای همراه از manifest انتشار خوانده می‌شود.</p>
+                    <p data-release-content="classic">نسخه کلاسیک را دانلود کنید و با نصب آن، جست‌وجو در فایل‌های خود را آغاز کنید.</p>
                     <div class="release-meta">
                         <span><strong>نوع فایل:</strong> <span data-release-delivery="classic">نصب‌کننده EXE ویندوز x64</span></span>
                         <span><strong>اندازه:</strong> <span data-release-size="classic">در حال دریافت اطلاعات…</span></span>
@@ -184,10 +127,10 @@
                 </article>
 
                 <article class="release-card">
-                    <div><span class="eyebrow">نسل جدید / Kotlin</span><h3>نسخه جدید متن‌یاب</h3></div>
-                    <p data-release-content="kotlin">فایل پرتابل شامل خود برنامه، Java/JavaFX، Lucene و Tika است؛ بسته محتوایی پژوهشی داخل فایل قرار ندارد.</p>
+                    <div><span class="eyebrow">نسخه جدید</span><h3>نسخه جدید متن‌یاب</h3></div>
+                    <p data-release-content="kotlin">فایل را از حالت فشرده خارج کنید و برنامه را اجرا کنید. بسته‌های محتوایی را می‌توانید جداگانه از داخل برنامه دریافت کنید.</p>
                     <div class="release-meta">
-                        <span><strong>نوع فایل:</strong> <span data-release-delivery="kotlin">ZIP پرتابل ویندوز x64 با runtime داخلی</span></span>
+                        <span><strong>نوع فایل:</strong> <span data-release-delivery="kotlin">ZIP آماده اجرا برای ویندوز x64</span></span>
                         <span><strong>اندازه:</strong> <span data-release-size="kotlin">در حال دریافت اطلاعات…</span></span>
                     </div>
                     <a class="btn btn-primary" data-release-link="kotlin" href="/downloadFiles/MATNYAAB-Kotlin-1.2-win-x64-portable.zip">دانلود نسخه جدید</a>
@@ -216,6 +159,7 @@
 @endsection
 
 @push('scripts')
+<script src="/assets/matnyaab-hero-v1/hero.js" defer></script>
 <script>
     (() => {
         const formatBytes = bytes => {
@@ -244,56 +188,6 @@
             })
             .catch(() => {});
 
-        const target = document.getElementById('hero-phrase');
-        if (!target) return;
-
-        const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-        const phrases = [
-            'همان چند واژه را جست‌وجو کنید',
-            'متن‌یاب میان فایل‌ها به دنبالش می‌گردد',
-            'در Word و PDF هم سراغش را می‌گیرد',
-            'و شما را به نتیجه‌های مرتبط می‌رساند'
-        ];
-
-        if (reduced) {
-            target.textContent = phrases[0];
-            return;
-        }
-
-        let phrase = 0;
-        let char = phrases[0].length;
-        let deleting = false;
-
-        const tick = () => {
-            const text = phrases[phrase];
-
-            if (!deleting) {
-                char++;
-                target.textContent = text.slice(0, char);
-                if (char >= text.length) {
-                    deleting = true;
-                    setTimeout(tick, 1700);
-                    return;
-                }
-                setTimeout(tick, 52);
-                return;
-            }
-
-            char--;
-            target.textContent = text.slice(0, Math.max(0, char));
-            if (char <= 0) {
-                deleting = false;
-                phrase = (phrase + 1) % phrases.length;
-                setTimeout(tick, 320);
-                return;
-            }
-            setTimeout(tick, 24);
-        };
-
-        setTimeout(() => {
-            deleting = true;
-            tick();
-        }, 1900);
     })();
 </script>
 @endpush
