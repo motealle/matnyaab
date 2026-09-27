@@ -31,7 +31,7 @@ jobs:
         shell: bash
         run: |
           [[ -f web/composer.json ]] && echo "web=true" >> "$GITHUB_OUTPUT" || echo "web=false" >> "$GITHUB_OUTPUT"
-          [[ -f client/windows/gradlew || -f client/windows/gradlew.bat ]] && echo "client=true" >> "$GITHUB_OUTPUT" || echo "client=false" >> "$GITHUB_OUTPUT"
+          [[ -f client/windows/settings.gradle.kts || -f client/windows/settings.gradle ]] && echo "client=true" >> "$GITHUB_OUTPUT" || echo "client=false" >> "$GITHUB_OUTPUT"
 
   laravel:
     needs: detect
@@ -86,34 +86,20 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Setup Gradle
+      - name: Setup Gradle 8.7
         uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
 
       - name: Clean build from source
         shell: pwsh
-        run: |
-          if (Test-Path ".\gradlew.bat") {
-            .\gradlew.bat --no-daemon clean build
-          } elseif (Test-Path ".\gradlew") {
-            .\gradlew --no-daemon clean build
-          } else {
-            throw "Gradle wrapper not found"
-          }
-
-      - name: Collect outputs
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force -Path "..\..\..\client-artifacts" | Out-Null
-          if (Test-Path "build\libs") {
-            Copy-Item "build\libs\*" "..\..\..\client-artifacts" -Recurse -Force
-          }
-          if (Test-Path "build\distributions") {
-            Copy-Item "build\distributions\*" "..\..\..\client-artifacts" -Recurse -Force
-          }
+        run: gradle --no-daemon :app:clean :app:build :app:shadowJar
 
       - uses: actions/upload-artifact@v4
         with:
           name: matnyaab-windows-${{ github.sha }}
-          path: client-artifacts
-          if-no-files-found: warn
+          path: |
+            client/windows/app/build/libs/**
+            client/windows/app/build/distributions/**
+          if-no-files-found: error
           retention-days: 14
