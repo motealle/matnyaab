@@ -88,7 +88,7 @@
 
                 @if ($clientLicenses['kotlin_system_id'])
                     <div class="divider"></div>
-                    <div class="help" style="margin-bottom:6px">نسخه جدید Kotlin — System-ID</div>
+                    <div class="help" style="margin-bottom:6px">نسخه نسل جدید (Kotlin) — System-ID</div>
                     <code class="serial">{{ $clientLicenses['kotlin_system_id'] }}</code>
                     @if ($clientLicenses['kotlin_serial'])
                         <div class="help" style="margin:10px 0 6px">سریال نسخه Kotlin</div>
