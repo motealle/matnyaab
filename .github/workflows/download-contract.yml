@@ -1,4 +1,4 @@
-name: Download API Contract
+name: Desktop API Contracts
 
 on:
   push:
@@ -27,9 +27,9 @@ jobs:
       - name: Install dependencies
         working-directory: web
         run: composer install --no-interaction --prefer-dist
-      - name: Test downloads using synthetic files and an in-memory database
+      - name: Test desktop contracts using synthetic data
         working-directory: web
         run: |
           cp .env.example .env
           php artisan key:generate
-          php artisan test --filter=LegacyDownloadContractTest
+          php artisan test --filter='Legacy(Download|News)ContractTest'

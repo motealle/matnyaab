@@ -26,11 +26,16 @@ class LegacyApiController extends Controller
     public function news(): JsonResponse
     {
         $rows = News::query()
-            ->where('expire_date', '>', now()->format('Y-m-d H:i:s'))
+            ->where('expire_date', '>', now('Asia/Tehran')->format('Y-m-d H:i:s'))
             ->orderByDesc('expire_date')
             ->get(['id', 'title', 'content', 'expire_date']);
 
-        return response()->json($rows);
+        return response()->json($rows->map(static fn (News $row): array => [
+            'id' => (int) $row->id,
+            'title' => (string) $row->title,
+            'content' => (string) $row->content,
+            'expire_date' => (string) $row->expire_date,
+        ]))->header('Cache-Control', 'no-store');
     }
 
     public function getContents(Request $request): JsonResponse|Response
