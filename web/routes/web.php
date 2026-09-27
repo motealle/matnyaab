@@ -39,6 +39,8 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('adminarea', [AdminController::class, 'index'])->name('admin.dashboard');
     Route::post('adminarea/gift', [AdminController::class, 'gift'])->name('admin.gift');
+    Route::post('adminarea/license/global', [AdminController::class, 'updateGlobalLicensePolicy'])->name('admin.license.global');
+    Route::post('adminarea/license/user', [AdminController::class, 'updateUserLicensePolicy'])->name('admin.license.user');
 
     Route::get('smsconfirm', [RegistrationController::class, 'showSmsConfirm'])->name('smsconfirm');
     Route::post('smsconfirm', [RegistrationController::class, 'smsConfirm'])->name('smsconfirm.submit');
