@@ -71,11 +71,16 @@
 
     .download-panel{
         border:1px solid rgba(139,92,246,.17);border-radius:24px;padding:32px;
-        background:radial-gradient(600px 300px at 100% 0,rgba(124,58,237,.12),transparent 60%),linear-gradient(145deg,var(--surface),var(--surface-2));
-        display:grid;grid-template-columns:1fr auto;gap:30px;align-items:center
+        background:radial-gradient(600px 300px at 100% 0,rgba(124,58,237,.12),transparent 60%),linear-gradient(145deg,var(--surface),var(--surface-2))
     }
     .download-panel h2{margin:0 0 6px;font-size:29px;font-weight:450}.download-panel p{margin:0;color:var(--muted);font-size:14px;font-weight:300}
     .download-note{display:flex;gap:18px;flex-wrap:wrap;color:var(--muted-2);font-size:11px;margin-top:14px}.download-note span:before{content:"✓";color:var(--green);margin-left:6px}
+    .release-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:24px}
+    .release-card{padding:20px;border:1px solid var(--line);border-radius:16px;background:var(--soft-card);display:flex;flex-direction:column;gap:12px}
+    .release-card h3{margin:0;font-size:18px}.release-card p{font-size:12px;line-height:1.95}
+    .release-meta{display:grid;gap:5px;color:var(--muted-2);font-size:11px}
+    .release-meta strong{color:var(--text);font-weight:650}
+    .release-card .btn{margin-top:auto}
 
     .account-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.account-card{padding:24px;border:1px solid var(--line);border-radius:18px;background:var(--surface)}
     .account-card h3{margin:0 0 7px;font-weight:550}.account-card p{color:var(--muted);font-size:13px;font-weight:300;margin:0 0 18px}
@@ -85,7 +90,7 @@
     }
     @media(max-width:640px){
         .hero{padding-top:55px}.hero-title{letter-spacing:-1px}.feature-grid,.workflow,.account-grid{grid-template-columns:1fr}
-        .download-panel{grid-template-columns:1fr;padding:23px}.stage-caption{left:10px;bottom:10px}.real-shot{min-height:230px}
+        .download-panel{padding:23px}.release-grid{grid-template-columns:1fr}.stage-caption{left:10px;bottom:10px}.real-shot{min-height:230px}
     }
     @media(prefers-reduced-motion:reduce){
         .type-caret{animation:none}.real-shot:after{animation:none}.hero-copy,.hero-actions,.hero-meta,.product-stage,.type-line{opacity:1;transform:none;animation:none}
@@ -161,12 +166,33 @@
     <div class="container">
         <div class="download-panel">
             <div>
-                <span class="eyebrow">نسخه ویندوز</span>
-                <h2>جست‌وجوی فایل‌هایتان را از ویندوز آغاز کنید</h2>
-                <p>نسخه ویندوز متن‌یاب را دریافت کنید و پوشه‌های دلخواهتان را برای جست‌وجو آماده کنید.</p>
-                <div class="download-note"><span>نصب‌کننده x64</span><span>مدیریت اشتراک از حساب کاربری</span><span>نصب ساده روی ویندوز</span></div>
+                <span class="eyebrow">نسخه‌های ویندوز</span>
+                <h2>نسخه مناسب خودتان را دریافت کنید</h2>
+                <p>نسخه کلاسیک برای کاربران فعلی حفظ شده و نسخه جدید Kotlin/JavaFX نیز جداگانه ارائه می‌شود.</p>
+                <div class="download-note"><span>ویندوز x64</span><span>هر دو نسخه قابل استفاده‌اند</span><span>بسته‌های محتوایی از داخل برنامه مدیریت می‌شوند</span></div>
             </div>
-            <a class="btn btn-primary" href="/update/MATNYAAB_x64_setup.exe">دریافت نصب‌کننده</a>
+
+            <div class="release-grid">
+                <article class="release-card">
+                    <div><span class="eyebrow">پایدار / کلاسیک</span><h3>نسخه کلاسیک متن‌یاب</h3></div>
+                    <p data-release-content="classic">نصب‌کننده قبلی ویندوز؛ جزئیات فایل و محتوای همراه از manifest انتشار خوانده می‌شود.</p>
+                    <div class="release-meta">
+                        <span><strong>نوع فایل:</strong> <span data-release-delivery="classic">نصب‌کننده EXE ویندوز x64</span></span>
+                        <span><strong>اندازه:</strong> <span data-release-size="classic">در حال دریافت اطلاعات…</span></span>
+                    </div>
+                    <a class="btn" data-release-link="classic" href="/update/MATNYAAB_x64_setup.exe">دانلود نسخه کلاسیک</a>
+                </article>
+
+                <article class="release-card">
+                    <div><span class="eyebrow">جدید / Kotlin</span><h3>نسخه جدید متن‌یاب</h3></div>
+                    <p data-release-content="kotlin">فایل پرتابل شامل خود برنامه، Java/JavaFX، Lucene و Tika است؛ بسته محتوایی پژوهشی داخل فایل قرار ندارد.</p>
+                    <div class="release-meta">
+                        <span><strong>نوع فایل:</strong> <span data-release-delivery="kotlin">ZIP پرتابل ویندوز x64 با runtime داخلی</span></span>
+                        <span><strong>اندازه:</strong> <span data-release-size="kotlin">در حال دریافت اطلاعات…</span></span>
+                    </div>
+                    <a class="btn btn-primary" data-release-link="kotlin" href="/downloadFiles/MATNYAAB-Kotlin-1.2-win-x64-portable.zip">دانلود نسخه جدید</a>
+                </article>
+            </div>
         </div>
     </div>
 </section>
@@ -192,6 +218,32 @@
 @push('scripts')
 <script>
     (() => {
+        const formatBytes = bytes => {
+            if (!Number.isFinite(bytes) || bytes <= 0) return 'نامشخص';
+            const units = ['B', 'KB', 'MB', 'GB'];
+            let value = bytes, unit = 0;
+            while (value >= 1024 && unit < units.length - 1) { value /= 1024; unit++; }
+            return new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 1 }).format(value) + ' ' + units[unit];
+        };
+
+        fetch('/downloadFiles/releases.json', { cache: 'no-store' })
+            .then(response => response.ok ? response.json() : Promise.reject())
+            .then(releases => {
+                ['classic', 'kotlin'].forEach(key => {
+                    const item = releases[key];
+                    if (!item) return;
+                    const link = document.querySelector('[data-release-link="' + key + '"]');
+                    const size = document.querySelector('[data-release-size="' + key + '"]');
+                    const delivery = document.querySelector('[data-release-delivery="' + key + '"]');
+                    const content = document.querySelector('[data-release-content="' + key + '"]');
+                    if (link && item.url) link.href = item.url;
+                    if (size && item.size_bytes) size.textContent = formatBytes(Number(item.size_bytes));
+                    if (delivery && item.delivery) delivery.textContent = item.delivery;
+                    if (content && item.content_summary) content.textContent = item.content_summary;
+                });
+            })
+            .catch(() => {});
+
         const target = document.getElementById('hero-phrase');
         if (!target) return;
 
