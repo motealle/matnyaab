@@ -6,6 +6,9 @@ import okhttp3.FormBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
+import java.nio.file.AtomicMoveNotSupportedException
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
@@ -113,30 +116,53 @@ class Downloader(
                     else {
                         val body = resp.body ?: throw IllegalStateException("empty body")
                         val total = body.contentLength()
-                        outFile.parentFile?.mkdirs()
-                        body.byteStream().use { input ->
-                            outFile.outputStream().use { output ->
-                                val buf = ByteArray(64 * 1024)
-                                var read: Int
-                                var done = 0L
-                                var lastPercent = -1
-                                while (input.read(buf).also { read = it } != -1) {
-                                    if (cancelled) { code = 2; break }
-                                    output.write(buf, 0, read)
-                                    done += read
-                                    if (total > 0) {
-                                        val p = ((done * 100) / total).toInt()
-                                        if (p != lastPercent) { lastPercent = p; onProgress(p) }
+                        val parent = outFile.absoluteFile.parentFile ?: File(".").absoluteFile
+                        parent.mkdirs()
+                        val tempFile = File.createTempFile("mny-", ".part", parent)
+                        try {
+                            var done = 0L
+                            body.byteStream().use { input ->
+                                tempFile.outputStream().use { output ->
+                                    val buf = ByteArray(64 * 1024)
+                                    var read: Int
+                                    var lastPercent = -1
+                                    while (input.read(buf).also { read = it } != -1) {
+                                        if (cancelled) { code = 2; break }
+                                        output.write(buf, 0, read)
+                                        done += read
+                                        if (total > 0) {
+                                            val p = ((done * 100) / total).toInt()
+                                            if (p != lastPercent) { lastPercent = p; onProgress(p) }
+                                        }
                                     }
                                 }
                             }
+                            if (code == 0 && total >= 0 && done != total) code = 1
+                            if (code == 0 && cancelled) code = 2
+                            if (code == 0) {
+                                try {
+                                    Files.move(
+                                        tempFile.toPath(),
+                                        outFile.toPath(),
+                                        StandardCopyOption.REPLACE_EXISTING,
+                                        StandardCopyOption.ATOMIC_MOVE,
+                                    )
+                                } catch (_: AtomicMoveNotSupportedException) {
+                                    Files.move(
+                                        tempFile.toPath(),
+                                        outFile.toPath(),
+                                        StandardCopyOption.REPLACE_EXISTING,
+                                    )
+                                }
+                            }
+                        } finally {
+                            if (tempFile.exists()) tempFile.delete()
                         }
                     }
                 }
             } catch (e: Exception) {
                 code = if (cancelled) 2 else 1
             }
-            if (code != 0) { try { outFile.delete() } catch (e: Exception) {} }
             onFinish(code)
         }.apply { isDaemon = true; start() }
     }
