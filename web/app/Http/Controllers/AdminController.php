@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Subscription;
 use App\Models\SubscriptionHistory;
 use App\Models\User;
+use App\Services\LicensePolicyService;
 use App\Services\SerialService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,7 +14,7 @@ use Illuminate\View\View;
 
 class AdminController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request, LicensePolicyService $licensePolicy): View
     {
         $this->authorizeSuperuser($request);
 
@@ -37,6 +38,12 @@ class AdminController extends Controller
             'query' => $query,
             'users' => $users,
             'subscriptions' => Subscription::query()->orderBy('subscription_price')->get(),
+            'licensePolicy' => [
+                'global_bypass' => $licensePolicy->globalBypass(),
+                'users' => $users->mapWithKeys(fn (User $user): array => [
+                    (string) $user->id => $licensePolicy->userSettings((int) $user->id),
+                ])->all(),
+            ],
             'counts' => [
                 'users' => User::query()->count(),
                 'confirmed' => User::query()->where('is_phone_confirmed', 1)->count(),
@@ -88,6 +95,40 @@ class AdminController extends Controller
         return redirect()
             ->route('admin.dashboard', ['q' => $user->username])
             ->with('status', 'اشتراک برای کاربر فعال شد و سریال جدید صادر شد.');
+    }
+
+    public function updateGlobalLicensePolicy(Request $request, LicensePolicyService $licensePolicy): RedirectResponse
+    {
+        $this->authorizeSuperuser($request);
+
+        $licensePolicy->setGlobalBypass($request->boolean('enabled'));
+
+        return redirect()
+            ->route('admin.dashboard')
+            ->with('status', $request->boolean('enabled')
+                ? 'بای‌پس سراسری لایسنس فعال شد.'
+                : 'بای‌پس سراسری لایسنس غیرفعال شد.');
+    }
+
+    public function updateUserLicensePolicy(Request $request, LicensePolicyService $licensePolicy): RedirectResponse
+    {
+        $this->authorizeSuperuser($request);
+
+        $data = $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users_accountmodel,id'],
+            'kotlin_system_id' => ['nullable', 'string', 'regex:/^[A-Fa-f0-9]{32}$/'],
+        ]);
+
+        $user = User::query()->findOrFail($data['user_id']);
+        $licensePolicy->setUser(
+            (int) $user->id,
+            $request->boolean('bypass'),
+            $data['kotlin_system_id'] ?? null,
+        );
+
+        return redirect()
+            ->route('admin.dashboard', ['q' => $user->username])
+            ->with('status', 'تنظیمات لایسنس این کاربر ذخیره شد.');
     }
 
     private function authorizeSuperuser(Request $request): void

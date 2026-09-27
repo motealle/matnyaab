@@ -1,0 +1,277 @@
+name: Publish Windows Clients
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "client/windows/**"
+      - ".github/workflows/publish-windows-clients.yml"
+  pull_request:
+    paths:
+      - "client/windows/**"
+      - ".github/workflows/publish-windows-clients.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: matnyaab-windows-client-release
+  cancel-in-progress: false
+
+env:
+  KOTLIN_VERSION: "1.2"
+  KOTLIN_FILE: "MATNYAAB-Kotlin-1.2-win-x64-portable.zip"
+  SITE_URL: "https://www.matnyaab.ir"
+
+jobs:
+  package-kotlin:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: client/windows
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Gradle 8.7
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
+
+      - name: Build tested fat jar
+        shell: pwsh
+        run: gradle --no-daemon :app:clean :app:test :app:shadowJar
+
+      - name: Build portable Windows app image
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $inputDir = Join-Path $PWD "package-input"
+          $releaseDir = Join-Path $PWD "release"
+          New-Item -ItemType Directory -Force -Path $inputDir | Out-Null
+          New-Item -ItemType Directory -Force -Path $releaseDir | Out-Null
+
+          $jar = Join-Path $PWD "app\build\libs\matnyaab-kotlin-1.2-all.jar"
+          if (-not (Test-Path $jar)) { throw "Expected fat jar not found: $jar" }
+          Copy-Item $jar $inputDir
+
+          $jpArgs = @(
+            "--type", "app-image",
+            "--input", $inputDir,
+            "--main-jar", "matnyaab-kotlin-1.2-all.jar",
+            "--main-class", "ir.matnyaab.MainKt",
+            "--name", "MATNYAAB-Kotlin",
+            "--app-version", $env:KOTLIN_VERSION,
+            "--vendor", "MATNYAAB",
+            "--runtime-image", $env:JAVA_HOME,
+            "--dest", $releaseDir
+          )
+          & jpackage @jpArgs
+          if ($LASTEXITCODE -ne 0) { throw "jpackage failed with exit code $LASTEXITCODE" }
+
+          $exe = Join-Path $releaseDir "MATNYAAB-Kotlin\MATNYAAB-Kotlin.exe"
+          if (-not (Test-Path $exe)) { throw "Packaged launcher was not created" }
+
+          $smoke = & $exe --smoke 2>&1 | Out-String
+          $smoke | Write-Host
+          if ($smoke -notmatch "MATNYAAB_CLIENT_SMOKE_OK") {
+            throw "Packaged Lucene/Tika smoke test failed"
+          }
+
+          $zip = Join-Path $PWD $env:KOTLIN_FILE
+          if (Test-Path $zip) { Remove-Item $zip -Force }
+          Compress-Archive -Path (Join-Path $releaseDir "MATNYAAB-Kotlin") -DestinationPath $zip -CompressionLevel Optimal
+          if ((Get-Item $zip).Length -lt 100000000) {
+            throw "Portable package is unexpectedly small"
+          }
+
+          $hash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          Set-Content -Path "$zip.sha256" -Value "$hash  $env:KOTLIN_FILE" -Encoding ascii
+          Write-Host "Portable package bytes: $((Get-Item $zip).Length)"
+          Write-Host "SHA256: $hash"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: matnyaab-kotlin-portable-${{ github.sha }}
+          path: |
+            client/windows/${{ env.KOTLIN_FILE }}
+            client/windows/${{ env.KOTLIN_FILE }}.sha256
+          if-no-files-found: error
+          retention-days: 3
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: package-kotlin
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USER: ${{ secrets.FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD_MATNYAAB_IR }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: matnyaab-kotlin-portable-${{ github.sha }}
+          path: release
+
+      - name: Validate release payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s "release/$KOTLIN_FILE"
+          test -s "release/$KOTLIN_FILE.sha256"
+          (cd release && sha256sum -c "$KOTLIN_FILE.sha256")
+          echo "KOTLIN_BYTES=$(stat -c%s "release/$KOTLIN_FILE")" >> "$GITHUB_ENV"
+          echo "KOTLIN_SHA256=$(sha256sum "release/$KOTLIN_FILE" | awk '{print $1}')" >> "$GITHUB_ENV"
+
+      - name: Normalize FTP endpoint
+        id: ftp
+        shell: bash
+        run: |
+          set -euo pipefail
+          server="${FTP_SERVER%/}"
+          case "$server" in
+            ftp://*|ftps://*) url="$server" ;;
+            *) url="ftp://$server" ;;
+          esac
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Audit existing classic client
+        env:
+          FTP_URL: ${{ steps.ftp.outputs.url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          legacy_url=""
+          legacy_path=""
+          legacy_bytes=0
+          legacy_sha=""
+          for rel in             "update/MATNYAAB_x64_setup.exe"             "downloadFiles/matnyaab1_2.exe"             "downloadFiles/matnyaab1_1.exe"; do
+            if curl --silent --show-error --fail               --connect-timeout 15 --max-time 900               --user "$FTP_USER:$FTP_PASSWORD"               --ftp-method nocwd               "$FTP_URL/$rel" -o /tmp/matnyaab-legacy.exe; then
+              legacy_path="$rel"
+              legacy_url="/$rel"
+              legacy_bytes="$(stat -c%s /tmp/matnyaab-legacy.exe)"
+              legacy_sha="$(sha256sum /tmp/matnyaab-legacy.exe | awk '{print $1}')"
+              break
+            fi
+          done
+
+          if [[ -z "$legacy_path" ]]; then
+            echo "::error::No classic Windows client was found on the host"
+            exit 1
+          fi
+
+          echo "LEGACY_PATH=$legacy_path" >> "$GITHUB_ENV"
+          echo "LEGACY_URL=$legacy_url" >> "$GITHUB_ENV"
+          echo "LEGACY_BYTES=$legacy_bytes" >> "$GITHUB_ENV"
+          echo "LEGACY_SHA256=$legacy_sha" >> "$GITHUB_ENV"
+
+          {
+            echo "Classic client path: $legacy_path"
+            echo "Classic client bytes: $legacy_bytes"
+            echo "Classic client sha256: $legacy_sha"
+          } > legacy-client-audit.txt
+
+          if command -v 7z >/dev/null 2>&1; then
+            7z l -ba /tmp/matnyaab-legacy.exe > legacy-installer-files.txt 2>&1 || true
+          else
+            : > legacy-installer-files.txt
+          fi
+
+          matches="$(grep -Eic '(^|[\\/])(contents?|packages?)([\\/]|$)|\.(rar|zip|7z)[[:space:]]*$' legacy-installer-files.txt || true)"
+          if [[ "$matches" -gt 0 ]]; then
+            echo "LEGACY_CONTENT_AUDIT=embedded-content-candidates-detected" >> "$GITHUB_ENV"
+            echo "Embedded content/package candidates detected: $matches" >> legacy-client-audit.txt
+            grep -Ei '(^|[\\/])(contents?|packages?)([\\/]|$)|\.(rar|zip|7z)[[:space:]]*$' legacy-installer-files.txt | head -100 >> legacy-client-audit.txt || true
+          else
+            echo "LEGACY_CONTENT_AUDIT=no-embedded-content-candidate-detected" >> "$GITHUB_ENV"
+            echo "No embedded content/package candidate was detected by archive listing." >> legacy-client-audit.txt
+          fi
+
+      - name: Upload Kotlin portable client and checksum
+        env:
+          FTP_URL: ${{ steps.ftp.outputs.url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in "$KOTLIN_FILE" "$KOTLIN_FILE.sha256"; do
+            curl --silent --show-error --fail --retry 3               --connect-timeout 20 --max-time 1800               --user "$FTP_USER:$FTP_PASSWORD"               --ftp-method nocwd --ftp-create-dirs               --upload-file "release/$file"               "$FTP_URL/downloadFiles/$file"
+          done
+
+      - name: Publish release manifest
+        env:
+          FTP_URL: ${{ steps.ftp.outputs.url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os
+          legacy_audit = os.environ.get("LEGACY_CONTENT_AUDIT", "not-audited")
+          if legacy_audit == "embedded-content-candidates-detected":
+              legacy_content = "در ساختار نصب‌کننده کلاسیک، فایل/مسیرهایی شبیه بسته محتوایی شناسایی شده‌اند؛ جزئیات audit برای بازبینی نگه‌داری شده است."
+          else:
+              legacy_content = "در فهرست قابل بازرسی نصب‌کننده کلاسیک، بسته محتوایی آماده‌ای شناسایی نشد؛ بسته‌های محتوایی از داخل برنامه جدا دریافت می‌شوند."
+
+          manifest = {
+              "schema": 1,
+              "classic": {
+                  "label": "نسخه کلاسیک",
+                  "url": os.environ["LEGACY_URL"],
+                  "size_bytes": int(os.environ["LEGACY_BYTES"]),
+                  "sha256": os.environ["LEGACY_SHA256"],
+                  "delivery": "نصب‌کننده EXE ویندوز x64",
+                  "content_summary": legacy_content,
+              },
+              "kotlin": {
+                  "label": "نسخه جدید Kotlin",
+                  "version": os.environ["KOTLIN_VERSION"],
+                  "url": "/downloadFiles/" + os.environ["KOTLIN_FILE"],
+                  "checksum_url": "/downloadFiles/" + os.environ["KOTLIN_FILE"] + ".sha256",
+                  "size_bytes": int(os.environ["KOTLIN_BYTES"]),
+                  "sha256": os.environ["KOTLIN_SHA256"],
+                  "delivery": "ZIP پرتابل ویندوز x64 با Java runtime داخلی",
+                  "content_summary": "هیچ بسته محتوایی پژوهشی داخل فایل نیست؛ فایل شامل خود برنامه، Java/JavaFX، Lucene، Tika و وابستگی‌های اجرایی است. بسته‌های محتوایی جداگانه از داخل برنامه دریافت می‌شوند.",
+              },
+          }
+          with open("releases.json", "w", encoding="utf-8") as f:
+              json.dump(manifest, f, ensure_ascii=False, indent=2)
+              f.write("\n")
+          PY
+
+          curl --silent --show-error --fail --retry 3             --connect-timeout 20 --max-time 120             --user "$FTP_USER:$FTP_PASSWORD"             --ftp-method nocwd --ftp-create-dirs             --upload-file releases.json             "$FTP_URL/downloadFiles/releases.json"
+
+      - name: Verify public release endpoints
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --silent --show-error --fail --location             "$SITE_URL/downloadFiles/releases.json" -o /tmp/releases.json
+          python3 - <<'PY'
+          import json
+          x=json.load(open("/tmp/releases.json", encoding="utf-8"))
+          assert x["classic"]["size_bytes"] > 1_000_000
+          assert x["kotlin"]["size_bytes"] > 100_000_000
+          assert x["kotlin"]["content_summary"]
+          print("Release manifest verified.")
+          PY
+
+          for url in "$LEGACY_URL" "/downloadFiles/$KOTLIN_FILE"; do
+            code="$(curl --silent --show-error --location --head               --connect-timeout 15 --max-time 60               -o /dev/null -w '%{http_code}' "$SITE_URL$url" || true)"
+            test "$code" = "200"
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: client-release-audit-${{ github.sha }}
+          path: |
+            legacy-client-audit.txt
+            legacy-installer-files.txt
+            releases.json
+          retention-days: 7

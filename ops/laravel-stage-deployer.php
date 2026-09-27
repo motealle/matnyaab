@@ -87,6 +87,18 @@ try {
         throw new RuntimeException('application key is empty');
     }
 
+    $licensePolicy = $sharedDir . DIRECTORY_SEPARATOR . 'license-policy.json';
+    if (!is_file($licensePolicy)) {
+        $initialPolicy = json_encode([
+            'version' => 1,
+            'global_bypass' => false,
+            'users' => [],
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        if (!is_string($initialPolicy) || file_put_contents($licensePolicy, $initialPolicy . PHP_EOL, LOCK_EX) === false) {
+            throw new RuntimeException('cannot initialize license policy');
+        }
+    }
+
     $envLines = [
         'APP_NAME=MATNYAAB',
         'APP_ENV=production',
@@ -102,6 +114,7 @@ try {
         'SESSION_LIFETIME=18000',
         'CACHE_STORE=file',
         'QUEUE_CONNECTION=sync',
+        'LICENSE_POLICY_PATH=' . $licensePolicy,
     ];
 
     $runtimeEnvFile = $sharedDir . DIRECTORY_SEPARATOR . 'runtime-services.env';

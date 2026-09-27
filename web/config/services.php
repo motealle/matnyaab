@@ -52,4 +52,8 @@ return [
         'api_password' => env('CONTENTS_API_PASSWORD'),
     ],
 
+    'license' => [
+        'policy_path' => env('LICENSE_POLICY_PATH', storage_path('app/license-policy.json')),
+    ],
+
 ];
