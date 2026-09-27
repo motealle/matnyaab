@@ -1,0 +1,35 @@
+name: Download API Contract
+
+on:
+  push:
+    paths:
+      - 'web/**'
+      - '.github/workflows/download-contract.yml'
+  pull_request:
+    paths:
+      - 'web/**'
+      - '.github/workflows/download-contract.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo_sqlite, sqlite3, curl, openssl, fileinfo
+          coverage: none
+      - name: Install dependencies
+        working-directory: web
+        run: composer install --no-interaction --prefer-dist
+      - name: Test downloads using synthetic files and an in-memory database
+        working-directory: web
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan test --filter=LegacyDownloadContractTest

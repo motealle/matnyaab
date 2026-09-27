@@ -1,6 +1,6 @@
 # Matnyaab Migration Backlog
 
-Last updated: 2026-09-26
+Last updated: 2026-09-27
 
 Status legend: DONE, IN PROGRESS, BLOCKED, TODO, DEFERRED.
 
@@ -124,3 +124,13 @@ Status legend: DONE, IN PROGRESS, BLOCKED, TODO, DEFERRED.
 ## Definition of complete
 
 Migration is complete only when Laravel serves all required web/API behavior, existing users/subscriptions/licenses remain valid, real SMS/payment flows are verified, Kotlin client is reproducibly built and packaged in Actions, updater works, backups remain independent of deploys, the bridge is removed, production smoke tests pass, and HANDOFF/BACKLOG/MIGRATION_STATUS match reality.
+
+
+## Download compatibility correction — 2026-09-27
+
+- Baseline main `8224350`: CI and Build succeeded; legacy SQLite smoke run 36263798906 failed because downloadContent declared only BinaryFileResponse but returned a plain-text Response for missing files. Deploy run 36263798871 nevertheless succeeded; deployment and compatibility workflows are currently independent.
+- Both public download methods now accept BinaryFileResponse|Response, preserving the legacy 404 text instead of throwing TypeError/500.
+- Added isolated synthetic download tests for both endpoints: invalid/missing IDs, missing files/root, traversal, successful files, partial and unsatisfiable ranges. No customer data or FTP secrets are required for this suite.
+- Added a deployment dependency on the complete legacy SQLite smoke suite through workflow_call; a failed compatibility job now prevents deployment. The separate automatic smoke trigger is replaced by this dependency to avoid duplicate downloads/runs; manual smoke remains available.
+- Public publication was explicitly authorized by the owner on 2026-09-27; branch CI and deployment verification are pending. PHP/Composer are unavailable in this workspace, so no passing test or production deployment is claimed. CI execution remains pending publication. Production routing remains on the recovery bridge; this change does not cut over API routes.
+- Next: publish and verify the prepared fix and deployment gate, finish golden API fixtures, then cut over endpoints individually. SMS needs an explicitly selected test recipient; SMTP and real payments retain their runtime gates.

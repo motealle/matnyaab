@@ -11,6 +11,7 @@ on:
       - "web/**"
       - "ops/laravel-stage-deployer.php"
       - ".github/workflows/deploy-laravel-stage.yml"
+      - ".github/workflows/laravel-legacy-smoke.yml"
 
 permissions:
   contents: read
@@ -20,7 +21,15 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  compatibility:
+    uses: ./.github/workflows/laravel-legacy-smoke.yml
+    secrets:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USER: ${{ secrets.FTP_USER }}
+      FTP_PASSWORD_MATNYAAB_IR: ${{ secrets.FTP_PASSWORD_MATNYAAB_IR }}
+
   deploy-stage:
+    needs: compatibility
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:

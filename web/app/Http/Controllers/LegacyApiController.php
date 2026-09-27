@@ -95,12 +95,12 @@ class LegacyApiController extends Controller
         return response()->json(['status' => 'success']);
     }
 
-    public function downloadContent(Request $request): BinaryFileResponse
+    public function downloadContent(Request $request): BinaryFileResponse|Response
     {
         return $this->downloadStoredFile($request, 'content_package_file');
     }
 
-    public function downloadContentImage(Request $request): BinaryFileResponse
+    public function downloadContentImage(Request $request): BinaryFileResponse|Response
     {
         return $this->downloadStoredFile($request, 'content_cover_image');
     }

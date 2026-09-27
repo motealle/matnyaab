@@ -2,14 +2,14 @@ name: Laravel Legacy SQLite Smoke
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-      - migration/source-import
-      - migration/backend-auth
-    paths:
-      - "web/**"
-      - ".github/workflows/laravel-legacy-smoke.yml"
+  workflow_call:
+    secrets:
+      FTP_SERVER:
+        required: true
+      FTP_USER:
+        required: true
+      FTP_PASSWORD_MATNYAAB_IR:
+        required: true
 
 permissions:
   contents: read
