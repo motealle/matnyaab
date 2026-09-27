@@ -96,4 +96,4 @@ jobs:
           test "$(wc -c < /tmp/sc1.png)" -gt 10000
           curl --silent --show-error --fail --location "$SITE_URL/login" | grep -q "ورود به متن‌یاب"
           curl --silent --show-error --fail --location "$SITE_URL/register" | grep -q "ساخت حساب متن‌یاب"
-          echo "Homepage, dual download cards, original screenshot, theme toggle and account pages passed."
+          echo "Homepage, dual Windows download cards, original screenshot, theme toggle and account pages passed."
