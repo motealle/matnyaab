@@ -6,6 +6,7 @@ import ir.matnyaab.ui.SplashWindow
 import javafx.application.Application
 import javafx.application.Platform
 import javafx.stage.Stage
+import java.io.File
 
 /**
  * نقطه ورود برنامه — معادل بخش __main__ در matnyaab.py
@@ -33,5 +34,26 @@ class MatnyaabApp : Application() {
 }
 
 fun main(args: Array<String>) {
+    if (args.contains("--smoke")) {
+        val probe = File.createTempFile("matnyaab-client-smoke", ".txt")
+        try {
+            probe.writeText("MATNYAAB smoke test")
+            val parsed = TikaExtractor.parse(probe)
+            check(parsed.status == 200 && parsed.content?.contains("MATNYAAB") == true) {
+                "Tika smoke failed"
+            }
+            org.apache.lucene.analysis.standard.StandardAnalyzer().use { analyzer ->
+                val tokens = analyzer.tokenStream("content", "متن یاب MATNYAAB")
+                tokens.reset()
+                check(tokens.incrementToken()) { "Lucene smoke failed" }
+                tokens.end()
+            }
+            println("MATNYAAB_CLIENT_SMOKE_OK " + Constants.APP_VERSION)
+        } finally {
+            probe.delete()
+        }
+        return
+    }
+
     Application.launch(MatnyaabApp::class.java, *args)
 }
