@@ -97,7 +97,7 @@ Target stack:
 - Lucene
 - Tika
 
-The destination-host FTP was probed for likely Kotlin/Java source archives and no candidate was found. This is a source-location blocker, not a compiler/build failure. The conversation/project materials contain the original NEW JAVA PROJECT archive and sanitized source bundles; the fallback is to import that sanitized source into a migration branch and clean-build it on Windows CI.
+The Kotlin source is now restored under `client/windows/` on main. PR #6 passed a Windows clean build on JDK 17 + Gradle 8.7, ran downloader regression tests, and produced a real Windows artifact of about 503 MB. Download writes are staged and only replace the target after complete success. The principal remaining release gate is behavioral parity, especially the legacy system-ID/license result on the same Windows machine, followed by representative indexing/search, content-pack and installer/updater smoke tests.
 
 ## CI/CD
 
@@ -118,14 +118,13 @@ GitHub Actions FTP authentication and production deploys are operational.
 
 ## Remaining sequence
 
-1. verify one controlled real SMS registration;
-2. configure runtime SMTP and verify one controlled password-recovery delivery;
-3. supply real IDPay merchant settings and verify one controlled payment;
-4. import sanitized Kotlin source and obtain a reproducible Windows clean build;
-5. verify updater/install packaging;
-6. create golden desktop API parity fixtures and move endpoints from bridge to Laravel one at a time;
-7. remove the bridge only after client/server parity is proven;
-8. defer SQLite-to-MySQL until the transformed stack is stable.
+1. prove legacy system-ID/license parity for the Kotlin Windows client;
+2. verify Lucene/Tika indexing/search and content-pack behavior with representative inputs;
+3. package and smoke-test the Windows installer/updater;
+4. create remaining golden desktop API fixtures and move endpoints from bridge to Laravel one at a time;
+5. verify controlled real SMS, SMTP and IDPay flows when safe runtime test inputs are available;
+6. remove the bridge only after client/server parity is proven;
+7. defer SQLite-to-MySQL until the transformed stack is stable.
 
 ## Repository policy
 

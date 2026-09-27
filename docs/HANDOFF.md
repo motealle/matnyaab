@@ -128,32 +128,38 @@ Do not remove the bridge until the Windows client and Laravel API contracts are 
 - Lucene
 - Tika
 
-Before release: import source only, remove generated/IDE output and hard-coded credentials, clean-build in Windows Actions, package installer, verify updater and license/content compatibility.
+Before release: preserve source-only Git history, keep generated/IDE output and credentials out of the repository, package an installer, and verify updater plus license/content compatibility.
+
+Verified Kotlin checkpoint:
+- PR #6 restored the verified source under `client/windows/` onto current main without merging stale migration history.
+- Windows Actions clean-builds with JDK 17 and Gradle 8.7, including the downloader regression tests.
+- PR #6 validation produced a real Windows artifact of about 503 MB; missing artifacts now fail the job.
+- Failed/cancelled downloads stage into a temporary file and no longer delete or replace an existing good target.
+- Do not change the WMI/system-ID algorithm until old-client parity is measured on the same Windows machine or against a trusted vector.
 
 Latest verified backend state:
 - Laravel compatibility suite is running on main against an isolated copy of production SQLite.
 - Password recovery is implemented with 30-minute stateless HMAC links and tested.
 - Superuser migration dashboard and gift-subscription flow are implemented and tested.
-- Latest Kotlin archive probe completed successfully as a workflow, but found no client source archive in the destination-host FTP root/candidate paths. This is a discovery blocker, not a build failure.
 
 ## Immediate next work
 
 See BACKLOG.md. Current order:
 
-1. activate SMS safely and test one controlled registration;
-2. configure runtime SMTP safely and test one controlled password-recovery delivery;
-3. verify real payment with one controlled transaction;
-4. import and clean-build Kotlin client using the sanitized source attachment if the FTP copy remains unavailable;
-5. migrate remaining desktop API routes to Laravel;
-6. remove the bridge after parity.
+1. prove old-client/Kotlin system-ID and license parity on Windows;
+2. run representative Lucene/Tika indexing/search and content-pack end-to-end tests;
+3. package and smoke-test the Windows installer/updater;
+4. continue desktop API golden fixtures and one-route-at-a-time Laravel cutover;
+5. separately complete controlled SMS, SMTP and real-payment tests when safe test inputs/runtime values are available;
+6. remove the recovery bridge only after client/server parity.
 
 ## Current blockers
 
 ### Runtime secrets
 SMS, SMTP and real IDPay values exist only in legacy/private configuration or need to be supplied as runtime secrets. Do not copy them into Git. Until runtime SMS is configured, new registration remains intentionally gated. Until SMTP is configured, password-recovery email remains intentionally gated. Until the merchant value is configured, real paid checkout remains intentionally gated.
 
-### Kotlin source location
-The destination host FTP does not currently expose a discoverable Kotlin/Java source archive at the probed names/paths. The project conversation contains the original NEW JAVA PROJECT archive and a sanitized source bundle, so the practical fallback is to import from that bundle into a migration branch and let Windows CI clean-build it.
+### Kotlin compatibility proof
+Source location and compilation are no longer blockers. The remaining client release gate is behavioral parity: especially legacy system-ID/license generation, representative indexing/search, content-pack behavior, and installer/updater smoke testing. The system-ID check requires a trusted old-client result from the same Windows machine (or an equivalent known-good vector) before its algorithm is changed.
 
 ## Rollback principle
 

@@ -66,19 +66,20 @@ Status legend: DONE, IN PROGRESS, BLOCKED, TODO, DEFERRED.
 ## P1 — Kotlin / Windows client
 
 - DONE — Probe destination-host FTP for likely Kotlin/Java archives; no candidate archive found.
-- IN PROGRESS — Sanitized Kotlin source bundle is materialized and inspected; import branch exists and source import/clean build is next.
-- TODO — Import Kotlin source under client/windows/.
-- TODO — Exclude .idea/, .gradle/ and old build/ output.
-- TODO — Remove/harden hard-coded server credentials.
-- TODO — Windows clean build with JDK 17 + Gradle 8.7.
-- TODO — Resolve missing-source versus stale-built-class discrepancies.
-- TODO — Test Lucene/Tika indexing and search.
+- DONE — Restore the verified sanitized Kotlin source under `client/windows/` on current main.
+- DONE — Exclude IDE/cache/build output from the imported source.
+- DONE — Reproducible Windows clean build with JDK 17 + Gradle 8.7.
+- DONE — Require a real Windows build artifact; PR #6 validation produced a ~503 MB artifact instead of silently passing with no client output.
+- DONE — Harden downloads to stage into a temporary file and replace the target only after a complete successful transfer; regression tests preserve an existing good file on failure.
+- TODO — Remove/harden the legacy `password=compat` content-list compatibility token after a server-side replacement is ready.
+- BLOCKED — Prove exact legacy system-ID/license parity on the same Windows machine or against a trusted old-client vector before changing the WMI hashing behavior.
+- TODO — Resolve any remaining missing-source versus stale-built-class discrepancies during parity testing.
+- TODO — Test Lucene/Tika indexing and search with representative Persian documents.
 - TODO — Verify Whoosh import/migration if still required.
-- TODO — Verify system-ID and license checks.
-- TODO — Verify content pack download/resume behavior.
+- TODO — Verify content pack download/cancel/retry behavior end-to-end.
 - TODO — Package installer with jpackage or chosen packager.
 - TODO — Verify updater/version contract.
-- TODO — Publish versioned GitHub artifact/release.
+- TODO — Publish versioned GitHub release.
 - TODO — Controlled client rollout.
 
 ## P1 — Web UX
