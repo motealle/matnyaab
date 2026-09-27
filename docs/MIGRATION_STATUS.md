@@ -1,6 +1,6 @@
 # Migration status
 
-Date: 2026-09-26
+Date: 2026-09-27
 
 This document is the current operational migration status for matnyaab.ir. For execution details see HANDOFF.md; for remaining work see BACKLOG.md.
 
@@ -76,7 +76,7 @@ Recovery bridge currently covers:
 
 ### SMS
 
-Legacy SMS keys exist in the destination-host copy of Django_Project/private.py. Values are intentionally not stored in Git. New registration stays gated until the credentials are supplied to Laravel runtime and one controlled real SMS succeeds.
+Legacy SMS keys exist in the destination-host copy of Django_Project/private.py. Values are intentionally not stored in Git and have already been synchronized to private Laravel runtime configuration. New registration stays gated until one controlled real SMS succeeds.
 
 ### Email/password recovery
 
@@ -120,14 +120,23 @@ GitHub Actions FTP authentication and production deploys are operational.
 
 1. verify one controlled real SMS registration;
 2. configure runtime SMTP and verify one controlled password-recovery delivery;
-3. supply SMTP runtime settings and verify password-recovery delivery;
-4. supply real IDPay merchant settings and verify one controlled payment;
-5. import sanitized Kotlin source and obtain a reproducible Windows clean build;
-6. verify updater/install packaging;
-7. create golden desktop API parity fixtures and move endpoints from bridge to Laravel one at a time;
-8. remove the bridge only after client/server parity is proven;
-9. defer SQLite-to-MySQL until the transformed stack is stable.
+3. supply real IDPay merchant settings and verify one controlled payment;
+4. import sanitized Kotlin source and obtain a reproducible Windows clean build;
+5. verify updater/install packaging;
+6. create golden desktop API parity fixtures and move endpoints from bridge to Laravel one at a time;
+7. remove the bridge only after client/server parity is proven;
+8. defer SQLite-to-MySQL until the transformed stack is stable.
 
 ## Repository policy
 
 The repository is public. Never commit production databases, .env files, SMS/payment/SMTP credentials, private signing keys, real customer exports, content packs, installers, Gradle build output, IDE metadata or font binaries.
+
+
+## Download compatibility correction — 2026-09-27
+
+- Baseline main `8224350`: CI and Build succeeded; legacy SQLite smoke run 36263798906 failed because downloadContent declared only BinaryFileResponse but returned a plain-text Response for missing files. Deploy run 36263798871 nevertheless succeeded; deployment and compatibility workflows are currently independent.
+- Both public download methods now accept BinaryFileResponse|Response, preserving the legacy 404 text instead of throwing TypeError/500.
+- Added isolated synthetic download tests for both endpoints: invalid/missing IDs, missing files/root, traversal, successful files, partial and unsatisfiable ranges. No customer data or FTP secrets are required for this suite.
+- Added a deployment dependency on the complete legacy SQLite smoke suite through workflow_call; a failed compatibility job now prevents deployment. The separate automatic smoke trigger is replaced by this dependency to avoid duplicate downloads/runs; manual smoke remains available.
+- Public publication was explicitly authorized by the owner on 2026-09-27; branch CI and deployment verification are pending. PHP/Composer are unavailable in this workspace, so no passing test or production deployment is claimed. CI execution remains pending publication. Production routing remains on the recovery bridge; this change does not cut over API routes.
+- Next: publish and verify the prepared fix and deployment gate, finish golden API fixtures, then cut over endpoints individually. SMS needs an explicitly selected test recipient; SMTP and real payments retain their runtime gates.
