@@ -172,3 +172,10 @@ Migration is complete only when Laravel serves all required web/API behavior, ex
 - Avoid: religious scenery without a research activity; promotional/staged poses; excessive domes, ornaments or gold; busy photo under text; relying on text shadow for contrast; AI-generated Persian/Arabic typography or fake product interface; essential content inside image; arbitrary mobile center-crop; multiple simultaneous animations; loading all full-resolution slides at startup.
 - Acceptance before publication: user selects imagery; headline/CTA remain readable with images absent and in both themes; measure contrast (target >=4.5:1 body and >=3:1 large text); verify real mobile crop and keyboard controls; preserve screenshot and download routes; optimize responsive assets with explicit dimensions, prioritize first image and defer others; add assets to existing live audit.
 - Scope: recommendations and future prompts only, not a claim that current homepage has been visually inspected. No public product claims about unsupported search capabilities.
+
+
+### Visual direction update — 2026-09-27
+
+- Generated 10 revised preview candidates after user feedback: 5 warm and 5 blue, panoramic 2:1, realistic contemporary settings, with generous right-side negative space for live Persian headline/CTA.
+- Several candidates show an ordinary young religious user from behind at a monitor; the screen displays “متن یاب”. Female subjects wear complete modest hijab/chador. The user has not selected images; no site asset or homepage was changed.
+- Await numbered selection, then only prepare/optimize the selected image(s) and implement the animated HTML text separately. Keep exact screen text in any refinement and test mobile crop.
