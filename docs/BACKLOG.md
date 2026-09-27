@@ -142,3 +142,17 @@ Migration is complete only when Laravel serves all required web/API behavior, ex
 - Found a pre-cutover mismatch: recovery compares news expiry in Asia/Tehran, while Laravel used the application UTC clock. Scoped correction to news only; no global timezone or customer-data changes.
 - News now preserves explicit legacy field types and no-store caching. Synthetic golden expectations cover expiry before/at/after the Tehran boundary, Persian text, ordering and an empty list.
 - Verified: PR #5 merged; Desktop API Contracts, Build, CI and Production Copy Guard passed. Deploy run 36290096487 passed full compatibility, deployed successfully and passed live web/API smoke. Public /news remains on recovery; a separate routing cutover and smoke test is next.
+
+
+## Dual Windows client publication — 2026-09-27
+
+- DONE — PR #7 merged and deployed.
+- DONE — Classic client remains publicly available at `/update/MATNYAAB_x64_setup.exe`; host audit measured 11,590,002 bytes and found no embedded content-package candidate in the inspectable installer listing.
+- DONE — Kotlin 1.2 portable Windows package was built with bundled runtime, passed packaged `--smoke` for Lucene/Tika, uploaded to `/downloadFiles/MATNYAAB-Kotlin-1.2-win-x64-portable.zip`, and the deploy workflow verified the public endpoint.
+- DONE — Release manifest `/downloadFiles/releases.json` is published with exact size/checksum/delivery metadata for both clients.
+- DONE — Homepage now exposes separate download cards for classic and Kotlin clients; size/delivery/content text is loaded from the release manifest.
+- DONE — Global and per-user license bypass controls plus a separate Kotlin System-ID field are available to superusers in `/adminarea`; legacy System-ID/serial remains intact.
+- TODO — Re-run homepage live audit now that the Kotlin upload is complete; the earlier audit raced the upload and saw a transient 404.
+- TODO — Prove old-client/Kotlin System-ID parity on the same Windows machine or retain dual-ID operation as the compatibility strategy.
+- TODO — Run representative Persian-document indexing/search tests and end-to-end content-pack cancel/retry tests.
+- TODO — Decide whether to additionally ship an installer EXE/MSI for Kotlin; current public Kotlin delivery is the tested portable ZIP.
