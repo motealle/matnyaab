@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Subscription;
 use App\Models\SubscriptionHistory;
 use App\Models\User;
+use App\Services\LicensePolicyService;
 use App\Services\SerialService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -15,6 +16,16 @@ class AdminDashboardTest extends TestCase
     private const ADMIN = 'matnyaab-ci-admin@example.invalid';
     private const TARGET = 'matnyaab-ci-target@example.invalid';
     private const NORMAL = 'matnyaab-ci-normal@example.invalid';
+
+    private string $licensePolicyPath;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->licensePolicyPath = storage_path('framework/testing/license-policy-'.uniqid('', true).'.json');
+        config()->set('services.license.policy_path', $this->licensePolicyPath);
+    }
 
     protected function tearDown(): void
     {
@@ -28,6 +39,10 @@ class AdminDashboardTest extends TestCase
             DB::table('users_accountmodel')->where('id', $user->id)->update(['new_order_id' => null]);
             DB::table('users_ordermodel')->where('user_id', $user->id)->delete();
             DB::table('users_accountmodel')->where('id', $user->id)->delete();
+        }
+
+        if (isset($this->licensePolicyPath) && is_file($this->licensePolicyPath)) {
+            @unlink($this->licensePolicyPath);
         }
 
         parent::tearDown();
@@ -77,6 +92,53 @@ class AdminDashboardTest extends TestCase
         $this->actingAs($normal)
             ->get('/adminarea')
             ->assertForbidden();
+    }
+
+    public function test_superuser_can_configure_dual_client_license_bypass(): void
+    {
+        $admin = $this->makeUser(
+            self::ADMIN,
+            '09999999993',
+            true
+        );
+
+        $target = $this->makeUser(
+            self::TARGET,
+            '09999999992'
+        );
+
+        $kotlinSystemId = strtoupper(md5('matnyaab-ci-kotlin-system'));
+
+        $this->actingAs($admin)
+            ->post('/adminarea/license/global', ['enabled' => '1'])
+            ->assertRedirect();
+
+        $policy = app(LicensePolicyService::class);
+        $this->assertTrue($policy->globalBypass());
+
+        $this->actingAs($admin)
+            ->post('/adminarea/license/user', [
+                'user_id' => $target->id,
+                'bypass' => '1',
+                'kotlin_system_id' => $kotlinSystemId,
+            ])
+            ->assertRedirect();
+
+        $settings = $policy->userSettings((int) $target->id);
+        $this->assertTrue($settings['bypass']);
+        $this->assertSame($kotlinSystemId, $settings['kotlin_system_id']);
+
+        $licenses = $policy->clientLicenses($target->fresh(), app(SerialService::class));
+        $this->assertTrue($licenses['bypassed']);
+        $this->assertSame('2099-12-31', $licenses['expires_at']);
+        $this->assertStringStartsWith(
+            $target->user_system_id,
+            app(SerialService::class)->decrypt($licenses['legacy_serial'])
+        );
+        $this->assertStringStartsWith(
+            $kotlinSystemId,
+            app(SerialService::class)->decrypt($licenses['kotlin_serial'])
+        );
     }
 
     public function test_superuser_can_search_and_gift_subscription(): void
