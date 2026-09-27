@@ -42,7 +42,7 @@ class LegacyApiParityTest extends TestCase
 
     public function test_news_contract_matches_legacy_query_and_shape(): void
     {
-        $now = now()->format('Y-m-d H:i:s');
+        $now = now('Asia/Tehran')->format('Y-m-d H:i:s');
 
         $expected = DB::table('news_news')
             ->where('expire_date', '>', $now)
