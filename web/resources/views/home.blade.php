@@ -4,7 +4,7 @@
 @section('meta_description', 'متن‌یاب؛ جستجوی سریع و محلی درون فایل‌های Word، PDF، PowerPoint، Excel، متن ساده و صفحات وب.')
 
 @push('styles')
-<link rel="stylesheet" href="/assets/matnyaab-hero-v1/hero.css">
+<link rel="stylesheet" href="/assets/matnyaab-hero-v1/hero.css?v=20260928-mobile">
 <style>
     .product-stage{margin:0;border:1px solid var(--line);border-radius:22px;padding:12px;background:var(--surface);box-shadow:var(--shadow)}
     .real-shot{border-radius:14px;overflow:hidden;background:var(--surface-2)}

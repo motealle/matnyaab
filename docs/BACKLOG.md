@@ -188,3 +188,10 @@ Migration is complete only when Laravel serves all required web/API behavior, ex
 - Versioned WebP assets and CSS/JS are published by the existing release deployer before switching the release pointer. Live audit now follows successful deployment and includes srcset assets.
 - User explicitly requested stopping tests to conserve tokens. No completed browser/visual validation: local PHP/browser setup was unavailable. JavaScript syntax and diff whitespace checks had passed before that instruction. Do not describe the UI as fully tested.
 - TODO — Final visual/mobile verification only when requested; automatic existing deployment gates remain in place.
+
+
+## Mobile hero correction — 2026-09-28
+
+- User reported that the mobile 2:1 thumbnail left unused copy space and moved captions outside the photo. Replaced the stacked mobile layout with one tall, full-cover photograph, per-slide subject positioning, and copy over a lower dark gradient. Overlapping grid slides grow with their content; controls retain reserved space below the copy.
+- Zoom rate increased threefold: scale 1 → 1.054 over 20s (previously 1 → 1.018). Reduced-motion and pause behavior retained. CSS URL cache-busted.
+- No tests run, as explicitly requested. Submitted through existing deployment; live outcome not verified.
