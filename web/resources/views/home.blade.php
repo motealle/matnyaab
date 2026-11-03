@@ -74,7 +74,7 @@
     .req-list li:before{content:"✓";color:var(--green);margin-left:6px}
 
     .support-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:20px;align-items:start}
-    .support-steps{margin:0 0 18px;padding-right:20px;color:var(--muted);font-size:14px;line-height:2.1}
+    .support-steps{list-style:persian;margin:0 0 18px;padding-right:22px;color:var(--muted);font-size:14px;line-height:2.1}
     .support-steps strong{color:var(--text)}
     .bank-card{position:relative;display:grid;gap:6px;padding:24px;border-radius:20px;color:#fff;overflow:hidden;
         background:radial-gradient(260px 160px at 90% 10%,rgba(255,255,255,.18),transparent 70%),linear-gradient(135deg,#0b4f8a,#1d7fd1 60%,#2ea0e6);
