@@ -115,6 +115,7 @@ try {
         'CACHE_STORE=file',
         'QUEUE_CONNECTION=sync',
         'LICENSE_POLICY_PATH=' . $licensePolicy,
+        'SUPPORT_REPORTS_PATH=' . $sharedDir . DIRECTORY_SEPARATOR . 'support-reports.jsonl',
     ];
 
     $runtimeEnvFile = $sharedDir . DIRECTORY_SEPARATOR . 'runtime-services.env';
@@ -167,22 +168,31 @@ try {
     $contents = App\Models\Content::query()->count();
     $users = App\Models\User::query()->count();
 
-    // The application lives outside document root; publish its versioned hero assets explicitly.
-    $assetSource = $releaseDir . '/public/assets/matnyaab-hero-v1';
-    $assetTarget = $docRoot . '/assets/matnyaab-hero-v1';
-    if (!is_dir($assetSource)) {
-        throw new RuntimeException('hero assets are missing from release');
-    }
-    if (!is_dir($assetTarget) && !mkdir($assetTarget, 0755, true) && !is_dir($assetTarget)) {
-        throw new RuntimeException('cannot create public hero asset directory');
-    }
-    foreach (glob($assetSource . '/*') ?: [] as $asset) {
-        if (!is_file($asset) || !in_array(pathinfo($asset, PATHINFO_EXTENSION), ['webp', 'css', 'js'], true)) {
-            throw new RuntimeException('unexpected hero asset');
+    // The application lives outside document root; publish its versioned public assets explicitly.
+    $assetSets = [
+        'matnyaab-hero-v1' => ['required' => true, 'ext' => ['webp', 'css', 'js']],
+        'matnyaab-v2' => ['required' => false, 'ext' => ['webp', 'png', 'svg', 'css', 'js']],
+    ];
+    foreach ($assetSets as $set => $rule) {
+        $assetSource = $releaseDir . '/public/assets/' . $set;
+        $assetTarget = $docRoot . '/assets/' . $set;
+        if (!is_dir($assetSource)) {
+            if ($rule['required']) {
+                throw new RuntimeException($set . ' assets are missing from release');
+            }
+            continue;
         }
-        $target = $assetTarget . '/' . basename($asset);
-        if (!copy($asset, $target . '.tmp') || !rename($target . '.tmp', $target)) {
-            throw new RuntimeException('cannot publish hero asset');
+        if (!is_dir($assetTarget) && !mkdir($assetTarget, 0755, true) && !is_dir($assetTarget)) {
+            throw new RuntimeException('cannot create public asset directory ' . $set);
+        }
+        foreach (glob($assetSource . '/*') ?: [] as $asset) {
+            if (!is_file($asset) || !in_array(strtolower(pathinfo($asset, PATHINFO_EXTENSION)), $rule['ext'], true)) {
+                throw new RuntimeException('unexpected public asset in ' . $set);
+            }
+            $target = $assetTarget . '/' . basename($asset);
+            if (!copy($asset, $target . '.tmp') || !rename($target . '.tmp', $target)) {
+                throw new RuntimeException('cannot publish asset ' . basename($asset));
+            }
         }
     }
 

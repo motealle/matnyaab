@@ -29,7 +29,7 @@ class SearchPanel(
     private val onAdvancedSearch: (AdvancedSearchParams) -> Unit,
 ) : VBox(8.0) {
 
-    private val quickInput = TextField().apply { promptText = "جستجوی سریع" }
+    private val quickInput = TextField().apply { promptText = "واژه یا عبارت موردنظر…" }
 
     private val allInput = AdvanceInput("همه کلمات")
     private val anyInput = AdvanceInput("یکی از کلمات")
@@ -82,6 +82,8 @@ class SearchPanel(
 
         children.addAll(quickRow, javafx.scene.control.Separator(), allInput, anyInput, noneInput, spaceRow, btnSearch)
     }
+
+    fun focusQuick() { quickInput.requestFocus(); quickInput.selectAll() }
 
     private fun fireQuick() { if (quickInput.text.isNotBlank()) onQuickSearch(quickInput.text.trim()) }
 

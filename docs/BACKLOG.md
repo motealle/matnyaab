@@ -195,3 +195,15 @@ Migration is complete only when Laravel serves all required web/API behavior, ex
 - User reported that the mobile 2:1 thumbnail left unused copy space and moved captions outside the photo. Replaced the stacked mobile layout with one tall, full-cover photograph, per-slide subject positioning, and copy over a lower dark gradient. Overlapping grid slides grow with their content; controls retain reserved space below the copy.
 - Zoom rate increased threefold: scale 1 → 1.054 over 20s (previously 1 → 1.018). Reduced-motion and pause behavior retained. CSS URL cache-busted.
 - No tests run, as explicitly requested. Submitted through existing deployment; live outcome not verified.
+
+
+## Matnyaab 2.0 free release — 2026-11-03
+
+- DONE — Remove trial cap and subscription gates from the Windows client.
+- DONE — Voluntary card-to-card support (client dialog + homepage section + report form + admin list).
+- DONE — Client 2.0: themes, new icon/name, redesigned add-folder flow, help page, screenshots in CI.
+- DONE — Homepage "What's new", single download, FAQ, SEO metadata, robots/sitemap.
+- TODO — Signed installer (jpackage `--type exe`/MSI + code signing) to avoid SmartScreen warnings.
+- TODO — In-app update check for 2.x (separate version file so classic clients are not affected).
+- TODO — OCR for scanned PDFs (Tesseract via Tika) as an optional add-on.
+- TODO — Remove dormant IDPay purchase code after the owner confirms online payment will not return.

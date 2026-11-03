@@ -1,0 +1,81 @@
+/* متن‌یاب ۲ — شیوه‌نامهٔ مشترک. رنگ‌ها از متغیرهای پوسته (-mx-*) روی ریشهٔ صحنه می‌آیند. */
+.root { -fx-text-fill: -mx-text; }
+.label { -fx-text-fill: -mx-text; }
+.muted { -fx-text-fill: -mx-muted; }
+
+.card {
+    -fx-background-color: -mx-surface;
+    -fx-background-radius: 10;
+    -fx-border-color: -mx-border;
+    -fx-border-radius: 10;
+    -fx-effect: dropshadow(gaussian, rgba(16,24,40,0.06), 10, 0, 0, 2);
+}
+.split-pane { -fx-background-color: -mx-canvas; -fx-padding: 8; }
+.split-pane > .split-pane-divider { -fx-background-color: transparent; -fx-padding: 0 3 0 3; }
+
+.scroll-pane, .scroll-pane > .viewport { -fx-background-color: transparent; }
+.scroll-pane.card > .viewport { -fx-background-color: -mx-surface; -fx-background-radius: 10; }
+
+.text-field, .text-area, .combo-box-base, .spinner {
+    -fx-background-color: -mx-border, -mx-surface;
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 7, 6;
+    -fx-text-fill: -mx-text;
+    -fx-prompt-text-fill: -mx-muted;
+    -fx-padding: 6 9 6 9;
+}
+.text-field:focused, .combo-box-base:focused {
+    -fx-background-color: -mx-accent, -mx-surface;
+    -fx-background-insets: 0, 2;
+}
+
+.table-view, .tree-view, .list-view {
+    -fx-background-color: -mx-surface;
+    -fx-border-color: -mx-border;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+.table-view .column-header-background { -fx-background-color: -mx-surface-2; }
+.table-view .column-header, .table-view .filler { -fx-background-color: transparent; -fx-border-color: transparent transparent -mx-border transparent; }
+.table-view .column-header .label { -fx-text-fill: -mx-muted; -fx-font-weight: bold; }
+.table-row-cell { -fx-background-color: -mx-surface; -fx-border-color: transparent transparent -mx-hover transparent; -fx-cell-size: 2.4em; }
+.table-row-cell:hover { -fx-background-color: -mx-hover; }
+.table-row-cell:selected, .tree-cell:selected, .list-cell:selected { -fx-background-color: -mx-selected; }
+.table-row-cell:selected .text, .tree-cell:selected, .list-cell:selected { -fx-fill: -mx-text; -fx-text-fill: -mx-text; }
+.tree-cell, .list-cell { -fx-background-color: -mx-surface; -fx-text-fill: -mx-text; -fx-padding: 4 6 4 6; }
+.tree-cell:hover, .list-cell:filled:hover { -fx-background-color: -mx-hover; }
+.table-view .placeholder .label, .tree-view .placeholder .label { -fx-text-fill: -mx-muted; }
+
+.check-box > .box { -fx-background-color: -mx-border, -mx-surface; -fx-background-radius: 4; }
+.check-box:selected > .box { -fx-background-color: -mx-accent; }
+.check-box:selected > .box > .mark { -fx-background-color: white; }
+.check-box { -fx-text-fill: -mx-text; }
+
+.progress-bar > .bar { -fx-background-color: -mx-accent; -fx-background-radius: 6; -fx-background-insets: 0; }
+.progress-bar > .track { -fx-background-color: -mx-hover; -fx-background-radius: 6; }
+
+.titled-pane > .title { -fx-background-color: -mx-surface-2; -fx-background-radius: 7; -fx-padding: 6 10 6 10; }
+.titled-pane > .title > .text { -fx-fill: -mx-text; }
+.titled-pane > .content { -fx-background-color: transparent; -fx-border-color: transparent; -fx-padding: 8 4 4 4; }
+
+.chip { -fx-background-color: -mx-surface-2; -fx-background-radius: 16; -fx-border-color: -mx-border; -fx-border-radius: 16; -fx-padding: 5 12 5 12; }
+.chip:selected { -fx-background-color: -mx-accent-soft; -fx-border-color: -mx-accent; }
+.chip:selected > .box { -fx-background-color: -mx-accent; }
+
+.context-menu { -fx-background-color: -mx-surface; -fx-border-color: -mx-border; -fx-background-radius: 8; -fx-border-radius: 8; }
+.menu-item:focused { -fx-background-color: -mx-hover; }
+.menu-item .label { -fx-text-fill: -mx-text; }
+.tooltip { -fx-background-color: -mx-text; -fx-text-fill: -mx-surface; -fx-background-radius: 6; -fx-font-size: 12px; }
+
+.scroll-bar { -fx-background-color: transparent; }
+.scroll-bar .thumb { -fx-background-color: -mx-border; -fx-background-radius: 6; }
+.scroll-bar .thumb:hover { -fx-background-color: -mx-muted; }
+.scroll-bar .increment-button, .scroll-bar .decrement-button { -fx-padding: 0; }
+
+.titlebar-button { -fx-background-color: transparent; -fx-text-fill: -mx-text; -fx-background-radius: 0; -fx-cursor: hand; }
+.titlebar-button:hover { -fx-background-color: -mx-hover; }
+.titlebar-close:hover { -fx-background-color: #C42B1C; -fx-text-fill: white; }
+
+.section-title { -fx-font-weight: bold; -fx-text-fill: -mx-text; }
+.empty-hint { -fx-text-fill: -mx-muted; -fx-wrap-text: true; -fx-text-alignment: center; }
+.badge-free { -fx-background-color: -mx-accent-soft; -fx-text-fill: -mx-accent-text; -fx-background-radius: 10; -fx-padding: 2 10 2 10; -fx-font-weight: bold; }

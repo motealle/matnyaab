@@ -25,13 +25,13 @@ class IncrementalIndexingDialog(
     owner: Window?,
     private val targets: List<IndexerInfo>,
     private val indexer: LuceneIndexer,
-    private val license: LicenseChecker,
+    @Suppress("UNUSED_PARAMETER") license: LicenseChecker? = null,
     private val onFinished: () -> Unit,
 ) {
     private val stage = Stage(StageStyle.UNDECORATED)
     private val tblLog = TableView<LogRow>()
-    private val btnCancel = Button("لغو")
-    private val service = IndexingService(indexer, license)
+    private val btnCancel = Button("توقف به‌روزرسانی")
+    private val service = IndexingService(indexer)
 
     // یادداشت: نیازی به گترهای دستی نیست — کاتلین برای propertyهای public
     // به‌طور خودکار گترهای هم‌نام جاوابین (getFile/getPath/getAction) می‌سازد
@@ -47,22 +47,24 @@ class IncrementalIndexingDialog(
         val c3 = TableColumn<LogRow, String>("عمل").apply { cellValueFactory = PropertyValueFactory("action"); prefWidth = 140.0 }
         tblLog.columns.addAll(c1, c2, c3)
         tblLog.prefHeight = 320.0
+        tblLog.placeholder = javafx.scene.control.Label("در حال مقایسهٔ فایل‌ها با فهرست قبلی…")
 
-        btnCancel.style = "${Theme.FONT} -fx-background-color: #c42b1c; -fx-text-fill: white; -fx-background-radius: 4px;"
+        btnCancel.style = Theme.dangerButton()
         btnCancel.prefHeight = Constants.OPTION_BUTTONS_HEIGHT
         btnCancel.maxWidth = Double.MAX_VALUE
         btnCancel.setOnAction { service.cancelled = true }
 
         val content = VBox(10.0, tblLog, btnCancel).apply {
-            padding = Insets(14.0); style = "-fx-background-color: white;"
+            padding = Insets(14.0); style = "-fx-background-color: ${Constants.OPTION_BACKGROUND_COLOR};"
         }
         val root = BorderPane().apply {
             nodeOrientation = NodeOrientation.RIGHT_TO_LEFT
-            top = CustomTitleBar(stage, "به روز رسانی فهرست ها", showMaximize = false)
+            top = CustomTitleBar(stage, "به‌روزرسانی فهرست‌ها", showMaximize = false)
             center = content
             style = "-fx-border-color: ${Constants.BORDER_COLOR};"
         }
         stage.scene = Scene(root, 620.0, 440.0)
+        Theme.install(stage.scene, stage)
     }
 
     fun show() {
@@ -83,9 +85,6 @@ class IncrementalIndexingDialog(
                         }
                     }
                     override fun onFinish(err: Int) {
-                        if (err == 1) Platform.runLater {
-                            CustomMessageBox.show(stage, Constants.APP_NAME_PERSIAN, "اشتراک به اتمام رسیده است!")
-                        }
                         if (err == 2) { Platform.runLater { onFinished(); stage.close() }; return }
                         runNext()
                     }

@@ -1,2 +1,7 @@
 User-agent: *
-Disallow:
+Disallow: /adminarea
+Disallow: /profile
+Disallow: /change_password
+Disallow: /restore/
+
+Sitemap: https://www.matnyaab.ir/sitemap.xml

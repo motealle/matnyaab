@@ -114,5 +114,32 @@
             @endforelse
         </div>
     </section>
+
+    <section class="panel panel-pad" style="margin-top:14px" id="support-reports">
+        <span class="eyebrow">حمایت‌های اعلام‌شده</span>
+        <h2 style="font-size:21px;margin:5px 0 12px">اعلام‌های واریز ({{ number_format($supportCount) }})</h2>
+        @if (empty($supportReports))
+            <div class="muted">هنوز اعلام واریزی ثبت نشده است.</div>
+        @else
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>زمان ثبت</th><th>نام</th><th>راه ارتباطی</th><th>مبلغ (تومان)</th><th>۴ رقم کارت</th><th>زمان واریز</th><th>پیام</th></tr></thead>
+                    <tbody>
+                    @foreach ($supportReports as $r)
+                        <tr>
+                            <td dir="ltr">{{ $r['received_at'] ?? '' }}</td>
+                            <td>{{ $r['name'] ?? '' }}</td>
+                            <td dir="auto">{{ $r['contact'] ?? '' }}</td>
+                            <td>{{ number_format((int) ($r['amount_toman'] ?? 0)) }}</td>
+                            <td dir="ltr">{{ $r['card_last4'] ?? '—' }}</td>
+                            <td>{{ $r['paid_at'] ?? '—' }}</td>
+                            <td style="max-width:280px;overflow-wrap:anywhere">{{ $r['message'] ?? '' }}</td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </section>
 </div>
 @endsection

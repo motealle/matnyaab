@@ -38,7 +38,7 @@ class ContentPacksPanel(
     init {
         nodeOrientation = NodeOrientation.RIGHT_TO_LEFT
         padding = Insets(8.0)
-        style = "-fx-background-color: white; -fx-border-color: ${Constants.BORDER_COLOR}; -fx-border-radius: 6px;"
+        style = "-fx-background-color: ${Constants.OPTION_BACKGROUND_COLOR}; -fx-border-color: ${Constants.BORDER_COLOR}; -fx-border-radius: 6px;"
         val scroll = ScrollPane(listBox).apply {
             isFitToWidth = true
             prefHeight = 300.0

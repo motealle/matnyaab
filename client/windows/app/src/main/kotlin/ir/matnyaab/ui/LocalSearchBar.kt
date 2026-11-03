@@ -49,9 +49,10 @@ class LocalSearchBar(
 
         val row = HBox(6.0, btnClose, counter, btnUp, btnDown, input).apply {
             alignment = Pos.CENTER
-            style = "-fx-background-color: white; -fx-border-color: ${Constants.BUTTON_BACKGROUND_COLOR}; -fx-border-width: 2px; -fx-padding: 6;"
+            style = "-fx-background-color: ${Constants.OPTION_BACKGROUND_COLOR}; -fx-border-color: ${Constants.BUTTON_BACKGROUND_COLOR}; -fx-border-width: 2px; -fx-padding: 6;"
         }
         stage.scene = Scene(row, 400.0, 46.0)
+        Theme.install(stage.scene, stage)
         stage.isAlwaysOnTop = true
     }
 

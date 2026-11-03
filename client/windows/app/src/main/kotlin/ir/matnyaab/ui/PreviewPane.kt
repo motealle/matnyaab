@@ -70,6 +70,7 @@ class PreviewPane(private val settings: AppSettingsManager) : VBox() {
         VBox.setVgrow(webView, Priority.ALWAYS)
         children.addAll(toolbar, lblError, webView)
         setAlignButtons()
+        Theme.onChange { if (!helpMode) render() else showHelp() }
 
         // بارگذاری WebView غیرهمزمان است؛ پس از پایان لود، خودکار به مورد فعلی/اول اسکرول می‌شود
         webView.engine.loadWorker.stateProperty().addListener { _, _, st ->
@@ -83,7 +84,7 @@ class PreviewPane(private val settings: AppSettingsManager) : VBox() {
     }
 
     private fun glyphBtn(g: String, tip: String, action: () -> Unit) = Button(g).apply {
-        style = Theme.awesome(12) + "-fx-background-color: transparent; -fx-cursor: hand;"
+        style = Theme.awesome(14) + "-fx-background-color: transparent; -fx-cursor: hand; -fx-text-fill: -mx-text;"
         tooltip = Tooltip(tip)
         setOnAction { action() }
     }
@@ -118,7 +119,9 @@ class PreviewPane(private val settings: AppSettingsManager) : VBox() {
         val body = """
             <html><head><meta charset='utf-8'>
             <style>
-              body { font-family: '$fontFamily', '${Constants.PREVIEW_DEFAULT_FONT}', '${Constants.GENERAL_FONT_NAME_PERSIAN}', 'Tahoma', sans-serif; font-size: ${fontSize}px; line-height: 2.1; direction: $dir; text-align: $align; padding: 8px; }
+              body { font-family: '$fontFamily', '${Constants.PREVIEW_DEFAULT_FONT}', '${Constants.GENERAL_FONT_NAME_PERSIAN}', 'Tahoma', sans-serif; font-size: ${fontSize}px; line-height: 2.1; direction: $dir; text-align: $align; padding: 10px 14px; background: ${Theme.palette.previewBg}; color: ${Theme.palette.previewText}; }
+              .hl { color: #1b1b1b; border-radius: 3px; padding: 0 1px; }
+              .empty { color: ${Theme.palette.muted}; text-align: center; margin-top: 30%; font-family: '${Theme.uiFont()}', Tahoma, sans-serif; font-size: 15px; line-height: 2; }
             </style>
             <script>
               function scrollToItem(i) {
@@ -128,7 +131,7 @@ class PreviewPane(private val settings: AppSettingsManager) : VBox() {
                 }
               }
             </script>
-            </head><body>${tagHighlights(previewHtml)}</body></html>
+            </head><body>${if (previewHtml.isBlank()) "<div class='empty'>متن سندِ انتخاب‌شده اینجا نمایش داده می‌شود.<br>واژه‌های جست‌وجوشده رنگی می‌شوند و با دکمه‌های ▲ ▼ میان آن‌ها جابه‌جا می‌شوید.</div>" else tagHighlights(previewHtml)}</body></html>
         """.trimIndent()
         webView.engine.loadContent(body)
     }
@@ -232,8 +235,8 @@ class PreviewPane(private val settings: AppSettingsManager) : VBox() {
 
     private fun setAlignButtons() {
         listOf(btnAlignRight to "right", btnAlignCenter to "center", btnAlignLeft to "left").forEach { (b, a) ->
-            b.style = Theme.awesome(12) + "-fx-background-color: transparent; -fx-cursor: hand;" +
-                if (align == a) "-fx-text-fill: red;" else ""
+            b.style = Theme.awesome(14) + "-fx-background-color: transparent; -fx-cursor: hand; -fx-text-fill: -mx-text;" +
+                if (align == a) "-fx-text-fill: -mx-accent; -fx-background-color: -mx-accent-soft; -fx-background-radius: 6;" else ""
         }
     }
 
@@ -253,7 +256,11 @@ class PreviewPane(private val settings: AppSettingsManager) : VBox() {
     /** نمایش راهنمما — معادل showHelp */
     fun showHelp() {
         val url = javaClass.getResource("/help/matnyaab_help.htm")
-        if (url != null) { helpMode = true; align = "left"; setAlignButtons(); webView.engine.load(url.toExternalForm()) }
+        if (url != null) {
+            helpMode = true
+            val dark = if (Theme.palette.dark) "?dark=1" else ""
+            webView.engine.load(url.toExternalForm() + dark)
+        }
     }
 }
 

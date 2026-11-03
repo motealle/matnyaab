@@ -17,6 +17,7 @@ class AppSettingsManager {
         "LAST_VISIT" to "1400-01-01 00:00:00",
         "SERIAL" to "",
         "FONT_RATE" to "100",
+        "THEME" to "blue",
         "PREVIEW_FONT_FAMILY" to Constants.PREVIEW_DEFAULT_FONT,
         "PREVIEW_FONT_SIZE" to Constants.PREVIEW_DEFAULT_FONT_SIZE.toString(),
     )

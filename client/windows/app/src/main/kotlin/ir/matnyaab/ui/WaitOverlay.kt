@@ -7,11 +7,16 @@ import javafx.scene.layout.StackPane
 /** معادل WgWait — لایه نیمه‌شفاف «لطفا صبر کنید...» روی کل پنجره */
 class WaitOverlay : StackPane() {
     init {
-        style = "-fx-background-color: rgba(243,250,240,0.9);"
-        val lbl = Label("لطفا صبر کنید...").apply {
-            style = "-fx-font-family: 'Tahoma','Arial'; -fx-font-size: 16px;"
+        style = "-fx-background-color: rgba(0,0,0,0.18);"
+        val spinner = javafx.scene.control.ProgressIndicator().apply { prefWidth = 36.0; prefHeight = 36.0 }
+        val lbl = Label("در حال جست‌وجو…").apply { style = "-fx-font-size: 15px; -fx-font-weight: bold;" }
+        val card = javafx.scene.layout.VBox(10.0, spinner, lbl).apply {
+            alignment = Pos.CENTER
+            maxWidth = 220.0; maxHeight = 120.0
+            styleClass.add("card")
+            style = "-fx-padding: 18;"
         }
-        children.add(lbl)
+        children.add(card)
         alignment = Pos.CENTER
         isVisible = false
     }

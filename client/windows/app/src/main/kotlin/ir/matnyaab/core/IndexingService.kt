@@ -10,7 +10,6 @@ import java.nio.file.Path
  */
 class IndexingService(
     private val indexer: LuceneIndexer,
-    private val license: LicenseChecker,
 ) {
     interface Callbacks {
         fun onFileStart(file: File) {}
@@ -18,7 +17,7 @@ class IndexingService(
         fun onFileError(file: File, error: String) {}
         fun onProgress(done: Int, total: Int) {}
         fun onLog(message: String) {}
-        /** err: 0=موفق 1=سقف اشتراک 2=لغو 3=خطا */
+        /** err: 0=موفق 2=لغو 3=خطا (متن‌یاب ۲ هیچ سقف حجمی ندارد) */
         fun onFinish(err: Int) {}
     }
 
@@ -58,8 +57,6 @@ class IndexingService(
         cancelled = false
         val startMs = System.currentTimeMillis()
         val savePath = indexer.makeIndexDir(rootPath)
-        var usedSpace = indexer.usedSpace()
-        val subscribed = license.isSubscribed()
         val entries = mutableListOf<FileEntry>()
         try {
             indexer.openWriter(savePath).use { writer ->
@@ -69,31 +66,23 @@ class IndexingService(
                 }
                 val total = all.size
                 var done = 0
+                cb.onProgress(0, total)
                 for (f in all) {
                     if (cancelled) {
                         writer.rollback()
                         indexer.deleteIndexer(savePath.toString())
                         cb.onFinish(2); return
                     }
-                    // محدودیت نسخه آزمایشی ۲۵ مگابایت
-                    if (!subscribed && usedSpace + f.length() > Constants.LIMITED_TRIAL_SIZE) {
-                        writer.commit()
-                        indexer.saveFileInfo(savePath, indexName, rootPath)
-                        indexer.saveFileList(savePath, entries)
-                        indexer.loadIndexer(indexName, savePath.toString(), rootPath)
-                        cb.onFinish(1); return
-                    }
                     cb.onFileStart(f)
                     val parsed = TikaExtractor.parse(f)
                     if (parsed.status == 500 || parsed.content == null) {
-                        cb.onFileError(f, "خطای سرور تیکا")
+                        cb.onFileError(f, "متن این فایل قابل استخراج نبود")
                     } else {
                         indexer.addDocument(
                             writer, f.name, f.absolutePath, f.length(),
                             f.lastModified() / 1000.0, parsed.content
                         )
                         entries.add(FileEntry(f.absolutePath, f.length(), f.lastModified() / 1000.0))
-                        usedSpace += f.length()
                         cb.onFileDone(f)
                     }
                     done++
@@ -144,8 +133,6 @@ class IndexingService(
                 cb.onFinish(0); return
             }
 
-            var usedSpace = indexer.usedSpace()
-            val subscribed = license.isSubscribed()
             val entries = oldList.toMutableMap()
 
             indexer.openWriter(savePath).use { writer ->
@@ -157,19 +144,13 @@ class IndexingService(
                 }
                 for (f in newFiles) {
                     if (cancelled) { writer.rollback(); cb.onFinish(2); return }
-                    if (!subscribed && usedSpace + f.length() > Constants.LIMITED_TRIAL_SIZE) {
-                        writer.commit()
-                        indexer.saveFileList(savePath, entries.values.toList())
-                        cb.onFinish(1); return
-                    }
                     cb.onFileStart(f)
                     val parsed = TikaExtractor.parse(f)
                     if (parsed.status == 500 || parsed.content == null) {
-                        cb.onFileError(f, "خطای سرور تیکا")
+                        cb.onFileError(f, "متن این فایل قابل استخراج نبود")
                     } else {
                         indexer.addDocument(writer, f.name, f.absolutePath, f.length(), f.lastModified() / 1000.0, parsed.content)
                         entries[f.absolutePath] = FileEntry(f.absolutePath, f.length(), f.lastModified() / 1000.0)
-                        usedSpace += f.length()
                         cb.onLog("افزودن به فهرست: ${f.absolutePath}")
                         cb.onFileDone(f)
                     }

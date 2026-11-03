@@ -7,6 +7,7 @@ use App\Models\SubscriptionHistory;
 use App\Models\User;
 use App\Services\LicensePolicyService;
 use App\Services\SerialService;
+use App\Services\SupportReportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +15,7 @@ use Illuminate\View\View;
 
 class AdminController extends Controller
 {
-    public function index(Request $request, LicensePolicyService $licensePolicy): View
+    public function index(Request $request, LicensePolicyService $licensePolicy, SupportReportService $supportReports): View
     {
         $this->authorizeSuperuser($request);
 
@@ -44,6 +45,8 @@ class AdminController extends Controller
                     (string) $user->id => $licensePolicy->userSettings((int) $user->id),
                 ])->all(),
             ],
+            'supportReports' => $supportReports->latest(50),
+            'supportCount' => $supportReports->count(),
             'counts' => [
                 'users' => User::query()->count(),
                 'confirmed' => User::query()->where('is_phone_confirmed', 1)->count(),
