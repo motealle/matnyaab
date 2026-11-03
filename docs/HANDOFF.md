@@ -250,3 +250,24 @@ There is no retired source host to fail back to. Rollback means reverting code/r
 - User reported that the mobile 2:1 thumbnail left unused copy space and moved captions outside the photo. Replaced the stacked mobile layout with one tall, full-cover photograph, per-slide subject positioning, and copy over a lower dark gradient. Overlapping grid slides grow with their content; controls retain reserved space below the copy.
 - Zoom rate increased threefold: scale 1 → 1.054 over 20s (previously 1 → 1.018). Reduced-motion and pause behavior retained. CSS URL cache-busted.
 - No tests run, as explicitly requested. Submitted through existing deployment; live outcome not verified.
+
+## Matnyaab 2.0 free release — 2026-11-03
+
+Product decision (owner): the Windows client is now **completely free with no limits**. Payment is voluntary,
+trust-based card-to-card, announced on the homepage. Online purchase is no longer offered in the UI.
+
+- Client `client/windows` is version **2.0**, packaged as `Matnyaab.exe` (`Matnyaab-2.0-win-x64.zip`) with a proper icon.
+  - 25 MB trial cap and every subscription gate were removed (search, indexing, incremental update).
+  - Subscription window replaced by `SupportDialog` (card number + link to `/#support`).
+  - Five switchable themes (`Theme.PALETTES`, persisted as `THEME` in settings.ini), applied live via CSS looked-up colours.
+  - Redesigned add-folder dialog, scope tree counts/tooltips/empty state, larger caption buttons, Persian help page.
+  - The settings directory is still `%APPDATA%\MATNYAAB` so existing indexes keep working.
+  - `--screenshots <dir>` renders product screenshots from a temporary sample library (used by CI only).
+- Web
+  - Homepage: "What's new in 2", screenshot gallery (`/assets/matnyaab-v2/`), one full download + classic link, support, FAQ.
+  - Support reports: `POST /support` → JSONL at `SUPPORT_REPORTS_PATH` (deployer points it to `shared/support-reports.jsonl`);
+    no SQLite schema change. Listed in `/adminarea`.
+  - Card details come from `services.support.*` (env `SUPPORT_CARD_NUMBER`, `SUPPORT_CARD_HOLDER`), public by design.
+  - SEO: canonical/OG/Twitter meta, JSON-LD (SoftwareApplication, WebSite, FAQPage), `/robots.txt`, `/sitemap.xml`.
+  - Profile no longer shows a purchase form. `buysubscription`/IDPay code is kept dormant for compatibility tests.
+- Deployer publishes `public/assets/matnyaab-v2` in addition to the hero assets.

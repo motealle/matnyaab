@@ -52,6 +52,20 @@ class SupportReportTest extends TestCase
         $this->assertFileDoesNotExist($this->path);
     }
 
+    public function test_homepage_shows_free_release_support_and_structured_data(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('متن‌یاب ۲', false)
+            ->assertSee('id="support"', false)
+            ->assertSee('5041 7212 0222 7469', false)
+            ->assertSee('application/ld+json', false)
+            ->assertSee('data-release-link="kotlin"', false)
+            ->assertSee('data-release-link="classic"', false)
+            ->assertSee('/static/sc1.png', false)
+            ->assertDontSee('ثبت‌نام آنلاین موقتاً', false);
+    }
+
     public function test_seo_endpoints_respond(): void
     {
         $this->get('/robots.txt')->assertOk()->assertSee('Sitemap:', false);
