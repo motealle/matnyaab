@@ -1,6 +1,7 @@
 package ir.matnyaab.ui
 
 import ir.matnyaab.core.*
+import ir.matnyaab.util.PersianUtil
 import javafx.application.Platform
 import javafx.collections.FXCollections
 import javafx.geometry.Insets
@@ -17,104 +18,135 @@ import javafx.stage.Window
 import java.io.File
 
 /**
- * معادل scanDirectoryDialog — دیالوگ «فهرست‌گیری»:
- * نام دسته، حداقل/حداکثر اندازه (بایت/کیلوبایت/مگابایت)، لیست فرمت‌ها با منوی راست‌کلیک،
- * چک‌باکس «همه فایل‌ها و فرمت‌ها»، زیرپوشه‌ها، لاگ فایل‌ها و جدول خطاها، دکمه سبز شروع/قرمز لغو
+ * دیالوگ «افزودن پوشه» (فهرست‌گیری) — طراحی فشردهٔ متن‌یاب ۲:
+ * نام دسته، انتخاب نوع اسناد با چند گزینهٔ ساده (به‌جای فهرست بلند پسوندها)،
+ * زیرپوشه‌ها، تنظیمات پیشرفتهٔ تاشو، دکمهٔ شروع درست زیر گزینه‌ها،
+ * و بخش پیشرفت (درصد، شمارش، زمان باقیمانده، خطاها) که فقط هنگام کار ظاهر می‌شود.
+ * هیچ محدودیت حجمی یا اشتراکی وجود ندارد.
  */
 class ScanDirectoryDialog(
     owner: Window?,
     private val rootPath: String,
     private val indexer: LuceneIndexer,
-    private val license: LicenseChecker,
+    @Suppress("UNUSED_PARAMETER") license: LicenseChecker? = null,
     private val onFinished: () -> Unit,
 ) {
+    /** گروه‌های نوع سند؛ هر گروه چند پسوند را پوشش می‌دهد */
+    data class FormatGroup(val title: String, val exts: List<String>, val default: Boolean)
+
+    companion object {
+        val GROUPS = listOf(
+            FormatGroup("Word و متن", listOf(".doc", ".docx", ".rtf", ".odt", ".ott", ".txt"), true),
+            FormatGroup("PDF", listOf(".pdf"), true),
+            FormatGroup("پاورپوینت", listOf(".ppt", ".pptx", ".odp"), true),
+            FormatGroup("OneNote", listOf(".one"), true),
+            FormatGroup("اکسل", listOf(".xls", ".xlsx", ".ods", ".csv"), false),
+            FormatGroup("وب، XML و کتاب الکترونیک", listOf(".htm", ".html", ".xhtml", ".xml", ".epub"), false),
+        )
+    }
+
     private val stage = Stage(StageStyle.UNDECORATED)
-    private val txtCatName = TextField(File(rootPath).name).apply { style = Theme.FONT }
-    private val txtMinSize = TextField("1")
-    private val txtMaxSize = TextField("100")
+    private val txtCatName = TextField(File(rootPath).name)
+    private val groupChecks = GROUPS.map { g ->
+        CheckBox(g.title).apply {
+            isSelected = g.default
+            styleClass.add("chip")
+            tooltip = Tooltip(g.exts.joinToString("  "))
+        }
+    }
+    private val chkSubFolders = CheckBox("زیرپوشه‌ها هم فهرست شوند").apply { isSelected = true }
+    private val chkAllFormats = CheckBox("همهٔ فایل‌ها با هر پسوندی (کندتر)")
+    private val txtMinSize = TextField("1").apply { prefColumnCount = 6 }
+    private val txtMaxSize = TextField("200").apply { prefColumnCount = 6 }
     private val units = listOf("بایت", "کیلوبایت", "مگابایت")
     private val cmbMinUnit = ComboBox(FXCollections.observableArrayList(units)).apply { selectionModel.select(0) }
     private val cmbMaxUnit = ComboBox(FXCollections.observableArrayList(units)).apply { selectionModel.select(2) }
-    private val lstFormats = ListView<String>().apply {
-        items.addAll(IndexingService.ALL_FILE_FORMATS)
-        selectionModel.selectionMode = SelectionMode.MULTIPLE
-        IndexingService.IMPORTANT_FORMATS.forEach { selectionModel.select(items.indexOf(it)) }
-        prefHeight = 150.0
+
+    private val progress = ProgressBar(0.0).apply { maxWidth = Double.MAX_VALUE; prefHeight = 10.0 }
+    private val lblProgress = Label("در حال شمارش فایل‌ها…")
+    private val lblEta = Label("").apply { styleClass.add("muted") }
+    private val lblCurrent = Label("").apply {
+        styleClass.add("muted"); maxWidth = Double.MAX_VALUE
+        textOverrun = OverrunStyle.LEADING_ELLIPSIS
+        style = "-fx-font-size: ${Constants.FONT_SIZE_SMALL}px;"
     }
-    private val chkAllFormats = CheckBox("همه فایل ها و فرمت ها")
-    private val chkSubFolders = CheckBox("زیر پوشه ها هم فهرست شوند").apply { isSelected = true }
-    private val lstLog = ListView<String>().apply { prefHeight = 110.0 }
     private val tblErrors = TableView<ErrorRow>().apply {
         val c1 = TableColumn<ErrorRow, String>("فایل").apply { cellValueFactory = PropertyValueFactory("file"); prefWidth = 170.0 }
-        val c2 = TableColumn<ErrorRow, String>("مسیر").apply { cellValueFactory = PropertyValueFactory("path"); prefWidth = 230.0 }
-        val c3 = TableColumn<ErrorRow, String>("خطا").apply { cellValueFactory = PropertyValueFactory("error"); prefWidth = 150.0 }
+        val c2 = TableColumn<ErrorRow, String>("مسیر").apply { cellValueFactory = PropertyValueFactory("path"); prefWidth = 200.0 }
+        val c3 = TableColumn<ErrorRow, String>("علت").apply { cellValueFactory = PropertyValueFactory("error"); prefWidth = 140.0 }
         columns.addAll(c1, c2, c3)
-        prefHeight = 110.0
+        prefHeight = 130.0
+        placeholder = Label("همهٔ فایل‌ها بدون مشکل خوانده شدند.")
     }
-    private val progress = ProgressBar(0.0).apply { maxWidth = Double.MAX_VALUE }
-    private val lblProgress = Label("").apply { style = Theme.FONT }
-    private val btnStart = Button("شروع فهرست گیری")
-    private val service = IndexingService(indexer, license)
+    private val errorsPane = TitledPane("فایل‌هایی که خوانده نشدند (۰)", tblErrors).apply {
+        isExpanded = false; isVisible = false; isManaged = false
+    }
+    private val progressBox = VBox(6.0, lblProgress, progress, lblEta, lblCurrent, errorsPane).apply {
+        padding = Insets(12.0)
+        styleClass.add("card")
+        isVisible = false; isManaged = false
+    }
+    private val btnStart = Button()
+    private val service = IndexingService(indexer)
     private var running = false
+    private var startMs = 0L
+    private var errorCount = 0
 
-    // یادداشت: نیازی به گترهای دستی نیست — کاتلین برای propertyهای public
-    // به‌طور خودکار گترهای هم‌نام جاوابین (getFile/getPath/getError) می‌سازد
-    // که PropertyValueFactory از طریق آن‌ها خوانده می‌شود.
     class ErrorRow(val file: String, val path: String, val error: String)
 
     init {
         stage.initModality(Modality.APPLICATION_MODAL)
         owner?.let { stage.initOwner(it) }
 
-        chkAllFormats.setOnAction { lstFormats.isDisable = chkAllFormats.isSelected }
-        val menu = ContextMenu(
-            MenuItem("پاک کردن انتخاب").apply { setOnAction { lstFormats.selectionModel.clearSelection() } },
-            MenuItem("انتخاب همه").apply { setOnAction { lstFormats.selectionModel.selectAll() } },
-            MenuItem("انتخاب متداول").apply {
-                setOnAction {
-                    lstFormats.selectionModel.clearSelection()
-                    IndexingService.IMPORTANT_FORMATS.forEach { f -> lstFormats.selectionModel.select(lstFormats.items.indexOf(f)) }
-                }
-            },
-        )
-        lstFormats.contextMenu = menu
-
+        chkAllFormats.setOnAction { groupChecks.forEach { it.isDisable = chkAllFormats.isSelected } }
         styleStart(false)
         btnStart.setOnAction { if (running) cancel() else start() }
 
-        val grid = GridPane().apply {
-            hgap = 8.0; vgap = 8.0
-            add(Label("نام دسته:").styled(), 0, 0); add(txtCatName, 1, 0, 3, 1)
-            add(Label("حداقل اندازه فایل:").styled(), 0, 1); add(txtMinSize, 1, 1); add(cmbMinUnit, 2, 1)
-            add(Label("حداکثر اندازه فایل:").styled(), 0, 2); add(txtMaxSize, 1, 2); add(cmbMaxUnit, 2, 2)
+        val lblFolder = Label(rootPath).apply {
+            style = "-fx-font-weight: bold;"
+            textOverrun = OverrunStyle.LEADING_ELLIPSIS
+            maxWidth = Double.MAX_VALUE
+            tooltip = Tooltip(rootPath)
         }
+        val folderRow = VBox(2.0, Label("پوشهٔ انتخاب‌شده").apply { styleClass.add("muted") }, lblFolder)
 
-        val content = VBox(8.0,
-            Label("پوشه: $rootPath").styled(),
-            grid,
-            Label("فرمت فایل ها:").styled(), lstFormats, chkAllFormats, chkSubFolders,
-            Label("فایل ها:").styled(), lstLog,
-            Label("خطاها:").styled(), tblErrors,
-            lblProgress, progress, btnStart,
-        ).apply { padding = Insets(14.0); style = "-fx-background-color: white;" }
+        val nameRow = VBox(4.0, Label("نام این مجموعه در متن‌یاب").apply { styleClass.add("section-title") }, txtCatName)
+
+        val chips = FlowPane(8.0, 8.0).apply { children.addAll(groupChecks) }
+        val typesRow = VBox(6.0, Label("چه نوع اسنادی جست‌وجوپذیر شوند؟").apply { styleClass.add("section-title") }, chips)
+
+        val advGrid = GridPane().apply {
+            hgap = 8.0; vgap = 8.0
+            add(Label("حداقل اندازهٔ فایل:"), 0, 0); add(txtMinSize, 1, 0); add(cmbMinUnit, 2, 0)
+            add(Label("حداکثر اندازهٔ فایل:"), 0, 1); add(txtMaxSize, 1, 1); add(cmbMaxUnit, 2, 1)
+            add(chkAllFormats, 0, 2, 3, 1)
+        }
+        val advanced = TitledPane("تنظیمات بیشتر", advGrid).apply { isExpanded = false }
+
+        val content = VBox(14.0,
+            folderRow, nameRow, typesRow, chkSubFolders, advanced, btnStart, progressBox,
+        ).apply {
+            padding = Insets(18.0)
+            style = "-fx-background-color: ${Constants.OPTION_BACKGROUND_COLOR};"
+        }
 
         val root = BorderPane().apply {
             nodeOrientation = NodeOrientation.RIGHT_TO_LEFT
-            top = CustomTitleBar(stage, "فهرست گیری", showMaximize = false) { if (!running) stage.close() }
-            center = ScrollPane(content).apply { isFitToWidth = true }
-            style = "-fx-border-color: ${Constants.BORDER_COLOR};"
+            top = CustomTitleBar(stage, "افزودن پوشه به متن‌یاب", showMaximize = false) { if (!running) stage.close() }
+            center = ScrollPane(content).apply { isFitToWidth = true; hbarPolicy = ScrollPane.ScrollBarPolicy.NEVER }
+            style = "-fx-border-color: ${Constants.BORDER_COLOR}; -fx-background-color: ${Constants.OPTION_BACKGROUND_COLOR};"
         }
         stage.scene = Scene(root, Constants.FEHRESTGIRI_WINDOW_WIDTH, Constants.FEHRESTGIRI_WINDOW_HEIGHT)
+        Theme.install(stage.scene, stage)
+        Platform.runLater { txtCatName.requestFocus(); txtCatName.selectAll() }
     }
 
-    private fun Label.styled(): Label { style = "${Theme.FONT} -fx-font-size: ${Constants.FONT_SIZE_NORMAL}px;"; return this }
-
     private fun styleStart(cancelMode: Boolean) {
-        btnStart.text = if (cancelMode) "لغو فهرست گیری" else "شروع فهرست گیری"
-        btnStart.style = "${Theme.FONT} -fx-text-fill: white; -fx-background-radius: 4px; -fx-cursor: hand;" +
-            if (cancelMode) "-fx-background-color: #FE0001;" else "-fx-background-color: #156608;"
-        btnStart.prefHeight = Constants.OPTION_BUTTONS_HEIGHT
+        btnStart.text = if (cancelMode) "توقف فهرست‌گیری" else "شروع فهرست‌گیری"
+        btnStart.style = if (cancelMode) Theme.dangerButton() else Theme.successButton()
+        btnStart.prefHeight = Constants.FISH_BARDARI_BUTTON
         btnStart.maxWidth = Double.MAX_VALUE
+        btnStart.isDefaultButton = !cancelMode
     }
 
     private fun unitFactor(u: String): Long = when (u) {
@@ -123,53 +155,78 @@ class ScanDirectoryDialog(
         else -> 1L
     }
 
-    /** معادل validate + startOperation */
+    private fun fa(n: Number) = PersianUtil.toPersianNumbers(n.toString())
+
+    private fun formatEta(secs: Long): String = when {
+        secs < 60 -> "کمتر از یک دقیقه"
+        secs < 3600 -> "حدود ${fa(secs / 60 + 1)} دقیقه"
+        else -> "حدود ${fa(secs / 3600)} ساعت و ${fa((secs % 3600) / 60)} دقیقه"
+    }
+
     private fun start() {
         val name = txtCatName.text.trim()
-        if (name.isBlank()) { CustomMessageBox.show(stage, "خطا", "نام دسته را وارد کنید."); return }
+        if (name.isBlank()) { CustomMessageBox.show(stage, "افزودن پوشه", "یک نام برای این مجموعه وارد کنید."); return }
         val formats: Set<String> = if (chkAllFormats.isSelected) emptySet()
-            else lstFormats.selectionModel.selectedItems.toSet()
+            else GROUPS.zip(groupChecks).filter { it.second.isSelected }.flatMap { it.first.exts }.toSet()
         if (formats.isEmpty() && !chkAllFormats.isSelected) {
-            CustomMessageBox.show(stage, "خطا", "حداقل یک فرمت را انتخاب کنید."); return
+            CustomMessageBox.show(stage, "افزودن پوشه", "دست‌کم یک نوع سند را انتخاب کنید."); return
         }
-        val minV = (txtMinSize.text.toLongOrNull() ?: 0) * unitFactor(cmbMinUnit.value)
-        val maxV = (txtMaxSize.text.toLongOrNull() ?: 0) * unitFactor(cmbMaxUnit.value)
-        if (minV < 1) { CustomMessageBox.show(stage, "خطا", "حداقل اندازه باید حداقل یک بایت باشد."); return }
-        if (minV > maxV) { CustomMessageBox.show(stage, "خطا", "حداقل اندازه نباید از حداکثر بیشتر باشد."); return }
-
-        // بررسی محدودیت نسخه آزمایشی پیش از شروع
-        if (!license.isSubscribed() && indexer.usedSpace() >= Constants.LIMITED_TRIAL_SIZE) {
-            CustomMessageBox.show(stage, Constants.APP_NAME_PERSIAN, "اشتراک به اتمام رسیده است!")
+        val minV = (txtMinSize.text.trim().toLongOrNull() ?: 1L) * unitFactor(cmbMinUnit.value)
+        val maxV = (txtMaxSize.text.trim().toLongOrNull() ?: 200L) * unitFactor(cmbMaxUnit.value)
+        if (minV < 1 || minV > maxV) {
+            CustomMessageBox.show(stage, "افزودن پوشه", "محدودهٔ اندازهٔ فایل معتبر نیست؛ حداقل باید از حداکثر کوچک‌تر باشد.")
             return
         }
 
         running = true
         styleStart(true)
-        lstLog.items.clear(); tblErrors.items.clear()
+        errorCount = 0
+        tblErrors.items.clear()
+        progress.progress = ProgressBar.INDETERMINATE_PROGRESS
+        lblProgress.text = "در حال شمارش فایل‌ها…"
+        lblEta.text = ""; lblCurrent.text = ""
+        progressBox.isVisible = true; progressBox.isManaged = true
+        startMs = System.currentTimeMillis()
 
         Thread {
             service.indexDirectory(name, rootPath, formats, minV, maxV, chkSubFolders.isSelected, object : IndexingService.Callbacks {
-                override fun onFileStart(file: File) { Platform.runLater { lstLog.items.add(0, file.absolutePath) } }
+                override fun onFileStart(file: File) { Platform.runLater { lblCurrent.text = file.absolutePath } }
                 override fun onFileError(file: File, error: String) {
-                    Platform.runLater { tblErrors.items.add(ErrorRow(file.name, file.parent ?: "", error)) }
+                    Platform.runLater {
+                        errorCount++
+                        tblErrors.items.add(ErrorRow(file.name, file.parent ?: "", error))
+                        errorsPane.text = "فایل‌هایی که خوانده نشدند (${fa(errorCount)})"
+                        errorsPane.isVisible = true; errorsPane.isManaged = true
+                    }
                 }
                 override fun onProgress(done: Int, total: Int) {
                     Platform.runLater {
                         progress.progress = if (total == 0) 1.0 else done.toDouble() / total
-                        lblProgress.text = "فهرست‌شده: " + ir.matnyaab.util.PersianUtil.toPersianNumbers(done) +
-                            " از " + ir.matnyaab.util.PersianUtil.toPersianNumbers(total) +
-                            " فایل — باقیمانده: " + ir.matnyaab.util.PersianUtil.toPersianNumbers(total - done)
+                        val pct = if (total == 0) 100 else done * 100 / total
+                        lblProgress.text = "${fa(done)} از ${fa(total)} فایل (${fa(pct)}٪)"
+                        if (done > 3 && total > done) {
+                            val elapsed = (System.currentTimeMillis() - startMs) / 1000.0
+                            val remain = (elapsed / done * (total - done)).toLong()
+                            lblEta.text = "زمان تقریبی باقیمانده: " + formatEta(remain)
+                        } else lblEta.text = ""
                     }
                 }
-                override fun onLog(message: String) { Platform.runLater { lstLog.items.add(0, message) } }
                 override fun onFinish(err: Int) {
                     Platform.runLater {
                         running = false; styleStart(false)
                         when (err) {
-                            0 -> { CustomMessageBox.show(stage, "فهرست گیری", "فهرست گیری با موفقیت به پایان رسید."); onFinished(); stage.close() }
-                            1 -> { CustomMessageBox.show(stage, Constants.APP_NAME_PERSIAN, "اشتراک به اتمام رسیده است!"); onFinished(); stage.close() }
-                            2 -> CustomMessageBox.show(stage, "فهرست گیری", "فهرست گیری لغو شد.")
-                            else -> CustomMessageBox.show(stage, "خطا", "خطا در فهرست گیری!")
+                            0 -> {
+                                val extra = if (errorCount > 0) "\n${fa(errorCount)} فایل قابل خواندن نبود و کنار گذاشته شد." else ""
+                                CustomMessageBox.show(stage, "افزودن پوشه",
+                                    "«$name» آمادهٔ جست‌وجو است.$extra")
+                                onFinished(); stage.close()
+                            }
+                            2 -> {
+                                progressBox.isVisible = false; progressBox.isManaged = false
+                                CustomMessageBox.show(stage, "افزودن پوشه", "فهرست‌گیری متوقف شد و تغییری ذخیره نشد.")
+                            }
+                            else -> CustomMessageBox.show(stage, "خطا",
+                                "فهرست‌گیری کامل نشد. اگر پوشه روی حافظهٔ جانبی یا شبکه است، اتصال آن را بررسی کنید و دوباره تلاش کنید.")
                         }
                     }
                 }
@@ -180,4 +237,5 @@ class ScanDirectoryDialog(
     private fun cancel() { service.cancelled = true }
 
     fun show() = stage.showAndWait()
+    internal fun showNonBlocking(): Stage { stage.show(); return stage }
 }

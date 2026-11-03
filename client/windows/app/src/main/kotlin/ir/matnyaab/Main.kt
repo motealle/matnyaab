@@ -13,8 +13,11 @@ import java.io.File
  */
 class MatnyaabApp : Application() {
     override fun start(primaryStage: Stage) {
+        val raw = parameters.raw
+        val shotsDir = raw.indexOf("--screenshots").takeIf { it >= 0 && it + 1 < raw.size }?.let { raw[it + 1] }
         val settings = AppSettingsManager()
         Constants.FONT_CHANGE_RATE = (settings.get("FONT_RATE").toIntOrNull() ?: 100) / 100.0 * 1.2
+        ir.matnyaab.ui.Theme.init(settings)
 
         val splash = SplashWindow()
         splash.show()
@@ -22,11 +25,13 @@ class MatnyaabApp : Application() {
         Thread {
             val license = LicenseChecker(settings, init = true)
             val indexer = LuceneIndexer(settings)
+            if (shotsDir != null) ir.matnyaab.ui.DemoShots.prepareCorpus(indexer)
             Platform.runLater {
                 val main = MainWindow(primaryStage, settings, indexer, license)
                 splash.close()
                 main.show()
-                StatisticsReporter.report("open_app", license.systemId, license.isSubscribed())
+                if (shotsDir != null) ir.matnyaab.ui.DemoShots.run(main, primaryStage, indexer, File(shotsDir))
+                else StatisticsReporter.report("open_app", license.systemId, license.isSubscribed())
             }
         }.apply { isDaemon = true }.start()
     }
@@ -55,5 +60,9 @@ fun main(args: Array<String>) {
         return
     }
 
+    if (args.contains("--screenshots")) {
+        // پوشهٔ تنظیمات جدا تا داده‌های واقعی کاربر دست نخورد
+        System.setProperty("matnyaab.home", java.nio.file.Files.createTempDirectory("matnyaab-shots").toString())
+    }
     Application.launch(MatnyaabApp::class.java, *args)
 }

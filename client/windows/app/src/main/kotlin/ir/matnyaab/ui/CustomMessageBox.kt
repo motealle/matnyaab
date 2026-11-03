@@ -29,11 +29,14 @@ object CustomMessageBox {
         val titleBar = CustomTitleBar(stage, title, showMaximize = false)
         val lbl = Label(message).apply {
             isWrapText = true
-            style = "${Theme.FONT} -fx-font-size: ${Constants.FONT_SIZE_NORMAL}px;"
+            style = "${Theme.FONT} -fx-font-size: ${Constants.FONT_SIZE_NORMAL}px; -fx-text-alignment: center;"
+            maxWidth = 420.0
         }
         val buttonRow = HBox(10.0).apply { alignment = Pos.CENTER }
         buttons.forEachIndexed { i, b ->
             buttonRow.children.add(Button(b).apply {
+                isDefaultButton = i == 0
+                if (i > 0) isCancelButton = i == buttons.size - 1
                 style = Theme.primaryButton()
                 prefWidth = 110.0; prefHeight = Constants.OPTION_BUTTONS_HEIGHT
                 setOnMouseEntered { style = Theme.primaryButtonHover() }
@@ -44,7 +47,7 @@ object CustomMessageBox {
         val center = VBox(20.0, lbl, buttonRow).apply {
             padding = Insets(20.0)
             alignment = Pos.CENTER
-            style = "-fx-background-color: white;"
+            style = "-fx-background-color: ${Constants.OPTION_BACKGROUND_COLOR};"
         }
         val root = BorderPane().apply {
             nodeOrientation = NodeOrientation.RIGHT_TO_LEFT
@@ -52,7 +55,9 @@ object CustomMessageBox {
             this.center = center
             style = "-fx-border-color: ${Constants.BORDER_COLOR}; -fx-border-width: 1;"
         }
-        stage.scene = Scene(root, 420.0, 200.0)
+        stage.scene = Scene(root)
+        root.prefWidth = 460.0; root.minHeight = 190.0
+        Theme.install(stage.scene, stage)
         stage.showAndWait()
         return result
     }

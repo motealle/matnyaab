@@ -22,13 +22,15 @@ class AccordionButton(
     private val onOpen: (Int) -> Unit,
 ) : VBox() {
 
-    private val extendLabel = Label(Theme.GLYPH_DOWN).apply { style = Theme.awesome(11) + "-fx-text-fill: white;" }
+    private val extendLabel = Label(Theme.GLYPH_DOWN).apply { style = Theme.awesome(12) + "-fx-text-fill: white;" }
+    /** محتوا با فاصلهٔ مشخص از سربرگ تا به آن نچسبد */
+    private val body = javafx.scene.layout.VBox(content).apply { padding = Insets(8.0, 0.0, 6.0, 0.0) }
     private val header = HBox()
     var isOpen = false; private set
 
     init {
         val lblTitle = Label(title).apply {
-            style = "${Theme.FONT} -fx-text-fill: white; -fx-font-size: ${Constants.FONT_SIZE_NORMAL}px;"
+            style = "${Theme.FONT} -fx-text-fill: white; -fx-font-size: ${Constants.FONT_SIZE_NORMAL}px; -fx-font-weight: bold;"
         }
         val spacer = Region().also { HBox.setHgrow(it, Priority.ALWAYS) }
         header.children.addAll(extendLabel, spacer, lblTitle)
@@ -41,13 +43,13 @@ class AccordionButton(
         header.setOnMouseEntered { if (!isOpen) header.style = headerStyle(Constants.BUTTON_HOVER_BACKGROUND_COLOR) }
         header.setOnMouseExited { setHeaderStyle(isOpen) }
 
-        content.isVisible = false
-        content.isManaged = false
-        children.addAll(header, content)
+        body.isVisible = false
+        body.isManaged = false
+        children.addAll(header, body)
     }
 
     private fun headerStyle(color: String) =
-        "-fx-background-color: $color; -fx-background-radius: 6px; -fx-cursor: hand;"
+        "-fx-background-color: $color; -fx-background-radius: 8px; -fx-cursor: hand;"
 
     private fun setHeaderStyle(open: Boolean) {
         header.style = headerStyle(if (open) Constants.BUTTON_HOVER_BACKGROUND_COLOR else Constants.BUTTON_BACKGROUND_COLOR)
@@ -58,16 +60,16 @@ class AccordionButton(
 
     fun expand() {
         isOpen = true
-        content.isVisible = true
-        content.isManaged = true
+        body.isVisible = true
+        body.isManaged = true
         setHeaderStyle(true)
         onOpen(optionId)
     }
 
     fun collapse() {
         isOpen = false
-        content.isVisible = false
-        content.isManaged = false
+        body.isVisible = false
+        body.isManaged = false
         setHeaderStyle(false)
     }
 }

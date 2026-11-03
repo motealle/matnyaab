@@ -29,13 +29,28 @@ class ScopeTree(
         override fun toString() = label
     }
 
+    private val emptyHint = Label("هنوز پوشه‌ای اضافه نشده است.\nبا «افزودن پوشه اسناد» شروع کنید؛ پس از فهرست‌گیری، همهٔ فایل‌های آن پوشه اینجا دیده می‌شوند.").apply {
+        styleClass.add("empty-hint"); isWrapText = true; maxWidth = 260.0
+        isMouseTransparent = true
+    }
+
     init {
         nodeOrientation = NodeOrientation.RIGHT_TO_LEFT
         tree.isShowRoot = false
         tree.root = CheckBoxTreeItem(ScopeNode("root", null, null))
-        tree.setCellFactory { CheckBoxTreeCell<ScopeNode>() }
+        // سلول با راهنمای مسیر کامل؛ نام‌های بلند کامل در tooltip دیده می‌شوند
+        tree.setCellFactory {
+            object : CheckBoxTreeCell<ScopeNode>() {
+                override fun updateItem(item: ScopeNode?, empty: Boolean) {
+                    super.updateItem(item, empty)
+                    tooltip = if (empty || item == null) null
+                        else Tooltip(item.filePath ?: item.label)
+                    style = if (!empty && item?.savePath != null) "-fx-font-weight: bold;" else ""
+                }
+            }
+        }
         tree.style = Theme.FONT
-        tree.prefHeight = 320.0
+        tree.prefHeight = 360.0
 
         val menu = ContextMenu()
         val miDelete = MenuItem("حذف سند از محدوده جستجو").apply { setOnAction { deleteSelected() } }
@@ -45,8 +60,10 @@ class ScopeTree(
         menu.items.addAll(miAdd, miUpdate, miUpdateAll, SeparatorMenuItem(), miDelete)
         tree.contextMenu = menu
 
-        children.add(tree)
+        emptyHint.isVisible = false
+        children.add(javafx.scene.layout.StackPane(tree, emptyHint))
     }
+
 
     private fun topLevelOf(item: TreeItem<ScopeNode>?): TreeItem<ScopeNode>? {
         var cur = item ?: return null
@@ -60,7 +77,7 @@ class ScopeTree(
         val node = top.value
         val r = CustomMessageBox.show(
             ownerWindow(), "حذف سند",
-            "آیا می خواهید سند ${node.label} از محدوده جستجو حذف شود؟",
+            "آیا می‌خواهید «${indexer.findBySavePath(node.savePath ?: "")?.indexName ?: node.label}» از محدودهٔ جست‌وجو حذف شود؟ (فایل‌های اصلی شما حذف نمی‌شوند)",
             listOf("بله", "خیر"),
         )
         if (r == 0 && node.savePath != null) {
@@ -80,8 +97,10 @@ class ScopeTree(
         val root = tree.root as CheckBoxTreeItem<ScopeNode>
         root.children.clear()
         for (obj in indexer.allObjects) {
-            val topItem = CheckBoxTreeItem(ScopeNode(obj.indexName, obj.savePath, null)).apply { isSelected = true }
             val files = indexer.readFileList(Path.of(obj.savePath))
+            val totalSize = files.sumOf { it.size }
+            val topLabel = "${obj.indexName} — ${fa(files.size)} فایل، ${fa(ir.matnyaab.util.PersianUtil.properSize(totalSize))}"
+            val topItem = CheckBoxTreeItem(ScopeNode(topLabel, obj.savePath, obj.rootPath)).apply { isSelected = true; isExpanded = false }
             val rootPathLen = obj.rootPath.trimEnd('/', '\\').length
             val folderItems = mutableMapOf<String, CheckBoxTreeItem<ScopeNode>>()
             for (f in files) {
@@ -97,12 +116,25 @@ class ScopeTree(
                         }
                     }
                 }
-                val label = "${parts.last()} (${ir.matnyaab.util.PersianUtil.properSize(f.size)})"
+                val label = "${parts.last()}  (${fa(ir.matnyaab.util.PersianUtil.properSize(f.size))})"
                 parent.children.add(CheckBoxTreeItem(ScopeNode(label, null, f.filename)).apply { isSelected = true })
+            }
+            // تعداد فایل‌های هر زیرپوشه در برچسب آن
+            folderItems.values.forEach { item ->
+                val n = countFiles(item)
+                item.value = item.value.copy(label = "${item.value.label}  (${fa(n)})")
             }
             root.children.add(topItem)
         }
+        emptyHint.isVisible = indexer.allObjects.isEmpty()
     }
+
+    val isEmpty: Boolean get() = indexer.allObjects.isEmpty()
+
+    private fun fa(v: Any) = ir.matnyaab.util.PersianUtil.toPersianNumbers(v)
+
+    private fun countFiles(item: TreeItem<ScopeNode>): Int =
+        if (item.children.isEmpty()) 1 else item.children.sumOf { countFiles(it) }
 
     /** معادل GetSelectedDocs: فهرست‌های فعال + مسیرهای حذف‌شده (آیتم‌های تیک‌نخورده) */
     fun getSelectedDocs(): Pair<List<IndexerInfo>, Set<String>> {

@@ -30,6 +30,7 @@ class ChooseFontDialog(
         }
         val scene = Scene(javafx.scene.layout.StackPane(list), 260.0, 300.0)
         scene.root.nodeOrientation = NodeOrientation.RIGHT_TO_LEFT
+        Theme.install(scene)
         stage.scene = scene
         stage.focusedProperty().addListener { _, _, focused -> if (!focused) stage.close() }
     }

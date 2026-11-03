@@ -45,7 +45,7 @@ class MainWindow(
     private lateinit var contentPacks: ContentPacksPanel
     private val accordions = mutableListOf<AccordionButton>()
     private val badge = Label().apply {
-        style = "-fx-background-color: red; -fx-text-fill: white; -fx-background-radius: 8px; -fx-padding: 1 6 1 6; -fx-font-size: 10px;"
+        style = "-fx-background-color: -mx-danger; -fx-text-fill: white; -fx-background-radius: 8px; -fx-padding: 1 6 1 6; -fx-font-size: 10px;"
         isVisible = false
     }
 
@@ -60,8 +60,8 @@ class MainWindow(
     private var newsEnabled = true
     private var newsText = ""
     private val statusGlyph = Label(Theme.GLYPH_CIRCLE).apply {
-        style = Theme.awesome(11) + "-fx-text-fill: red;"
-        tooltip = Tooltip("وضعیت موتور استخراج متن")
+        style = Theme.awesome(11) + "-fx-text-fill: -mx-muted;"
+        tooltip = Tooltip("موتور استخراج متن در حال آماده شدن است…")
     }
     private val btnUpdate = Button().apply { isVisible = false; isManaged = false }
 
@@ -75,10 +75,17 @@ class MainWindow(
         loadExistingIndexers()
         importOldWhooshIndexes()
         startBackgroundThreads()
-        checkLicenseOnStart()
+        // کاربر تازه: بخش افزودن پوشه باز شود تا قدم اول روشن باشد
+        if (indexer.allObjects.isEmpty()) accordions.getOrNull(1)?.expand()
     }
 
     fun show() = stage.show()
+
+    // ---- برای تولید خودکار تصاویر معرفی (حالت --screenshots)
+    internal fun demoSearch(text: String) = quickSearch(text)
+    internal fun selectFirstResult() { if (table.items.isNotEmpty()) table.selectionModel.select(0) }
+    internal fun openPanel(i: Int) { accordions.getOrNull(i)?.let { if (!it.isOpen) it.expand() } }
+    internal fun expandFirstScope() { scopeTree.tree.root.children.firstOrNull()?.isExpanded = true }
 
     // ------------------------------------------------------------------ ساخت رابط
 
@@ -96,17 +103,20 @@ class MainWindow(
             onNewCount = { n -> badge.isVisible = n > 0; badge.text = PersianUtil.toPersianNumbers(n) })
 
         val accSearch = AccordionButton(0, "جستجو", searchPanel, ::onAccordionOpen)
-        val scopeBox = VBox(6.0,
-            Button("افزودن سند جدید " + Theme.GLYPH_PLUS).apply {
-                style = Theme.primaryButton() + Theme.awesome(11)
-                prefHeight = Constants.OPTION_BUTTONS_HEIGHT; maxWidth = Double.MAX_VALUE
+        val scopeBox = VBox(8.0,
+            Button(Theme.GLYPH_PLUS + "  افزودن پوشه اسناد").apply {
+                style = Theme.addButton()
+                prefHeight = Constants.OPTION_HEIGHT; maxWidth = Double.MAX_VALUE
+                tooltip = Tooltip("یک پوشه را انتخاب کنید تا محتوای فایل‌هایش جست‌وجوپذیر شود (Ctrl+O)")
+                setOnMouseEntered { style = Theme.addButton(hover = true) }
+                setOnMouseExited { style = Theme.addButton() }
                 setOnAction { selectDirectory() }
             },
             scopeTree,
         )
         val accScope = AccordionButton(1, "محدوده جستجو", scopeBox, ::onAccordionOpen)
-        val accSettings = AccordionButton(2, "تنظیمات و اشتراک", buildSettingsBox(), ::onAccordionOpen)
-        val accContents = AccordionButton(3, "بسته های محتوایی", contentPacks, ::onAccordionOpen)
+        val accSettings = AccordionButton(2, "تنظیمات و حمایت", buildSettingsBox(), ::onAccordionOpen)
+        val accContents = AccordionButton(3, "بسته‌های محتوایی", contentPacks, ::onAccordionOpen)
         accordions.addAll(listOf(accSearch, accScope, accSettings, accContents))
 
         val rightPanel = VBox(8.0).apply {
@@ -116,10 +126,13 @@ class MainWindow(
             })
         }
         accSearch.expand()
+        table.placeholder = Label("هنوز جست‌وجویی انجام نشده است.\nیک پوشه اضافه کنید و سپس واژه‌ای را جست‌وجو کنید.").apply {
+            styleClass.add("empty-hint")
+        }
 
         // ----- نوار بالای کادر نتایج: عنوان + تعداد فایل‌ها و مجموع موارد یافت‌شده
         val resultsHeader = HBox(8.0,
-            Label("نتایج جستجو").apply { style = Theme.FONT },
+            Label("نتایج جست‌وجو").apply { styleClass.add("section-title") },
             Region().also { HBox.setHgrow(it, Priority.ALWAYS) },
             lblResultCount,
         ).apply {
@@ -140,7 +153,7 @@ class MainWindow(
         split.setDividerPositions(2.0 / 7.0, 5.0 / 7.0)
 
         val statusBar = buildStatusBar()
-        val titleBar = CustomTitleBar(stage, "${Constants.APP_NAME_PERSIAN} ${Constants.APP_VERSION}") { onClose() }
+        val titleBar = CustomTitleBar(stage, "${Constants.APP_NAME_PERSIAN} ${Constants.APP_VERSION_PERSIAN}") { onClose() }
 
         val root = BorderPane().apply {
             top = titleBar
@@ -148,9 +161,16 @@ class MainWindow(
             bottom = statusBar
             style = "-fx-background-color: ${Constants.CANVAS_COLOR}; -fx-border-color: ${Constants.BORDER_COLOR};"
         }
-        stage.scene = Scene(root, 1200.0, 760.0)
+        stage.scene = Scene(root, 1240.0, 780.0)
         stage.title = Constants.APP_NAME_PERSIAN
-        javaClass.getResource("/css/app.css")?.toExternalForm()?.let { stage.scene.stylesheets.add(it) }
+        stage.minWidth = 900.0; stage.minHeight = 560.0
+        Theme.install(stage.scene, stage)
+        // میان‌برها: Ctrl+F جست‌وجو، Ctrl+O افزودن پوشه
+        stage.scene.accelerators[javafx.scene.input.KeyCombination.keyCombination("Shortcut+F")] = Runnable {
+            accordions.getOrNull(0)?.let { if (!it.isOpen) it.expand() }
+            searchPanel.focusQuick()
+        }
+        stage.scene.accelerators[javafx.scene.input.KeyCombination.keyCombination("Shortcut+O")] = Runnable { selectDirectory() }
     }
 
     private fun buildTable() {
@@ -202,9 +222,14 @@ class MainWindow(
             setOnAction { action() }
         }
         return VBox(6.0,
-            btn("تنظیمات برنامه") { SettingsDialog(stage, settings).show() },
-            btn("اشتراک") { showLicenseDialog() },
+            btn("تنظیمات و پوستهٔ رنگی") { SettingsDialog(stage, settings).show() },
             btn("راهنمای برنامه") { preview.showHelp() },
+            Button("♥  حمایت از متن‌یاب").apply {
+                style = Theme.addButton(); prefHeight = Constants.OPTION_BUTTONS_HEIGHT; maxWidth = Double.MAX_VALUE
+                setOnMouseEntered { style = Theme.addButton(hover = true) }
+                setOnMouseExited { style = Theme.addButton() }
+                setOnAction { showSupportDialog() }
+            },
         ).apply { padding = Insets(8.0) }
     }
 
@@ -255,13 +280,11 @@ class MainWindow(
 
     /** معادل basicSearching */
     private fun quickSearch(text: String) {
-        if (!checkLicenseOnSearch()) return
         runSearch { indexer.makeSimpleQuery(text).also { indexer.makeAdvancedQuery(text.split(" ").filter { w -> w.isNotBlank() }, emptyList(), emptyList(), 0) } }
     }
 
     /** معادل advanceSearching با منطق ستاره‌دار کردن کلمات غیردقیق */
     private fun advancedSearch(p: AdvancedSearchParams) {
-        if (!checkLicenseOnSearch()) return
         fun extractWords(s: String) = s.trim().replace(Regex("\\s+"), " ").split(" ").filter { it.isNotBlank() }
         fun star(words: List<String>, accuracy: Boolean) =
             if (accuracy) words else words.map { "*$it*" }
@@ -298,27 +321,6 @@ class MainWindow(
                 }
             }
         }.apply { isDaemon = true }.start()
-    }
-
-    /** معادل check_license_on_search: محدودیت ۲۵ مگابایت نسخه آزمایشی */
-    private fun checkLicenseOnSearch(): Boolean {
-        if (license.isSubscribed()) return true
-        if (indexer.usedSpace() <= Constants.LIMITED_TRIAL_SIZE) return true
-        val r = CustomMessageBox.show(stage, Constants.APP_NAME_PERSIAN,
-            "اشتراک به اتمام رسیده است!",
-            listOf("خرید اشتراک", "حذف فهرست ها", "لغو"))
-        when (r) {
-            0 -> showLicenseDialog()
-            1 -> {
-                val c = CustomMessageBox.show(stage, Constants.APP_NAME_PERSIAN,
-                    "آیا مطمئن هستید همه فهرست ها حذف شوند؟", listOf("بله", "خیر"))
-                if (c == 0) {
-                    indexer.allObjects.toList().forEach { indexer.deleteIndexer(it.savePath) }
-                    loadExistingIndexers()
-                }
-            }
-        }
-        return false
     }
 
     // ------------------------------------------------------------------ پیش‌نمایش و عملیات فایل
@@ -426,7 +428,8 @@ class MainWindow(
     /** معادل setIndexedSizeStatus */
     private fun refreshIndexStatus() {
         val size = PersianUtil.toPersianNumbers(PersianUtil.humanFileSize(indexer.usedSpace()))
-        lblIndexSize.text = "حجم فهرست گیری: $size"
+        val files = PersianUtil.toPersianNumbers(indexer.allObjects.size)
+        lblIndexSize.text = "$files مجموعه · حجم اسناد فهرست‌شده: $size"
     }
 
     // ------------------------------------------------------------------ آکاردئون و بسته‌ها
@@ -445,18 +448,7 @@ class MainWindow(
 
     // ------------------------------------------------------------------ اشتراک، اخبار، بروزرسانی
 
-    private fun showLicenseDialog() = SubscriptionDialog(stage, settings, license).show()
-
-    /** معادل check_license تایمر اول برنامه: هشدار کمتر از ۷ روز */
-    private fun checkLicenseOnStart() {
-        Platform.runLater {
-            if (license.isSubscribed()) {
-                val left = java.time.Duration.between(java.time.LocalDateTime.now(), license.licenseEnd).toDays()
-                if (left < 7) CustomMessageBox.show(stage, Constants.APP_NAME_PERSIAN,
-                    "از زمان اشتراک ${PersianUtil.toPersianNumbers(left)} روز باقی مانده است!")
-            }
-        }
-    }
+    private fun showSupportDialog() = SupportDialog(stage).show()
 
     private fun startBackgroundThreads() {
         // وضعیت موتور استخراج متن: با یک پارس کوچک گرم می‌شود و سبز می‌شود (معادل TikaRunThread)
@@ -465,7 +457,10 @@ class MainWindow(
                 val tmp = File.createTempFile("matnyaab", ".txt").apply { writeText("سلام") }
                 TikaExtractor.parse(tmp)
                 tmp.delete()
-                Platform.runLater { statusGlyph.style = Theme.awesome(11) + "-fx-text-fill: green;" }
+                Platform.runLater {
+                    statusGlyph.style = Theme.awesome(11) + "-fx-text-fill: -mx-success;"
+                    statusGlyph.tooltip = Tooltip("موتور استخراج متن آماده است")
+                }
             } catch (e: Exception) { /* قرمز می‌ماند */ }
         }.apply { isDaemon = true }.start()
 

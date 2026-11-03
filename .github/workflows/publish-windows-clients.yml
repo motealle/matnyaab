@@ -21,8 +21,9 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  KOTLIN_VERSION: "1.2"
-  KOTLIN_FILE: "MATNYAAB-Kotlin-1.2-win-x64-portable.zip"
+  KOTLIN_VERSION: "2.0"
+  KOTLIN_FILE: "Matnyaab-2.0-win-x64.zip"
+  APP_NAME: "Matnyaab"
   SITE_URL: "https://www.matnyaab.ir"
 
 jobs:
@@ -59,25 +60,28 @@ jobs:
           New-Item -ItemType Directory -Force -Path $inputDir | Out-Null
           New-Item -ItemType Directory -Force -Path $releaseDir | Out-Null
 
-          $jar = Join-Path $PWD "app\build\libs\matnyaab-kotlin-1.2-all.jar"
+          $jar = Join-Path $PWD "app\build\libs\matnyaab-2.0-all.jar"
           if (-not (Test-Path $jar)) { throw "Expected fat jar not found: $jar" }
           Copy-Item $jar $inputDir
 
           $jpArgs = @(
             "--type", "app-image",
             "--input", $inputDir,
-            "--main-jar", "matnyaab-kotlin-1.2-all.jar",
+            "--main-jar", "matnyaab-2.0-all.jar",
             "--main-class", "ir.matnyaab.MainKt",
-            "--name", "MATNYAAB-Kotlin",
+            "--name", $env:APP_NAME,
             "--app-version", $env:KOTLIN_VERSION,
-            "--vendor", "MATNYAAB",
+            "--vendor", "Matnyaab",
+            "--description", "Matnyaab - full-text search in your documents",
+            "--copyright", "matnyaab.ir",
+            "--icon", (Join-Path $PWD "packaging\matnyaab.ico"),
             "--runtime-image", $env:JAVA_HOME,
             "--dest", $releaseDir
           )
           & jpackage @jpArgs
           if ($LASTEXITCODE -ne 0) { throw "jpackage failed with exit code $LASTEXITCODE" }
 
-          $exe = Join-Path $releaseDir "MATNYAAB-Kotlin\MATNYAAB-Kotlin.exe"
+          $exe = Join-Path $releaseDir "$env:APP_NAME\$env:APP_NAME.exe"
           if (-not (Test-Path $exe)) { throw "Packaged launcher was not created" }
 
           $smoke = & $exe --smoke 2>&1 | Out-String
@@ -88,7 +92,7 @@ jobs:
 
           $zip = Join-Path $PWD $env:KOTLIN_FILE
           if (Test-Path $zip) { Remove-Item $zip -Force }
-          Compress-Archive -Path (Join-Path $releaseDir "MATNYAAB-Kotlin") -DestinationPath $zip -CompressionLevel Optimal
+          Compress-Archive -Path (Join-Path $releaseDir $env:APP_NAME) -DestinationPath $zip -CompressionLevel Optimal
           if ((Get-Item $zip).Length -lt 100000000) {
             throw "Portable package is unexpectedly small"
           }
@@ -97,6 +101,25 @@ jobs:
           Set-Content -Path "$zip.sha256" -Value "$hash  $env:KOTLIN_FILE" -Encoding ascii
           Write-Host "Portable package bytes: $((Get-Item $zip).Length)"
           Write-Host "SHA256: $hash"
+
+      - name: Capture product screenshots
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $exe = Join-Path $PWD "release\$env:APP_NAME\$env:APP_NAME.exe"
+          $shots = Join-Path $PWD "screenshots"
+          New-Item -ItemType Directory -Force -Path $shots | Out-Null
+          $p = Start-Process -FilePath $exe -ArgumentList @("--screenshots", $shots) -PassThru
+          if (-not $p.WaitForExit(180000)) { $p.Kill(); Write-Host "Screenshot run timed out" }
+          Get-ChildItem $shots | Format-Table Name, Length
+
+      - uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: matnyaab-screenshots-${{ github.sha }}
+          path: client/windows/screenshots/*.png
+          if-no-files-found: warn
+          retention-days: 7
 
       - uses: actions/upload-artifact@v4
         with:
@@ -223,7 +246,7 @@ jobs:
           manifest = {
               "schema": 1,
               "classic": {
-                  "label": "نسخه کلاسیک",
+                  "label": "نسخه قدیمی (کلاسیک)",
                   "url": os.environ["LEGACY_URL"],
                   "size_bytes": int(os.environ["LEGACY_BYTES"]),
                   "sha256": os.environ["LEGACY_SHA256"],
@@ -231,14 +254,14 @@ jobs:
                   "content_summary": legacy_content,
               },
               "kotlin": {
-                  "label": "نسخه جدید Kotlin",
+                  "label": "متن‌یاب ۲",
                   "version": os.environ["KOTLIN_VERSION"],
                   "url": "/downloadFiles/" + os.environ["KOTLIN_FILE"],
                   "checksum_url": "/downloadFiles/" + os.environ["KOTLIN_FILE"] + ".sha256",
                   "size_bytes": int(os.environ["KOTLIN_BYTES"]),
                   "sha256": os.environ["KOTLIN_SHA256"],
-                  "delivery": "ZIP پرتابل ویندوز x64 با Java runtime داخلی",
-                  "content_summary": "هیچ بسته محتوایی پژوهشی داخل فایل نیست؛ فایل شامل خود برنامه، Java/JavaFX، Lucene، Tika و وابستگی‌های اجرایی است. بسته‌های محتوایی جداگانه از داخل برنامه دریافت می‌شوند.",
+                  "delivery": "ZIP آماده اجرا برای ویندوز ۱۰ و ۱۱ (۶۴ بیتی) — بدون نیاز به نصب",
+                  "content_summary": "فایل را از حالت فشرده خارج کنید و Matnyaab.exe را اجرا کنید. همهٔ امکانات رایگان و بدون محدودیت است؛ بسته‌های محتوایی را می‌توانید جداگانه از داخل برنامه دریافت کنید.",
               },
           }
           with open("releases.json", "w", encoding="utf-8") as f:

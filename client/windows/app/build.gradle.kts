@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "ir.matnyaab"
-version = "1.2"
+version = "2.0"
 
 repositories { mavenCentral() }
 
@@ -58,6 +58,6 @@ java { toolchain.languageVersion.set(JavaLanguageVersion.of(17)) }
 tasks.test { useJUnitPlatform() }
 
 tasks.shadowJar {
-    archiveFileName.set("matnyaab-kotlin-1.2-all.jar")
+    archiveFileName.set("matnyaab-2.0-all.jar")
     mergeServiceFiles()
 }
