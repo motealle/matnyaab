@@ -9,6 +9,22 @@
         <meta name="description" content="@yield('meta_description')">
     @endif
     <title>@yield('title', 'متن‌یاب')</title>
+    <link rel="canonical" href="{{ url()->current() === url('/') ? url('/') : url()->current() }}">
+    <link rel="icon" type="image/png" sizes="256x256" href="/assets/matnyaab-v2/icon-256.png">
+    <link rel="apple-touch-icon" href="/assets/matnyaab-v2/icon-256.png">
+    <meta property="og:site_name" content="متن‌یاب">
+    <meta property="og:locale" content="fa_IR">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="@yield('title', 'متن‌یاب')">
+    @hasSection('meta_description')
+        <meta property="og:description" content="@yield('meta_description')">
+    @endif
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:image" content="{{ url('/assets/matnyaab-v2/og-cover.png') }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    @stack('head')
 
     <script>
         (() => {
@@ -120,7 +136,8 @@
         th{color:var(--text);font-weight:650;background:var(--table-head)}td{color:var(--muted)}tr:last-child td{border-bottom:0}
 
         .site-footer{border-top:1px solid var(--line);padding:28px 0 36px;color:var(--muted-2);font-size:12px}
-        .footer-row{display:flex;justify-content:space-between;gap:24px;align-items:center}
+        .footer-row{display:flex;justify-content:space-between;gap:12px 24px;align-items:center;flex-wrap:wrap}
+        .site-footer a{color:inherit;text-decoration:underline;text-underline-offset:3px}
 
         @media(max-width:820px){.nav-links{display:none}.nav-actions .desktop-only{display:none}.page-shell{padding-top:34px}.stat-grid{grid-template-columns:1fr}.form-row{grid-template-columns:1fr}}
         @media(max-width:520px){.container{width:min(100% - 24px,var(--max))}.panel-pad{padding:20px}.page-title{font-size:26px}.nav{min-height:66px}.brand{font-size:18px}}
@@ -157,10 +174,10 @@
         </a>
 
         <nav class="nav-links" id="primary-nav" aria-label="ناوبری اصلی">
+            <a href="{{ route('home') }}#whats-new">تازه‌های نسخه ۲</a>
             <a href="{{ route('home') }}#features">امکانات</a>
-            <a href="{{ route('home') }}#workflow">نحوه کار</a>
             <a href="{{ route('home') }}#download">دانلود</a>
-            <a href="{{ route('home') }}#account">حساب کاربری</a>
+            <a href="{{ route('home') }}#support">حمایت</a>
         </nav>
 
         <button class="btn nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" aria-label="بازکردن فهرست ناوبری"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
@@ -180,7 +197,7 @@
                 </form>
             @else
                 <a class="btn desktop-only" href="{{ route('login') }}">ورود</a>
-                <a class="btn btn-primary" href="{{ route('register') }}">ثبت‌نام</a>
+                <a class="btn btn-primary" href="{{ route('home') }}#download">دانلود رایگان</a>
             @endauth
         </div>
     </div>
@@ -190,8 +207,8 @@
 
 <footer class="site-footer">
     <div class="container footer-row">
-        <span>© {{ date('Y') }} متن‌یاب</span>
-        <span>جست‌وجو در محتوای فایل‌ها، روی رایانه شما</span>
+        <span>© {{ date('Y') }} متن‌یاب · رایگان و بدون محدودیت</span>
+        <span><a href="{{ route('home') }}#download">دانلود</a> · <a href="{{ route('home') }}#support">حمایت از متن‌یاب</a> · جست‌وجو در محتوای فایل‌ها، روی رایانهٔ شما</span>
     </div>
 </footer>
 

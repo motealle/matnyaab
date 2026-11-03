@@ -236,7 +236,7 @@ class PreviewPane(private val settings: AppSettingsManager) : VBox() {
     private fun setAlignButtons() {
         listOf(btnAlignRight to "right", btnAlignCenter to "center", btnAlignLeft to "left").forEach { (b, a) ->
             b.style = Theme.awesome(14) + "-fx-background-color: transparent; -fx-cursor: hand; -fx-text-fill: -mx-text;" +
-                if (align == a) "-fx-text-fill: red;" else ""
+                if (align == a) "-fx-text-fill: -mx-accent; -fx-background-color: -mx-accent-soft; -fx-background-radius: 6;" else ""
         }
     }
 

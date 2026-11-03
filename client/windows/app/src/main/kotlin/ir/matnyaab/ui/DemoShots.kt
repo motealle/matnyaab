@@ -56,7 +56,12 @@ object DemoShots {
         """,
     )
 
-    fun demoRoot(): File = Constants.APP_SETTINGS_DIR.resolve("کتابخانهٔ پژوهشی").toFile()
+    /** مسیر خوانا برای تصاویر (روی CI درایو D وجود دارد) */
+    fun demoRoot(): File {
+        val d = File("D:\\")
+        return if (d.isDirectory && d.canWrite()) File(d, "پژوهش\\کتابخانهٔ پژوهشی")
+        else Constants.APP_SETTINGS_DIR.resolve("کتابخانهٔ پژوهشی").toFile()
+    }
 
     /** ساخت فایل‌های نمونه و فهرست‌گیری آن‌ها (روی ترد پس‌زمینه صدا زده می‌شود) */
     fun prepareCorpus(indexer: LuceneIndexer) {
@@ -64,7 +69,7 @@ object DemoShots {
         SAMPLES.forEach { (rel, text) ->
             val f = File(root, rel)
             f.parentFile.mkdirs()
-            f.writeText(text.trimIndent().repeat(3), Charsets.UTF_8)
+            f.writeText((text.trimIndent() + "\n\n").repeat(3), Charsets.UTF_8)
         }
         IndexingService(indexer).indexDirectory(
             "کتابخانهٔ پژوهشی", root.absolutePath, setOf(".txt"), 1, 100L * 1024 * 1024, true,

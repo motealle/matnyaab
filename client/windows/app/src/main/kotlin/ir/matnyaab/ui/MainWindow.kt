@@ -153,7 +153,7 @@ class MainWindow(
         split.setDividerPositions(2.0 / 7.0, 5.0 / 7.0)
 
         val statusBar = buildStatusBar()
-        val titleBar = CustomTitleBar(stage, "${Constants.APP_NAME_PERSIAN} ${Constants.APP_VERSION_PERSIAN}") { onClose() }
+        val titleBar = CustomTitleBar(stage, "${Constants.APP_NAME_PERSIAN} ۲") { onClose() }
 
         val root = BorderPane().apply {
             top = titleBar
@@ -187,8 +187,8 @@ class MainWindow(
 
         // ستون‌ها مطابق نسخه اصلی: فایل / اندازه / امتیاز / عنوان / دامنه
         val cFile = col("فایل", 180.0) { File(it.path).name }
-        val cSize = col("اندازه", 80.0) { PersianUtil.properSize(it.size) }
-        val cScore = col("امتیاز", 70.0) { it.score }
+        val cSize = col("اندازه", 80.0) { PersianUtil.toPersianNumbers(PersianUtil.properSize(it.size)) }
+        val cScore = col("امتیاز", 70.0) { PersianUtil.toPersianNumbers(it.score) }
         val cTitle = col("عنوان", 160.0) { File(it.path).nameWithoutExtension }
         val cDomain = col("دامنه", 100.0) { it.indexName }
         table.columns.addAll(cFile, cSize, cScore, cTitle, cDomain)

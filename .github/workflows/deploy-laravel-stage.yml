@@ -171,6 +171,14 @@ jobs:
             test "$(wc -c < /tmp/hero-asset)" -gt 1000
           done
 
+          for asset in shot-main-blue.webp shot-main-night.webp shot-main-paper.webp shot-add-folder.webp icon-256.png og-cover.png; do
+            curl --silent --show-error --fail --location --max-time 30 "$SITE_URL/assets/matnyaab-v2/$asset" -o /tmp/v2-asset
+            test "$(wc -c < /tmp/v2-asset)" -gt 1000
+          done
+          grep -q 'id="support"' /tmp/home.html
+          curl --silent --show-error --fail "$SITE_URL/robots.txt" | grep -q "Sitemap:"
+          curl --silent --show-error --fail "$SITE_URL/sitemap.xml" | grep -q "<urlset"
+
           echo "Live Laravel web + recovery bridge smoke passed."
 
       - name: Remove public temporary deployment files

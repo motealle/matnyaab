@@ -64,7 +64,7 @@ object Theme {
             text = "#1E1B26", muted = "#5F5A6D", border = "#E0DCEB", hover = "#F1EDFB", selected = "#E0D7F6",
             success = "#107C41", danger = "#C42B1C", previewBg = "#FFFFFF", previewText = "#1E1B26"),
         ThemePalette("night", "شب (تیره)", true,
-            accent = "#4CA3F0", accentHover = "#6CB4F3", accentSoft = "#1F3347", accentText = "#9CCBF6",
+            accent = "#2E7BD1", accentHover = "#3A8AE0", accentSoft = "#1F3347", accentText = "#9CCBF6",
             canvas = "#15181D", surface = "#1E2229", surface2 = "#232830", titlebar = "#1A1E24",
             text = "#E6E9EE", muted = "#9AA4B2", border = "#323945", hover = "#2A313B", selected = "#27405A",
             success = "#3FB36B", danger = "#E5534B", previewBg = "#1E2229", previewText = "#E6E9EE"),

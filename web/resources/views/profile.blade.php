@@ -27,7 +27,7 @@
         <div>
             <span class="eyebrow">حساب کاربری</span>
             <h1 class="page-title" style="margin-bottom:3px">حساب شما</h1>
-            <p class="page-subtitle">وضعیت اشتراک، سریال و سوابق خریدتان را در یک نگاه ببینید.</p>
+            <p class="page-subtitle">اطلاعات حساب و سوابق خریدتان را در یک نگاه ببینید. متن‌یاب ۲ برای همه رایگان و بدون محدودیت است.</p>
         </div>
         <div class="nav-actions">
             <a class="btn" href="{{ route('password.change') }}">تغییر رمز عبور</a>
@@ -49,11 +49,7 @@
                         <div class="section-label" style="margin:0 0 3px">وضعیت حساب</div>
                         <div class="muted" style="font-size:12px">{{ $user->username }}</div>
                     </div>
-                    @if ($isSubscriptionEnded)
-                        <span class="status-pill status-off">بدون اشتراک فعال</span>
-                    @else
-                        <span class="status-pill status-active">اشتراک فعال</span>
-                    @endif
+                    <span class="status-pill status-active">دسترسی کامل و رایگان</span>
                 </div>
 
                 <div class="stat-grid">
@@ -62,7 +58,7 @@
                         <div class="stat-value" dir="ltr">{{ $user->phone_number }}</div>
                     </div>
                     <div class="stat">
-                        <div class="stat-label">اشتراک فعلی</div>
+                        <div class="stat-label">آخرین اشتراک خریداری‌شده</div>
                         <div class="stat-value">{{ $user->subscription?->subscription_title ?? '—' }}</div>
                     </div>
                     <div class="stat">
@@ -72,34 +68,17 @@
                 </div>
 
                 <div class="divider"></div>
-                <div class="section-label">مجوزهای کلاینت ویندوز</div>
-                @if ($clientLicenses['bypassed'])
-                    <div class="alert alert-success">
-                        دسترسی ویژه مدیریتی برای این حساب فعال است؛ سریال‌های زیر تا {{ $clientLicenses['expires_at'] }} معتبرند.
-                    </div>
-                @endif
-
+                <div class="alert alert-success" style="margin:0">
+                    متن‌یاب ۲ به سریال نیاز ندارد؛ کافی است آن را <a href="{{ route('home') }}#download">دانلود</a> و اجرا کنید.
+                </div>
                 @if ($clientLicenses['legacy_system_id'] && $clientLicenses['legacy_serial'])
-                    <div class="help" style="margin-bottom:6px">نسخه کلاسیک — System-ID</div>
-                    <code class="serial">{{ $clientLicenses['legacy_system_id'] }}</code>
-                    <div class="help" style="margin:10px 0 6px">سریال نسخه کلاسیک</div>
-                    <code class="serial">{{ $clientLicenses['legacy_serial'] }}</code>
-                @endif
-
-                @if ($clientLicenses['kotlin_system_id'])
-                    <div class="divider"></div>
-                    <div class="help" style="margin-bottom:6px">نسخه نسل جدید (Kotlin) — System-ID</div>
-                    <code class="serial">{{ $clientLicenses['kotlin_system_id'] }}</code>
-                    @if ($clientLicenses['kotlin_serial'])
-                        <div class="help" style="margin:10px 0 6px">سریال نسخه Kotlin</div>
-                        <code class="serial">{{ $clientLicenses['kotlin_serial'] }}</code>
-                    @else
-                        <div class="help">برای صدور سریال این شناسه، اشتراک فعال لازم است.</div>
-                    @endif
-                @else
-                    <div class="help" style="margin-top:10px">
-                        System-ID نسخه Kotlin هنوز برای این حساب ثبت نشده است؛ مدیر سامانه می‌تواند آن را از پنل مدیریت ثبت کند.
-                    </div>
+                    <details style="margin-top:14px">
+                        <summary class="help" style="cursor:pointer">سریال نسخهٔ قدیمی (کلاسیک)</summary>
+                        <div class="help" style="margin:10px 0 6px">شناسهٔ سیستم</div>
+                        <code class="serial">{{ $clientLicenses['legacy_system_id'] }}</code>
+                        <div class="help" style="margin:10px 0 6px">سریال</div>
+                        <code class="serial">{{ $clientLicenses['legacy_serial'] }}</code>
+                    </details>
                 @endif
             </section>
 
@@ -133,40 +112,13 @@
 
         <aside class="stack">
             <section class="panel panel-pad">
-                <div class="panel-header" style="margin-bottom:17px">
-                    <span class="eyebrow">اشتراک متن‌یاب</span>
-                    <h2 style="font-size:21px;margin:5px 0 0">خرید یا تمدید اشتراک</h2>
-                    <p class="page-subtitle">طرح مناسب را انتخاب کنید و برای خرید یا تمدید ادامه دهید.</p>
-                </div>
-
-                <form method="post" action="{{ route('buysubscription') }}">
-                    @csrf
-                    <label class="field">
-                        <span class="field-label">طرح اشتراک</span>
-                        <select class="select" name="subscription_id" required>
-                            @foreach ($subscriptions as $subscription)
-                                <option value="{{ $subscription->id }}">
-                                    {{ $subscription->subscription_title }} — {{ number_format($subscription->subscription_price) }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </label>
-
-                    <label class="field">
-                        <span class="field-label">کد تخفیف</span>
-                        <input class="input" name="coupon_code" autocomplete="off" placeholder="اختیاری">
-                    </label>
-
-                    <button class="btn btn-primary btn-block" type="submit">ادامه خرید</button>
-                </form>
-            </section>
-
-            <section class="panel panel-pad">
-                <div class="section-label">سازگاری دو نسخه ویندوز</div>
-                <div class="help">
-                    نسخه کلاسیک و نسخه Kotlin می‌توانند System-ID متفاوت داشته باشند. پنل مدیریت هر دو شناسه را مستقل نگه می‌دارد
-                    و برای هرکدام سریال سازگار با همان کلاینت صادر می‌کند.
-                </div>
+                <span class="eyebrow">حمایت از متن‌یاب</span>
+                <h2 style="font-size:21px;margin:5px 0 6px">متن‌یاب رایگان است</h2>
+                <p class="page-subtitle">همهٔ امکانات بدون پرداخت در اختیار شماست. اگر متن‌یاب به کارتان آمده، می‌توانید به‌صورت داوطلبانه و کارت‌به‌کارت از ادامهٔ توسعهٔ آن حمایت کنید.</p>
+                <div class="help" style="margin:12px 0 4px">شماره کارت</div>
+                <code class="serial" dir="ltr">{{ implode(' ', str_split(preg_replace('/\D/', '', (string) config('services.support.card_number')), 4)) }}</code>
+                <div class="help" style="margin:6px 0 14px">به نام {{ config('services.support.card_holder') }}</div>
+                <a class="btn btn-primary btn-block" href="{{ route('home') }}#support">اعلام واریز</a>
             </section>
         </aside>
     </div>
