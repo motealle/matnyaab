@@ -60,5 +60,8 @@ class TikaFormatsTest {
 
     @Test fun rtf() = assertParsed(tmp(".rtf").apply { writeText("{\\rtf1\\ansi\\deff0 {\\fonttbl{\\f0 Arial;}}\\f0 rtfword\\par}") }, "rtfword")
     @Test fun html() = assertParsed(tmp(".html").apply { writeText("<html><head><meta charset=\"utf-8\"></head><body><p>htmlword</p></body></html>", Charsets.UTF_8) }, "htmlword")
+    @Test fun txtPersian() = assertParsed(tmp(".txt").apply {
+        writeText("سعدی در گلستان از عدالت و مهربانی سخن می‌گوید و پژوهشگران این متن را بارها خوانده‌اند. واژهٔ عدالت کلید این متن است.", Charsets.UTF_8)
+    }, "عدالت")
     @Test fun txt() = assertParsed(tmp(".txt").apply { writeText("This is plain text with txtword inside it for detection.", Charsets.UTF_8) }, "txtword")
 }
