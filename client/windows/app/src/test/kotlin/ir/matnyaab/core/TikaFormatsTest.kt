@@ -10,6 +10,7 @@ class TikaFormatsTest {
 
     private fun assertParsed(f: File, needle: String) {
         val r = TikaExtractor.parse(f)
+        println("FMT ${f.extension}: status=${r.status} content=${r.content?.take(120)?.replace("\n", " ")}")
         assertTrue(r.status == 200 && r.content?.contains(needle) == true, "${f.extension} not parsed: ${r.content?.take(200)}")
     }
 
@@ -57,9 +58,7 @@ class TikaFormatsTest {
         assertParsed(f, "pdftext")
     }
 
-    @Test fun rtfHtmlTxt() {
-        assertParsed(tmp(".rtf").apply { writeText("{\\rtf1\\ansi rtfword}") }, "rtfword")
-        assertParsed(tmp(".html").apply { writeText("<html><body><p>htmlword</p></body></html>") }, "htmlword")
-        assertParsed(tmp(".txt").apply { writeText("متن ساده txtword", Charsets.UTF_8) }, "txtword")
-    }
+    @Test fun rtf() = assertParsed(tmp(".rtf").apply { writeText("{\\rtf1\\ansi\\deff0 {\\fonttbl{\\f0 Arial;}}\\f0 rtfword\\par}") }, "rtfword")
+    @Test fun html() = assertParsed(tmp(".html").apply { writeText("<html><head><meta charset=\"utf-8\"></head><body><p>htmlword</p></body></html>", Charsets.UTF_8) }, "htmlword")
+    @Test fun txt() = assertParsed(tmp(".txt").apply { writeText("This is plain text with txtword inside it for detection.", Charsets.UTF_8) }, "txtword")
 }

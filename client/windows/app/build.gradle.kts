@@ -58,7 +58,10 @@ application {
 
 tasks.withType<KotlinCompile> { kotlinOptions.jvmTarget = "17" }
 java { toolchain.languageVersion.set(JavaLanguageVersion.of(17)) }
-tasks.test { useJUnitPlatform() }
+tasks.test {
+    useJUnitPlatform()
+    testLogging { showStandardStreams = true; exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL; events("failed") }
+}
 
 tasks.shadowJar {
     archiveFileName.set("matnyaab-all.jar")
