@@ -122,7 +122,7 @@
                     <li>یک هفته پیش از موعد، به فهرست بالا پیام دهید؛ تمدید به‌موقع مهم‌ترین اهرم درآمد است.</li>
                     <li>برای حوزه‌ها، کتابخانه‌ها و مؤسسه‌ها اشتراک گروهی (مثلاً ۱۰ رایانه) تعریف کنید.</li>
                     <li>بسته‌های محتوایی تخصصی را جداگانه یا همراه پلن سالانه عرضه کنید.</li>
-                    <li>به کاربران فعالِ بدون اشتراک (کارت زرد بالا) از بخش «پیام به برنامه» پیامی مهربان بفرستید.</li>
+                    <li>به کاربران فعالِ بدون اشتراک (کارت زرد بالا) از بخش «پیام به برنامه» پیامی دوستانه بفرستید.</li>
                 </ul>
             </section>
         </div>
@@ -244,7 +244,7 @@
                 @endforeach
             </section>
             <section class="card"><h2>پلن‌ها و قیمت‌ها (تومان)</h2>
-                @foreach ([0, 1, 2, 3] as $i)
+                @foreach ([0, 1, 2, 3, 4, 5] as $i)
                     @php $p = $settings['plans'][$i] ?? ['id' => 'p'.$i, 'title' => '', 'days' => '', 'price' => '', 'enabled' => false]; @endphp
                     <div class="row" style="margin-bottom:10px">
                         <input type="hidden" name="plans[{{ $i }}][id]" value="{{ $p['id'] }}">
@@ -274,6 +274,7 @@
                 <section class="card"><h2>متن‌ها</h2>
                     <label class="field"><span class="field-label">متن نوار اطلاعیهٔ صفحهٔ اصلی</span><textarea class="input" name="texts[announcement]" rows="2">{{ $settings['texts']['announcement'] }}</textarea></label>
                     <label class="field"><span class="field-label">جملهٔ اعتماد (صفحهٔ اشتراک)</span><textarea class="input" name="texts[trust_note]" rows="3">{{ $settings['texts']['trust_note'] }}</textarea></label>
+                    <label class="field"><span class="field-label">شعار تبلیغی (صفحهٔ اصلی)</span><input class="input" name="texts[tagline]" value="{{ $settings['texts']['tagline'] }}"></label>
                     <label class="field"><span class="field-label">زمان پاسخ‌گویی پشتیبانی</span><input class="input" name="texts[support_hours]" value="{{ $settings['texts']['support_hours'] }}"></label>
                 </section>
             </div>

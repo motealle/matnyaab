@@ -17,14 +17,14 @@
     @media(max-width:800px){.product-overview{grid-template-columns:1fr;gap:26px}}
     .section{padding:72px 0}.section-head{display:flex;justify-content:space-between;align-items:end;gap:24px;margin-bottom:28px}
     .section-head h2{font-size:34px;font-weight:400;line-height:1.5;letter-spacing:-.7px;margin:5px 0 0}.section-head p{max-width:530px;color:var(--muted);margin:0;font-size:14px;font-weight:300}
-    .feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
+    .feature-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:13px}.feature-grid>*{flex:1 1 280px;max-width:420px;min-width:0}
     .feature-card{min-height:215px;padding:22px;border-radius:18px;border:1px solid var(--line);background:linear-gradient(155deg,var(--soft-card),transparent);transition:.25s ease;position:relative;overflow:hidden}
     .feature-card:hover{transform:translateY(-3px);border-color:rgba(73,155,224,.24)}
     .feature-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:rgba(73,155,224,.08);border:1px solid rgba(73,155,224,.14);margin-bottom:34px}
     .feature-icon svg{width:20px;height:20px;stroke:var(--accent-soft);fill:none;stroke-width:1.7}
     .feature-card h3{font-size:17px;font-weight:550;margin:0 0 5px}.feature-card p{font-size:13px;font-weight:300;color:var(--muted);margin:0;line-height:1.95}
 
-    .workflow{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;counter-reset:step}.workflow-card{border-top:1px solid var(--line-strong);padding-top:20px;counter-increment:step}
+    .workflow{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;counter-reset:step}.workflow-card{border-top:1px solid var(--line-strong);padding-top:20px;counter-increment:step}
     .workflow-card:before{content:"0" counter(step);font-size:11px;color:var(--accent);font-weight:700;letter-spacing:.12em}
     .workflow-card h3{margin:8px 0 5px;font-size:17px;font-weight:550}.workflow-card p{margin:0;color:var(--muted);font-size:13px;font-weight:300}
 
@@ -50,7 +50,7 @@
     .new-badge:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green)}
     .whats-new h2{font-size:34px;font-weight:500;margin:12px 0 6px;line-height:1.5}
     .whats-new .lead{color:var(--muted);font-size:15px;max-width:720px;margin:0 0 22px}
-    .new-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:26px}
+    .new-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-bottom:26px}.new-grid>*{flex:1 1 260px;min-width:0}
     .new-item{padding:16px 18px;border-radius:16px;border:1px solid var(--line);background:var(--soft-card)}
     .new-item h3{margin:0 0 4px;font-size:15px;font-weight:650}.new-item p{margin:0;color:var(--muted);font-size:13px;line-height:1.9}
     .gallery{display:grid;gap:12px}
@@ -94,22 +94,25 @@
     .field-label small{color:var(--muted-2);font-weight:400}
     .hp-field{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
-    .price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .price-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:16px}.price-grid>.price-card{flex:1 1 240px;max-width:340px;min-width:0}
     .price-card{position:relative;padding:22px;border:1px solid var(--line);border-radius:20px;background:var(--surface);display:grid;gap:8px}
     .price-card.is-best{border-color:rgba(52,211,153,.45);box-shadow:0 18px 50px rgba(16,185,129,.12)}
     .price-card .new-badge{position:absolute;top:-12px;right:18px;background:var(--surface)}
     .price-card h3{margin:0;font-size:18px}.price b{font-size:32px;font-weight:800}.price span{color:var(--muted);font-size:13px}
-    .price-card p{margin:0;color:var(--muted);font-size:13px;min-height:44px}
+    .price-card p{margin:0;color:var(--muted);font-size:13px;min-height:44px}.price-card .btn{align-self:end}.price-card{align-content:start}
+    .pay-wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:22px;align-items:start;margin-top:28px}
+    .card-row{display:flex;flex-wrap:wrap;justify-content:center;gap:16px;margin-top:22px}.card-row>.bank-card{flex:1 1 300px;max-width:440px;min-width:0}
+    .support-form{max-width:760px;margin-inline:auto}
     .type-pick{display:inline-flex;gap:6px;align-items:center;padding:7px 14px;border:1px solid var(--line-strong);border-radius:999px;cursor:pointer;font-size:14px}
     .type-pick:has(input:checked){border-color:var(--accent);background:rgba(88,176,237,.12)}
     .faq{display:grid;gap:10px}
     .faq details{border:1px solid var(--line);border-radius:14px;padding:14px 18px;background:var(--soft-card)}
     .faq summary{cursor:pointer;font-weight:600;font-size:15px}
     .faq details p{margin:8px 0 0;color:var(--muted);font-size:14px}
-    @media(max-width:900px){.price-grid{grid-template-columns:1fr}.new-grid{grid-template-columns:1fr 1fr}.download-main,.support-grid{grid-template-columns:1fr}}
-    @media(max-width:640px){.new-grid,.form-grid{grid-template-columns:1fr}.whats-new{padding:22px}.whats-new h2{font-size:26px}.classic-card{flex-direction:column;align-items:flex-start}}
+    @media(max-width:900px){.pay-wrap{grid-template-columns:1fr}.download-main,.support-grid{grid-template-columns:1fr}}
+    @media(max-width:640px){.form-grid{grid-template-columns:1fr}.whats-new{padding:22px}.whats-new h2{font-size:26px}.classic-card{flex-direction:column;align-items:flex-start}}
     @media(max-width:900px){
-        .hero-grid{grid-template-columns:1fr;gap:42px}.product-stage{max-width:680px}.feature-grid{grid-template-columns:1fr 1fr}.section-head{align-items:start;flex-direction:column}
+        .hero-grid{grid-template-columns:1fr;gap:42px}.product-stage{max-width:680px}.section-head{align-items:start;flex-direction:column}
     }
     @media(max-width:640px){
         .hero{padding-top:55px}.hero-title{letter-spacing:-1px}.feature-grid,.workflow,.account-grid{grid-template-columns:1fr}
@@ -135,7 +138,7 @@
             <p class="lead">نسخهٔ تازهٔ متن‌یاب با نصب‌کنندهٔ ویندوزی و همهٔ امکانات، بدون قفل و سقف حجمی در دسترس است. ظاهر برنامه از نو طراحی شده، افزودن پوشه ساده‌تر شده و برای مطالعه‌های طولانی، پوسته‌های رنگی متنوعی به آن افزوده شده است.</p>
 
             <div class="new-grid">
-                <div class="new-item"><h3>اشتراک اعتمادمحور</h3><p>بدون سریال و سقف حجمی؛ پلن را خودتان اعلام می‌کنید و روزشمار مهربان برنامه موعد تمدید را یادآوری می‌کند.</p></div>
+                <div class="new-item"><h3>اشتراک اعتمادمحور</h3><p>بدون سریال و سقف حجمی؛ پلن را خودتان اعلام می‌کنید و روزشمار برنامه موعد تمدید را به شما یادآوری می‌کند.</p></div>
                 <div class="new-item"><h3>پنج پوستهٔ رنگی</h3><p>آبی، زمردی، یاسی، «کاغذی» برای مطالعهٔ طولانی و «شب» برای کار در تاریکی؛ با یک کلیک.</p></div>
                 <div class="new-item"><h3>افزودن پوشه در چند ثانیه</h3><p>نوع اسناد را با چند گزینهٔ ساده انتخاب کنید؛ پیشرفت کار و زمان تقریبی باقیمانده را ببینید.</p></div>
                 <div class="new-item"><h3>کتابخانه‌ای مرتب</h3><p>هر مجموعه با تعداد فایل‌ها و حجم آن نمایش داده می‌شود؛ زیرپوشه‌ها جمع‌وجور و قابل گسترش‌اند.</p></div>
