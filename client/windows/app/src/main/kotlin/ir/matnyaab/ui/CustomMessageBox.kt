@@ -29,7 +29,7 @@ object CustomMessageBox {
         val titleBar = CustomTitleBar(stage, title, showMaximize = false)
         val lbl = Label(message).apply {
             isWrapText = true
-            style = "${Theme.FONT} -fx-font-size: ${Constants.FONT_SIZE_NORMAL}px; -fx-text-alignment: center;"
+            style = "-fx-font-family: '${AppFonts.message}'; -fx-font-size: ${Constants.FONT_SIZE_NORMAL + 1}px; -fx-text-alignment: center; -fx-line-spacing: 4;"
             maxWidth = 420.0
         }
         val buttonRow = HBox(10.0).apply { alignment = Pos.CENTER }

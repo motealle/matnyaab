@@ -32,7 +32,7 @@ class SubscriptionManager(private val settings: AppSettingsManager, private val 
 
     data class State(
         val kind: Kind, val planTitle: String, val start: LocalDate?, val end: LocalDate?,
-        val code: String, val holder: String,
+        val code: String, val holder: String, val org: String = "", val seats: Int = 1,
     ) {
         fun today(): LocalDate = LocalDate.now()
         val daysLeft: Long get() = end?.let { maxOf(0, ChronoUnit.DAYS.between(today(), it)) } ?: 0
@@ -72,7 +72,8 @@ class SubscriptionManager(private val settings: AppSettingsManager, private val 
     val state: State get() {
         val kind = runCatching { Kind.valueOf(settings.get("SUB_KIND")) }.getOrDefault(Kind.NONE)
         fun d(k: String) = settings.get(k).takeIf { it.isNotBlank() }?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
-        return State(kind, settings.get("SUB_PLAN"), d("SUB_START"), d("SUB_END"), settings.get("SUB_CODE"), settings.get("SUB_HOLDER"))
+        return State(kind, settings.get("SUB_PLAN"), d("SUB_START"), d("SUB_END"), settings.get("SUB_CODE"), settings.get("SUB_HOLDER"),
+            if (kind == Kind.CODE) settings.get("SUB_ORG") else "", settings.get("SUB_SEATS").toIntOrNull() ?: 1)
     }
 
     /** حال‌وهوای وضعیت برای رنگ نشان: سبز، قرمز در روزهای پایانی، یا پایان‌یافته */
@@ -162,6 +163,8 @@ class SubscriptionManager(private val settings: AppSettingsManager, private val 
             if (local.kind == Kind.CODE || local.kind == Kind.NONE || local.end == null || !serverEnd.isBefore(local.end))
             save(Kind.CODE, s.get("plan_title").asString, LocalDate.parse(s.get("start").asString),
                 LocalDate.parse(s.get("end").asString), s.get("code").asString, s.get("holder")?.asString ?: "")
+            settings.setValue("SUB_ORG", s.get("org")?.takeIf { !it.isJsonNull }?.asString ?: "")
+            settings.setValue("SUB_SEATS", s.get("seats")?.takeIf { !it.isJsonNull }?.asInt ?: 1)
         } else if (state.kind == Kind.CODE && json.has("subscription")) {
             // کد در پنل لغو یا حذف شده؛ دورهٔ فعلی محلی حفظ می‌شود ولی دیگر همگام نمی‌شود
             settings.setValue("SUB_KIND", Kind.LOCAL.name)

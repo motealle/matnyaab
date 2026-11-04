@@ -13,6 +13,7 @@
         'feature_requests_enabled' => 'فرم پیشنهاد قابلیت فعال باشد',
         'client_messages_enabled' => 'پیام‌های مدیر در برنامه نمایش داده شود',
         'announcement_enabled' => 'نوار اطلاعیه بالای صفحهٔ اصلی نمایش داده شود',
+        'org_enabled' => 'اشتراک سازمانی (چند کاربر با کد گروهی) فعال باشد',
     ];
     $targets = ['all' => 'همهٔ کاربران برنامه', 'expiring' => 'نزدیک موعد تمدید', 'expired' => 'اشتراک پایان‌یافته', 'trial' => 'در حال مهمانی سه‌روزه', 'no_code' => 'بدون کد اشتراک'];
 @endphp
@@ -143,7 +144,7 @@
                 @php $last = end($v['history']); @endphp
                 <tr>
                     <td data-l="کد"><span class="mono">{{ $v['code'] }}</span><br><span class="pill st-{{ $v['state'] }}">{{ $stateLabel[$v['state']] }}</span></td>
-                    <td data-l="کاربر">{{ $v['name'] }}<br><small class="muted" dir="auto">{{ $v['contact'] }}</small></td>
+                    <td data-l="کاربر">@if (! empty($v['org']))🏛 {{ $v['org'] }} · {{ $fa($v['seats'] ?? 1) }} کاربر<br>@endif{{ $v['name'] }}<br><small class="muted" dir="auto">{{ $v['contact'] }}</small>@if (! empty($v['org']))<br><small class="muted">{{ $fa(count($v['clients'] ?? [])) }} رایانهٔ فعال با این کد</small>@endif</td>
                     <td data-l="پلن">{{ $v['plan_title'] }} · {{ $fa($v['price']) }}<br><small class="muted">پیگیری: <span class="mono">{{ $last['tracking_code'] ?? '—' }}</span> · کارت: <span class="mono">{{ $last['card_last4'] ?? '—' }}</span></small></td>
                     <td data-l="دوره">{{ $v['period_start'] ?? $v['start'] }} تا {{ $v['end'] }}<br><small class="muted">روز {{ $fa($v['day_number']) }} از {{ $fa($v['days_total']) }} · {{ $fa($v['days_left']) }} روز مانده</small></td>
                     <td data-l="استفاده">{{ $v['last_seen'] ?: 'هنوز در برنامه وارد نشده' }}</td>
@@ -262,6 +263,12 @@
                     <div class="row" style="margin-top:12px">
                         <label class="field"><span class="field-label">روزهای مهمانی (آزمایشی)</span><input class="input" name="numbers[trial_days]" value="{{ $settings['numbers']['trial_days'] }}"></label>
                         <label class="field"><span class="field-label">یادآوری تمدید از چند روز قبل</span><input class="input" name="numbers[reminder_days]" value="{{ $settings['numbers']['reminder_days'] }}"></label>
+                    </div>
+                    <div class="row" style="margin-top:12px">
+                        <label class="field"><span class="field-label">حداقل کاربر سازمانی</span><input class="input" name="numbers[org_min_seats]" value="{{ $settings['numbers']['org_min_seats'] }}"></label>
+                        <label class="field"><span class="field-label">٪ قیمت فردی (تا ۹ کاربر)</span><input class="input" name="numbers[org_tier1]" value="{{ $settings['numbers']['org_tier1'] }}"></label>
+                        <label class="field"><span class="field-label">٪ (۱۰ تا ۴۹)</span><input class="input" name="numbers[org_tier2]" value="{{ $settings['numbers']['org_tier2'] }}"></label>
+                        <label class="field"><span class="field-label">٪ (۵۰ به بالا)</span><input class="input" name="numbers[org_tier3]" value="{{ $settings['numbers']['org_tier3'] }}"></label>
                     </div>
                 </section>
                 <section class="card"><h2>متن‌ها</h2>

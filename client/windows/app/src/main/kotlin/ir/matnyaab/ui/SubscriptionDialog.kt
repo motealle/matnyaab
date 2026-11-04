@@ -22,34 +22,44 @@ import javafx.stage.Window
 import java.awt.Desktop
 import java.net.URI
 
-/** متن‌های مهربان، فرهنگی و گاهی شوخ‌طبع برای وضعیت اشتراک */
+/** متن‌های صمیمی و مهربان وضعیت اشتراک */
 object SubTexts {
     fun fa(n: Any) = PersianUtil.toPersianNumbers(n)
 
+    private fun org(m: SubscriptionManager) = m.state.org.takeIf { it.isNotBlank() }
+
     fun chip(m: SubscriptionManager): String {
         val s = m.state
+        val g = org(m)?.let { "گروهی «$it» · " } ?: ""
         return when {
-            s.kind == Kind.NONE -> "🌱 اشتراک هنوز ثبت نشده · برای شروع بزنید"
-            !s.active -> "🍂 دورهٔ اشتراک به سر رسید · تمدید"
-            s.kind == Kind.TRIAL -> "☕ مهمان متن‌یاب · ${fa(s.daysLeft)} روز مانده"
-            m.mood(s) == Mood.SOON -> "⏳ ${fa(s.daysLeft)} روز تا تمدید · ${s.planTitle}"
-            else -> "✔ اشتراک ${s.planTitle} · روز ${fa(s.dayNumber)} از ${fa(s.daysTotal)}"
+            s.kind == Kind.NONE -> "🌱 هنوز اشتراکی ثبت نکرده‌اید · بزنید تا با هم شروع کنیم"
+            !s.active -> "🍂 دورهٔ اشتراک تمام شد · تمدید"
+            s.kind == Kind.TRIAL -> "☕ مهمان ما هستید · ${fa(s.daysLeft)} روز مانده"
+            m.mood(s) == Mood.SOON -> "⏳ ${g}${fa(s.daysLeft)} روز تا تمدید"
+            else -> "✔ ${g}اشتراک ${s.planTitle} · روز ${fa(s.dayNumber)} از ${fa(s.daysTotal)}"
         }
     }
 
     fun headline(m: SubscriptionManager): Pair<String, String> {
         val s = m.state
+        val g = org(m)
         return when {
-            s.kind == Kind.NONE -> "به متن‌یاب خوش آمدید" to
-                "متن‌یاب با اشتراک اعتمادمحور کار می‌کند: پلن را خودتان انتخاب و اعلام می‌کنید و ما به انتخاب‌تان اعتماد داریم."
-            !s.active -> "دورهٔ اشتراک‌تان به سر رسید" to
-                "کتابخانه‌تان سر جایش است و چیزی از دست نرفته. هر وقت صلاح دانستید، تمدید کنید؛ یا اگر فعلاً گشایشی نیست، سه روز دیگر مهمان ما باشید."
-            s.kind == Kind.TRIAL -> "مهمان عزیز متن‌یاب هستید" to
-                "قدم‌تان روی چشم. تا ${fa(s.daysLeft)} روز دیگر میزبان شماییم؛ هر زمان خواستید، اشتراک‌تان را ثبت کنید."
-            m.mood(s) == Mood.SOON -> "موعد تمدید نزدیک است" to
-                "تنها ${fa(s.daysLeft)} روز تا پایان دورهٔ ${s.planTitle} مانده. تمدید با همان کد قبلی و در یک دقیقه انجام می‌شود؛ عجله‌ای نیست، فقط خواستیم یادتان باشد. 🌷"
-            else -> "اشتراک اعتمادمحور شما برقرار است" to
-                "از اعتماد و همراهی‌تان سپاسگزاریم. ${fa(s.daysLeft)} روز از دورهٔ ${s.planTitle} باقی است؛ با خیال آسوده پژوهش کنید."
+            s.kind == Kind.NONE -> "سلام، خوش آمدید! 👋" to
+                "خوشحالیم که متن‌یاب را انتخاب کردید. اشتراک ما بر پایهٔ اعتماد است: پلن را خودتان انتخاب می‌کنید و کد اشتراک همان لحظه تقدیم‌تان می‌شود."
+            !s.active && g != null -> "دورهٔ اشتراک گروهی «$g» تمام شد" to
+                "اگر زحمتی نیست، به مسئول اشتراک‌تان خبر بدهید تا تمدیدش کند؛ کد گروه همان می‌ماند. تا آن موقع می‌توانید چند روزی مهمان ما باشید. 🌷"
+            !s.active -> "دورهٔ اشتراک‌تان تمام شد" to
+                "کتابخانه‌تان صحیح و سالم سر جایش است. هر وقت فرصت کردید تمدیدش کنید؛ اگر هم فعلاً شرایطش نیست، اشکالی ندارد، چند روز دیگر مهمان ما باشید. 🌷"
+            s.kind == Kind.TRIAL -> "قدم‌تان روی چشم ☕" to
+                "تا ${fa(s.daysLeft)} روز دیگر مهمان ما هستید. با خیال راحت کارتان را بکنید و هر وقت مایل بودید، اشتراک‌تان را ثبت کنید."
+            m.mood(s) == Mood.SOON && g != null -> "اشتراک گروهی «$g» رو به پایان است" to
+                "${fa(s.daysLeft)} روز دیگر از اشتراک گروه‌تان مانده. اگر زحمتی نیست، به مسئول اشتراک یادآوری کنید که تمدیدش کند. ممنون از همراهی‌تان! 🌷"
+            m.mood(s) == Mood.SOON -> "دوست عزیز، موعد تمدید نزدیک است" to
+                "فقط ${fa(s.daysLeft)} روز از دورهٔ ${s.planTitle} مانده. تمدیدش با همان کد قبلی یک دقیقه هم طول نمی‌کشد. عجله‌ای نیست؛ فقط خواستیم یادتان بماند. 🌷"
+            g != null -> "اشتراک گروهی «$g» برقرار است" to
+                "${fa(s.daysLeft)} روز دیگر از اشتراک گروه‌تان باقی است. پژوهش‌تان پربار! 🌿"
+            else -> "همه‌چیز رو به راه است 🌿" to
+                "ممنون که همراه ما هستید! ${fa(s.daysLeft)} روز از دورهٔ ${s.planTitle} باقی است؛ با خیال راحت پژوهش کنید."
         }
     }
 }
@@ -140,7 +150,7 @@ class SubscriptionDialog(owner: Window?, private val m: SubscriptionManager, pri
         HBox.setHgrow(txtCode, Priority.ALWAYS)
         val codeBox = section("کد اشتراک دارم",
             HBox(8.0, txtCode, btnActivate),
-            wrap("کد را پس از ثبت اشتراک در سایت دریافت می‌کنید. با آن، روزشمار برنامه با سایت یکسان می‌شود و پیام‌های متن‌یاب به شما می‌رسد.", true),
+            wrap("کد را بعد از ثبت اشتراک در سایت می‌گیرید (برای سازمان‌ها، کد گروهی). با آن روزشمار برنامه با سایت یکی می‌شود و پیام‌های ما هم به دست‌تان می‌رسد.", true),
             lblResult)
 
         // ---- ثبت/تمدید در سایت و پلن‌ها
@@ -182,19 +192,19 @@ class SubscriptionDialog(owner: Window?, private val m: SubscriptionManager, pri
         )
 
         // ---- سه روز مهمانی
-        val trialBox = if (m.config.trialEnabled) section("مهمانی سه‌روزه",
-            wrap("به رسم مهمان‌نوازی ایرانی و «الضَّیفُ حبیبُ الله»، هر زمان نیاز داشتید ${SubTexts.fa(m.config.trialDays)} روز دیگر بی‌منت در خدمت شماییم؛ هر وقت گشایشی بود، اشتراک‌تان را ثبت کنید.", true),
-            Button("حلالم کنید؛ ${SubTexts.fa(m.config.trialDays)} روز دیگر مهمان متن‌یاب می‌مانم").apply {
+        val trialBox = if (m.config.trialEnabled) section("چند روز مهمان ما باشید",
+            wrap("هر وقت لازم شد، با کمال میل ${SubTexts.fa(m.config.trialDays)} روز دیگر مهمان ما باشید؛ چند بار هم که بخواهید. هر وقت شرایطش جور شد، اشتراک‌تان را ثبت کنید. 🌷", true),
+            Button("لطفاً حلال کنید که ${SubTexts.fa(m.config.trialDays)} روز دیگه هم رایگان استفاده کنم!").apply {
                 style = Theme.successButton(); prefHeight = Constants.OPTION_BUTTONS_HEIGHT; maxWidth = Double.MAX_VALUE
                 setOnAction {
                     m.startTrial(); onChanged()
-                    CustomMessageBox.show(stage, "قدم‌تان روی چشم", "حلالِ حلال؛ تا ${SubTexts.fa(m.config.trialDays)} روز دیگر میزبان شماییم. پژوهش‌تان پربار! 🌿")
+                    CustomMessageBox.show(stage, "حلالِ حلال! 🌿", "قدم‌تان روی چشم؛ تا ${SubTexts.fa(m.config.trialDays)} روز دیگر با کمال میل میزبان شما هستیم. پژوهش‌تان پربار!")
                     render()
                 }
             },
         ) else null
 
-        val trust = wrap("🤝 متن‌یاب بر اعتماد بنا شده: ما پرداخت را بررسی نمی‌کنیم و انتخاب درست را به وجدان شما می‌سپاریم. استفاده از متن‌یاب رایگان نیست، اما قضاوتش با شماست.", true)
+        val trust = wrap("🤝 ما به شما اعتماد داریم؛ برای همین هیچ بررسی و پیگیری‌ای در کار نیست. همراهی شما با ثبت اشتراک، چراغ متن‌یاب را روشن نگه می‌دارد و کمک می‌کند هر روز بهترش کنیم. ممنون که هستید! 🌷", true)
         val btnClose = Button("بستن").apply { style = Theme.addButton(); isCancelButton = true; setOnAction { stage.close() }; maxWidth = Double.MAX_VALUE }
 
         content.children.setAll(listOfNotNull(status, codeBox, siteBox, trialBox, trust, btnClose))
@@ -208,7 +218,7 @@ class SubscriptionDialog(owner: Window?, private val m: SubscriptionManager, pri
 object MessagesDialog {
     fun show(owner: Window?, m: SubscriptionManager) {
         val list = m.allMessages()
-        val text = if (list.isEmpty()) "پیام تازه‌ای نیست. 🌿"
+        val text = if (list.isEmpty()) "فعلاً پیام تازه‌ای نداریم. 🌿"
             else list.joinToString("\n\n") { "● ${it.title}\n${it.body}" }
         m.markAllSeen()
         CustomMessageBox.show(owner, "پیام‌های متن‌یاب", text)

@@ -16,7 +16,11 @@ class SubscribeController extends Controller
         $code = SubscriptionStore::normalizeCode($request->query('code'));
         $current = $code ? $subs->find($code) : null;
 
+        $s = $settings->all();
+
         return view('subscribe', [
+            'orgTiers' => ['min' => max(2, (int) $s['numbers']['org_min_seats']), 't1' => (int) $s['numbers']['org_tier1'], 't2' => (int) $s['numbers']['org_tier2'], 't3' => (int) $s['numbers']['org_tier3']],
+            'type' => $current && ! empty($current['org']) ? 'org' : ($request->query('type') === 'org' ? 'org' : 'personal'),
             'settings' => $settings->all(),
             'plans' => $settings->plans(),
             'cards' => $settings->cards(),
@@ -38,6 +42,8 @@ class SubscribeController extends Controller
         $renew = SubscriptionStore::normalizeCode($request->input('renew_code'));
         $existing = $renew ? $subs->find($renew) : null;
 
+        $isOrg = $request->input('type') === 'org' || ! empty($existing['org']);
+        $minSeats = max(2, $settings->number('org_min_seats'));
         $rules = [
             'plan' => ['required', 'string', 'max:10'],
             'tracking_code' => [$settings->flag('require_tracking_code') ? 'required' : 'nullable', 'string', 'max:40'],
@@ -49,19 +55,34 @@ class SubscribeController extends Controller
             $rules['contact'] = ['required', 'string', 'max:120'];
             $rules['start'] = ['nullable', 'date_format:Y-m-d'];
         }
+        if ($isOrg) {
+            abort_unless($settings->flag('org_enabled'), 404);
+            $rules['seats'] = ['required', 'integer', 'min:'.$minSeats, 'max:2000'];
+            if (! $existing) {
+                $rules['org'] = ['required', 'string', 'max:100'];
+            }
+        }
         $data = $request->validate($rules, [
             'name.required' => 'نام خود را بنویسید.',
             'contact.required' => 'موبایل یا ایمیل را بنویسید تا موعد تمدید را یادآوری کنیم.',
             'tracking_code.required' => 'کد پیگیری واریز را بنویسید.',
             'card_last4.digits' => 'چهار رقم آخر کارت باید چهار رقم باشد.',
-            'trust.accepted' => 'لطفاً تأیید خوداظهاری را علامت بزنید.',
+            'trust.accepted' => 'لطفاً تیک تأیید را بزنید تا ثبت کنیم. 🌷',
+            'seats.min' => 'اشتراک سازمانی از :min کاربر شروع می‌شود.',
+            'org.required' => 'نام سازمان یا مجموعه را بنویسید.',
         ]);
         $plan = $settings->plan($data['plan']);
         if (! $plan) {
             return back()->withErrors(['plan' => 'یک پلن معتبر انتخاب کنید.'])->withInput();
         }
 
+        if ($isOrg) {
+            $seats = (int) $data['seats'];
+            $plan = ['id' => $plan['id'], 'title' => 'سازمانی '.$plan['title'].' · '.$seats.' کاربر', 'days' => $plan['days'], 'price' => $settings->orgQuote($plan, $seats)];
+        }
         $record = $subs->register([
+            'org' => $isOrg ? ($existing['org'] ?? trim((string) $data['org'])) : null,
+            'seats' => $isOrg ? (int) $data['seats'] : null,
             'name' => $existing['name'] ?? trim($data['name']),
             'contact' => $existing['contact'] ?? trim($data['contact']),
             'start' => $data['start'] ?? null,

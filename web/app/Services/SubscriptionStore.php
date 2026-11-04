@@ -74,6 +74,8 @@ final class SubscriptionStore
                     'contacted_at' => null,
                     'last_seen' => null,
                     'clients' => [],
+                    'org' => $in['org'] ?? null,
+                    'seats' => max(1, (int) ($in['seats'] ?? 1)),
                 ];
                 $type = 'new';
             } else {
@@ -85,6 +87,9 @@ final class SubscriptionStore
             }
 
             $end = $start->addDays((int) $plan['days']);
+            if (isset($in['seats'])) {
+                $existing['seats'] = max(1, (int) $in['seats']);
+            }
             $existing['plan_id'] = $plan['id'];
             $existing['plan_title'] = $plan['title'];
             $existing['price'] = (int) $plan['price'];
@@ -146,7 +151,7 @@ final class SubscriptionStore
             $all[$code]['last_seen'] = $now;
             if ($systemId !== '') {
                 $all[$code]['clients'][substr($systemId, 0, 64)] = ['last_seen' => $now, 'version' => mb_substr($version, 0, 12)];
-                $all[$code]['clients'] = array_slice($all[$code]['clients'], -5, null, true);
+                $all[$code]['clients'] = array_slice($all[$code]['clients'], -max(5, (int) ($all[$code]['seats'] ?? 1) + 5), null, true);
             }
 
             return $all[$code];

@@ -22,6 +22,13 @@
     .check{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--muted);margin:12px 0}
     .check input{margin-top:5px;width:18px;height:18px;accent-color:var(--accent)}
     .hp-field{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+    .type-tabs{display:flex;gap:8px;margin:0 0 16px}
+    .type-tabs a{padding:8px 16px;border-radius:999px;border:1px solid var(--line-strong);text-decoration:none;color:var(--text);font-size:14px}
+    .type-tabs a[aria-current]{background:var(--accent);border-color:var(--accent);color:#fff}
+    .calc{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px;border-radius:14px;background:var(--soft-card);border:1px solid var(--line);margin:4px 0 14px;text-align:center}
+    .calc b{display:block;font-size:20px}.calc small{color:var(--muted)}
+    .calc .save{color:var(--green)}
+    input[type=range]{width:100%;accent-color:var(--accent)}
     @media(max-width:900px){.sub-wrap{grid-template-columns:1fr}}
     @media(max-width:560px){.plan-pick,.form-grid{grid-template-columns:1fr}}
 </style>
@@ -31,7 +38,13 @@
 <div class="container page-shell">
     <span class="eyebrow">اشتراک اعتمادمحور</span>
     <h1 class="page-title">{{ $renew ? 'تمدید اشتراک '.$renew['code'] : 'ثبت اشتراک متن‌یاب' }}</h1>
-    <p class="page-subtitle">پلن را انتخاب کنید، مبلغ را کارت‌به‌کارت بپردازید و فرم را بفرستید؛ کد اشتراک همان لحظه به شما داده می‌شود.</p>
+    <p class="page-subtitle">پلن‌تان را انتخاب کنید، مبلغش را کارت‌به‌کارت کنید و فرم کوتاه زیر را بفرستید؛ کد اشتراک همان لحظه تقدیم‌تان می‌شود. 🌷</p>
+    @if (! $renew && $settings['flags']['org_enabled'])
+        <nav class="type-tabs" aria-label="نوع اشتراک">
+            <a href="{{ route('subscribe') }}" @if ($type === 'personal') aria-current="page" @endif>👤 فردی</a>
+            <a href="{{ route('subscribe', ['type' => 'org']) }}" @if ($type === 'org') aria-current="page" @endif>🏛 سازمانی (چند کاربر)</a>
+        </nav>
+    @endif
 
     @if ($renew)
         <div class="alert {{ $renew['state'] === 'active' ? 'alert-success' : 'alert-error' }}">
@@ -44,6 +57,7 @@
         <form class="panel panel-pad" method="post" action="{{ route('subscribe.store') }}">
             @csrf {!! \App\Support\SpamGuard::fields() !!}
             @if ($renew)<input type="hidden" name="renew_code" value="{{ $renew['code'] }}">@endif
+            <input type="hidden" name="type" value="{{ $type }}">
 
             <div class="plan-pick" role="radiogroup" aria-label="انتخاب پلن">
                 @foreach ($plans as $i => $p)
@@ -58,9 +72,21 @@
                 @endforeach
             </div>
 
+            @if ($type === 'org')
+                <label class="field"><span class="field-label">تعداد کاربران: <b data-seats-out>{{ old('seats', $renew['seats'] ?? 10) }}</b></span>
+                    <input type="range" name="seats" min="{{ $orgTiers['min'] }}" max="200" value="{{ old('seats', $renew['seats'] ?? 10) }}" data-seats></label>
+                <div class="calc" aria-live="polite">
+                    <div><small>هر کاربر</small><b data-per>—</b><small>تومان در کل دوره</small></div>
+                    <div><small>جمع کل</small><b data-total>—</b><small>تومان</small></div>
+                    <div class="save"><small>صرفه‌جویی نسبت به فردی</small><b data-save>—</b><small data-pct></small></div>
+                </div>
+                @unless ($renew)
+                    <label class="field"><span class="field-label">نام سازمان یا مجموعه</span><input class="input" name="org" value="{{ old('org') }}" maxlength="100" required></label>
+                @endunless
+            @endif
             @unless ($renew)
                 <div class="form-grid">
-                    <label class="field"><span class="field-label">نام</span><input class="input" name="name" value="{{ old('name') }}" maxlength="80" autocomplete="name" required></label>
+                    <label class="field"><span class="field-label">{{ $type === 'org' ? 'نام مسئول اشتراک' : 'نام' }}</span><input class="input" name="name" value="{{ old('name') }}" maxlength="80" autocomplete="name" required></label>
                     <label class="field"><span class="field-label">موبایل یا ایمیل</span><input class="input" name="contact" dir="auto" value="{{ old('contact') }}" maxlength="120" required></label>
                 </div>
             @endunless
@@ -71,8 +97,8 @@
             @unless ($renew)
                 <label class="field"><span class="field-label">روز شروع استفاده <small class="muted">(خالی = امروز)</small></span><input class="input" type="date" name="start" value="{{ old('start') }}"></label>
             @endunless
-            <label class="check"><input type="checkbox" name="trust" value="1" required @checked(old('trust'))> <span>اعلام می‌کنم مبلغ این پلن را پرداخت کرده‌ام یا به‌زودی پرداخت می‌کنم. می‌دانم این ثبت بررسی نمی‌شود و بر اعتماد بنا شده است.</span></label>
-            <button class="btn btn-primary btn-block" type="submit">{{ $renew ? 'ثبت تمدید' : 'ثبت و دریافت کد اشتراک' }}</button>
+            <label class="check"><input type="checkbox" name="trust" value="1" required @checked(old('trust'))> <span>این پلن را برای {{ $type === 'org' ? 'مجموعه‌مان' : 'خودم' }} انتخاب کرده‌ام و پرداختش را، اگر هنوز انجام نداده‌ام، هر وقت برایم میسر شد انجام می‌دهم. 🌷</span></label>
+            <button class="btn btn-primary btn-block" type="submit">{{ $renew ? 'ثبت تمدید' : ($type === 'org' ? 'ثبت و دریافت کد گروهی' : 'ثبت و دریافت کد اشتراک') }}</button>
         </form>
 
         <aside>
@@ -92,6 +118,25 @@
 
 @push('scripts')
 <script>
+(() => {
+    const range = document.querySelector('[data-seats]');
+    if (!range) return;
+    const T = @json($orgTiers), plans = @json(collect($plans)->keyBy('id')->map(fn ($p) => $p['price']));
+    const fa = n => new Intl.NumberFormat('fa-IR').format(n);
+    const calc = () => {
+        const seats = +range.value, plan = document.querySelector('input[name=plan]:checked')?.value;
+        const price = plans[plan] || 0, f = seats >= 50 ? T.t3 : seats >= 10 ? T.t2 : T.t1;
+        const total = Math.round(price * seats * f / 100 / 10000) * 10000;
+        document.querySelector('[data-seats-out]').textContent = fa(seats);
+        document.querySelector('[data-per]').textContent = fa(Math.round(total / seats / 1000) * 1000);
+        document.querySelector('[data-total]').textContent = fa(total);
+        document.querySelector('[data-save]').textContent = fa(price * seats - total);
+        document.querySelector('[data-pct]').textContent = fa(100 - f) + '٪ تخفیف';
+    };
+    range.addEventListener('input', calc);
+    document.querySelectorAll('input[name=plan]').forEach(r => r.addEventListener('change', calc));
+    calc();
+})();
 document.querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click', async () => {
     try { await navigator.clipboard.writeText(b.dataset.copy); b.textContent = 'کپی شد ✓'; } catch (_) { b.textContent = b.dataset.copy; }
 }));

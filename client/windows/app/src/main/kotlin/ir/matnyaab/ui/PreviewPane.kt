@@ -118,8 +118,8 @@ class PreviewPane(private val settings: AppSettingsManager) : VBox() {
         val dir = if (align == "left") "ltr" else "rtl"
         val body = """
             <html><head><meta charset='utf-8'>
-            <style>
-              body { font-family: '$fontFamily', '${Constants.PREVIEW_DEFAULT_FONT}', '${Constants.GENERAL_FONT_NAME_PERSIAN}', 'Tahoma', sans-serif; font-size: ${fontSize}px; line-height: 2.1; direction: $dir; text-align: $align; padding: 10px 14px; background: ${Theme.palette.previewBg}; color: ${Theme.palette.previewText}; }
+            <style>${AppFonts.fontFaceCss()}
+              body { font-family: '$fontFamily', 'Vazirmatn', '${Constants.PREVIEW_DEFAULT_FONT}', '${Constants.GENERAL_FONT_NAME_PERSIAN}', 'Tahoma', sans-serif; font-size: ${fontSize}px; line-height: 2.1; direction: $dir; text-align: $align; padding: 10px 14px; background: ${Theme.palette.previewBg}; color: ${Theme.palette.previewText}; }
               .hl { color: #1b1b1b; border-radius: 3px; padding: 0 1px; }
               .empty { color: ${Theme.palette.muted}; text-align: center; margin-top: 30%; font-family: '${Theme.uiFont()}', Tahoma, sans-serif; font-size: 15px; line-height: 2; }
             </style>

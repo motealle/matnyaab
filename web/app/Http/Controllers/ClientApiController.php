@@ -40,6 +40,7 @@ class ClientApiController extends Controller
             'code' => $v['code'], 'holder' => $v['name'], 'plan_id' => $v['plan_id'], 'plan_title' => $v['plan_title'],
             'start' => $v['period_start'] ?? $v['start'], 'end' => $v['end'], 'days_left' => $v['days_left'],
             'days_total' => $v['days_total'], 'day_number' => $v['day_number'], 'state' => $v['state'],
+            'org' => $v['org'] ?? null, 'seats' => (int) ($v['seats'] ?? 1),
         ];
     }
 
