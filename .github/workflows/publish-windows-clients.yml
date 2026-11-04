@@ -21,8 +21,9 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  KOTLIN_VERSION: "2.0"
-  KOTLIN_FILE: "Matnyaab-2.0-win-x64.zip"
+  KOTLIN_VERSION: "2.1"
+  KOTLIN_FILE: "Matnyaab-2.1-win-x64-portable.zip"
+  SETUP_FILE: "Matnyaab-Setup-2.1.exe"
   APP_NAME: "Matnyaab"
   SITE_URL: "https://www.matnyaab.ir"
 
@@ -51,23 +52,38 @@ jobs:
         shell: pwsh
         run: gradle --no-daemon :app:clean :app:test :app:shadowJar
 
-      - name: Build portable Windows app image
+      - name: Build slim runtime, app image, installer and portable zip
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
           $inputDir = Join-Path $PWD "package-input"
           $releaseDir = Join-Path $PWD "release"
-          New-Item -ItemType Directory -Force -Path $inputDir | Out-Null
-          New-Item -ItemType Directory -Force -Path $releaseDir | Out-Null
-
-          $jar = Join-Path $PWD "app\build\libs\matnyaab-2.0-all.jar"
+          New-Item -ItemType Directory -Force -Path $inputDir, $releaseDir | Out-Null
+          $jar = Join-Path $PWD "app\build\libs\matnyaab-all.jar"
           if (-not (Test-Path $jar)) { throw "Expected fat jar not found: $jar" }
-          Copy-Item $jar $inputDir
+          # jar بدون فشرده‌سازی داخلی ذخیره می‌شود تا فشرده‌سازی LZMA2 نصب‌کننده بسیار مؤثرتر شود
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $jarX = Join-Path $PWD "jar-x"
+          if (Test-Path $jarX) { Remove-Item $jarX -Recurse -Force }
+          [System.IO.Compression.ZipFile]::ExtractToDirectory($jar, $jarX)
+          [System.IO.Compression.ZipFile]::CreateFromDirectory($jarX, (Join-Path $inputDir "matnyaab-all.jar"), [System.IO.Compression.CompressionLevel]::NoCompression, $false)
+
+          # Java runtime سفارشی و کوچک به‌جای کل JDK
+          $mods = ""
+          try { $mods = (& jdeps --ignore-missing-deps --multi-release 17 --print-module-deps $jar 2>$null | Select-Object -Last 1).Trim() } catch { }
+          if ($LASTEXITCODE -ne 0 -or $mods -notmatch "java.base") {
+            $mods = "java.base,java.desktop,java.xml,java.sql,java.naming,java.management,java.logging,java.prefs,java.datatransfer,java.security.jgss,java.instrument,java.compiler"
+          }
+          $extra = "jdk.crypto.ec,jdk.localedata,jdk.charsets,jdk.zipfs,jdk.unsupported,jdk.jsobject,java.scripting,jdk.xml.dom,java.net.http,jdk.management,java.security.sasl"
+          Write-Host "Runtime modules: $mods,$extra"
+          $runtime = Join-Path $PWD "runtime"
+          & jlink --add-modules "$mods,$extra" --strip-debug --no-header-files --no-man-pages --compress=2 --include-locales=en,fa --output $runtime
+          if ($LASTEXITCODE -ne 0) { throw "jlink failed" }
 
           $jpArgs = @(
             "--type", "app-image",
             "--input", $inputDir,
-            "--main-jar", "matnyaab-2.0-all.jar",
+            "--main-jar", "matnyaab-all.jar",
             "--main-class", "ir.matnyaab.MainKt",
             "--name", $env:APP_NAME,
             "--app-version", $env:KOTLIN_VERSION,
@@ -75,32 +91,42 @@ jobs:
             "--description", "Matnyaab - full-text search in your documents",
             "--copyright", "matnyaab.ir",
             "--icon", (Join-Path $PWD "packaging\matnyaab.ico"),
-            "--runtime-image", $env:JAVA_HOME,
+            "--java-options", "-Dfile.encoding=UTF-8",
+            "--runtime-image", $runtime,
             "--dest", $releaseDir
           )
           & jpackage @jpArgs
           if ($LASTEXITCODE -ne 0) { throw "jpackage failed with exit code $LASTEXITCODE" }
 
-          $exe = Join-Path $releaseDir "$env:APP_NAME\$env:APP_NAME.exe"
+          $appDir = Join-Path $releaseDir $env:APP_NAME
+          $exe = Join-Path $appDir "$env:APP_NAME.exe"
           if (-not (Test-Path $exe)) { throw "Packaged launcher was not created" }
-
           $smoke = & $exe --smoke 2>&1 | Out-String
           $smoke | Write-Host
-          if ($smoke -notmatch "MATNYAAB_CLIENT_SMOKE_OK") {
-            throw "Packaged Lucene/Tika smoke test failed"
-          }
+          if ($smoke -notmatch "MATNYAAB_CLIENT_SMOKE_OK") { throw "Packaged Lucene/Tika smoke test failed" }
+          $appBytes = (Get-ChildItem $appDir -Recurse | Measure-Object Length -Sum).Sum
+          Write-Host "App image bytes: $appBytes"
+
+          # نصب‌کنندهٔ ویندوز (Inno Setup)
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup --no-progress -y | Out-Null }
+          if (-not (Test-Path $iscc)) { throw "Inno Setup not available" }
+          & $iscc "/DAppVersion=$env:KOTLIN_VERSION" "/DSourceDir=$appDir" "/DOutputDir=$PWD" (Join-Path $PWD "packaging\matnyaab.iss")
+          if ($LASTEXITCODE -ne 0) { throw "Installer build failed" }
+          $setup = Join-Path $PWD $env:SETUP_FILE
+          if (-not (Test-Path $setup)) { throw "Installer not created" }
 
           $zip = Join-Path $PWD $env:KOTLIN_FILE
           if (Test-Path $zip) { Remove-Item $zip -Force }
-          Compress-Archive -Path (Join-Path $releaseDir $env:APP_NAME) -DestinationPath $zip -CompressionLevel Optimal
-          if ((Get-Item $zip).Length -lt 100000000) {
-            throw "Portable package is unexpectedly small"
-          }
+          Compress-Archive -Path $appDir -DestinationPath $zip -CompressionLevel Optimal
 
-          $hash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
-          Set-Content -Path "$zip.sha256" -Value "$hash  $env:KOTLIN_FILE" -Encoding ascii
-          Write-Host "Portable package bytes: $((Get-Item $zip).Length)"
-          Write-Host "SHA256: $hash"
+          foreach ($f in @($setup, $zip)) {
+            $len = (Get-Item $f).Length
+            if ($len -lt 20000000 -or $len -gt 250000000) { throw "Unexpected package size for $f : $len" }
+            $hash = (Get-FileHash $f -Algorithm SHA256).Hash.ToLowerInvariant()
+            Set-Content -Path "$f.sha256" -Value "$hash  $(Split-Path $f -Leaf)" -Encoding ascii
+            Write-Host "$(Split-Path $f -Leaf): $len bytes, sha256 $hash"
+          }
 
       - name: Capture product screenshots
         continue-on-error: true
@@ -127,6 +153,8 @@ jobs:
           path: |
             client/windows/${{ env.KOTLIN_FILE }}
             client/windows/${{ env.KOTLIN_FILE }}.sha256
+            client/windows/${{ env.SETUP_FILE }}
+            client/windows/${{ env.SETUP_FILE }}.sha256
           if-no-files-found: error
           retention-days: 3
 
@@ -151,7 +179,9 @@ jobs:
           set -euo pipefail
           test -s "release/$KOTLIN_FILE"
           test -s "release/$KOTLIN_FILE.sha256"
-          (cd release && sha256sum -c "$KOTLIN_FILE.sha256")
+          (cd release && sha256sum -c "$KOTLIN_FILE.sha256" && sha256sum -c "$SETUP_FILE.sha256")
+          echo "SETUP_BYTES=$(stat -c%s "release/$SETUP_FILE")" >> "$GITHUB_ENV"
+          echo "SETUP_SHA256=$(sha256sum "release/$SETUP_FILE" | awk '{print $1}')" >> "$GITHUB_ENV"
           echo "KOTLIN_BYTES=$(stat -c%s "release/$KOTLIN_FILE")" >> "$GITHUB_ENV"
           echo "KOTLIN_SHA256=$(sha256sum "release/$KOTLIN_FILE" | awk '{print $1}')" >> "$GITHUB_ENV"
 
@@ -225,7 +255,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for file in "$KOTLIN_FILE" "$KOTLIN_FILE.sha256"; do
+          for file in "$SETUP_FILE" "$SETUP_FILE.sha256" "$KOTLIN_FILE" "$KOTLIN_FILE.sha256"; do
             curl --silent --show-error --fail --retry 3               --connect-timeout 20 --max-time 1800               --user "$FTP_USER:$FTP_PASSWORD"               --ftp-method nocwd --ftp-create-dirs               --upload-file "release/$file"               "$FTP_URL/downloadFiles/$file"
           done
 
@@ -256,12 +286,14 @@ jobs:
               "kotlin": {
                   "label": "متن‌یاب ۲",
                   "version": os.environ["KOTLIN_VERSION"],
-                  "url": "/downloadFiles/" + os.environ["KOTLIN_FILE"],
-                  "checksum_url": "/downloadFiles/" + os.environ["KOTLIN_FILE"] + ".sha256",
-                  "size_bytes": int(os.environ["KOTLIN_BYTES"]),
-                  "sha256": os.environ["KOTLIN_SHA256"],
-                  "delivery": "ZIP آماده اجرا برای ویندوز ۱۰ و ۱۱ (۶۴ بیتی) — بدون نیاز به نصب",
-                  "content_summary": "فایل را از حالت فشرده خارج کنید و Matnyaab.exe را اجرا کنید. همهٔ امکانات رایگان و بدون محدودیت است؛ بسته‌های محتوایی را می‌توانید جداگانه از داخل برنامه دریافت کنید.",
+                  "url": "/downloadFiles/" + os.environ["SETUP_FILE"],
+                  "checksum_url": "/downloadFiles/" + os.environ["SETUP_FILE"] + ".sha256",
+                  "size_bytes": int(os.environ["SETUP_BYTES"]),
+                  "sha256": os.environ["SETUP_SHA256"],
+                  "portable_url": "/downloadFiles/" + os.environ["KOTLIN_FILE"],
+                  "portable_size_bytes": int(os.environ["KOTLIN_BYTES"]),
+                  "delivery": "نصب‌کنندهٔ ویندوز ۱۰ و ۱۱ (۶۴ بیتی)",
+                  "content_summary": "نصب‌کننده را اجرا کنید؛ میان‌بر متن‌یاب روی میز کار و منوی شروع ساخته می‌شود. بسته‌های محتوایی را از داخل برنامه دریافت کنید.",
               },
           }
           with open("releases.json", "w", encoding="utf-8") as f:
@@ -280,12 +312,12 @@ jobs:
           import json
           x=json.load(open("/tmp/releases.json", encoding="utf-8"))
           assert x["classic"]["size_bytes"] > 1_000_000
-          assert x["kotlin"]["size_bytes"] > 100_000_000
+          assert x["kotlin"]["size_bytes"] > 20_000_000
           assert x["kotlin"]["content_summary"]
           print("Release manifest verified.")
           PY
 
-          for url in "$LEGACY_URL" "/downloadFiles/$KOTLIN_FILE"; do
+          for url in "$LEGACY_URL" "/downloadFiles/$SETUP_FILE" "/downloadFiles/$KOTLIN_FILE"; do
             code="$(curl --silent --show-error --location --head               --connect-timeout 15 --max-time 60               -o /dev/null -w '%{http_code}' "$SITE_URL$url" || true)"
             test "$code" = "200"
           done

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'متن‌یاب | جستجوی حرفه‌ای در محتوای فایل‌ها؛ رایگان برای ویندوز')
-@section('meta_description', 'متن‌یاب ۲ رایگان و بدون محدودیت: جست‌وجوی سریع درون متن فایل‌های Word، PDF، پاورپوینت، اکسل و OneNote روی رایانهٔ خودتان؛ مناسب پژوهشگران، طلاب، دانشجویان و کتابخانه‌های شخصی.')
+@section('title', 'متن‌یاب | جستجوی حرفه‌ای در محتوای فایل‌ها؛ اشتراک اعتمادمحور برای ویندوز')
+@section('meta_description', 'متن‌یاب ۲ با اشتراک اعتمادمحور (از ماهی ۴۱ هزار تومان): جست‌وجوی سریع درون متن فایل‌های Word، PDF، پاورپوینت، اکسل و OneNote روی رایانهٔ خودتان؛ مناسب پژوهشگران، طلاب، دانشجویان و کتابخانه‌های شخصی.')
 
 @push('styles')
 <link rel="stylesheet" href="/assets/matnyaab-hero-v1/hero.css?v=20260928-mobile">
@@ -94,11 +94,19 @@
     .field-label small{color:var(--muted-2);font-weight:400}
     .hp-field{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
+    .price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .price-card{position:relative;padding:22px;border:1px solid var(--line);border-radius:20px;background:var(--surface);display:grid;gap:8px}
+    .price-card.is-best{border-color:rgba(52,211,153,.45);box-shadow:0 18px 50px rgba(16,185,129,.12)}
+    .price-card .new-badge{position:absolute;top:-12px;right:18px;background:var(--surface)}
+    .price-card h3{margin:0;font-size:18px}.price b{font-size:32px;font-weight:800}.price span{color:var(--muted);font-size:13px}
+    .price-card p{margin:0;color:var(--muted);font-size:13px;min-height:44px}
+    .type-pick{display:inline-flex;gap:6px;align-items:center;padding:7px 14px;border:1px solid var(--line-strong);border-radius:999px;cursor:pointer;font-size:14px}
+    .type-pick:has(input:checked){border-color:var(--accent);background:rgba(88,176,237,.12)}
     .faq{display:grid;gap:10px}
     .faq details{border:1px solid var(--line);border-radius:14px;padding:14px 18px;background:var(--soft-card)}
     .faq summary{cursor:pointer;font-weight:600;font-size:15px}
     .faq details p{margin:8px 0 0;color:var(--muted);font-size:14px}
-    @media(max-width:900px){.new-grid{grid-template-columns:1fr 1fr}.download-main,.support-grid{grid-template-columns:1fr}}
+    @media(max-width:900px){.price-grid{grid-template-columns:1fr}.new-grid{grid-template-columns:1fr 1fr}.download-main,.support-grid{grid-template-columns:1fr}}
     @media(max-width:640px){.new-grid,.form-grid{grid-template-columns:1fr}.whats-new{padding:22px}.whats-new h2{font-size:26px}.classic-card{flex-direction:column;align-items:flex-start}}
     @media(max-width:900px){
         .hero-grid{grid-template-columns:1fr;gap:42px}.product-stage{max-width:680px}.feature-grid{grid-template-columns:1fr 1fr}.section-head{align-items:start;flex-direction:column}
@@ -114,17 +122,20 @@
 @endpush
 
 @section('content')
+@if ($settings['flags']['announcement_enabled'] && $settings['texts']['announcement'] !== '')
+<div class="container" style="margin-top:14px"><div class="alert alert-success" role="status">📣 {{ $settings['texts']['announcement'] }}</div></div>
+@endif
 @include('partials.home-hero')
 
 <section class="section" id="whats-new">
     <div class="container">
         <div class="whats-new">
             <span class="new-badge">تازه منتشر شد</span>
-            <h2>متن‌یاب ۲؛ رایگان، کامل و زیباتر از همیشه</h2>
-            <p class="lead">نسخهٔ تازهٔ متن‌یاب با همهٔ امکانات و بدون هیچ محدودیتی در دسترس است. ظاهر برنامه از نو طراحی شده، افزودن پوشه ساده‌تر شده و برای مطالعه‌های طولانی، پوسته‌های رنگی متنوعی به آن افزوده شده است.</p>
+            <h2>متن‌یاب ۲؛ کامل‌تر، سبک‌تر و زیباتر از همیشه</h2>
+            <p class="lead">نسخهٔ تازهٔ متن‌یاب با نصب‌کنندهٔ ویندوزی و همهٔ امکانات، بدون قفل و سقف حجمی در دسترس است. ظاهر برنامه از نو طراحی شده، افزودن پوشه ساده‌تر شده و برای مطالعه‌های طولانی، پوسته‌های رنگی متنوعی به آن افزوده شده است.</p>
 
             <div class="new-grid">
-                <div class="new-item"><h3>رایگان و بدون محدودیت</h3><p>بدون اشتراک، بدون سریال و بدون سقف حجمی؛ هر قدر پوشه و فایل دارید فهرست کنید.</p></div>
+                <div class="new-item"><h3>اشتراک اعتمادمحور</h3><p>بدون سریال و سقف حجمی؛ پلن را خودتان اعلام می‌کنید و روزشمار مهربان برنامه موعد تمدید را یادآوری می‌کند.</p></div>
                 <div class="new-item"><h3>پنج پوستهٔ رنگی</h3><p>آبی، زمردی، یاسی، «کاغذی» برای مطالعهٔ طولانی و «شب» برای کار در تاریکی؛ با یک کلیک.</p></div>
                 <div class="new-item"><h3>افزودن پوشه در چند ثانیه</h3><p>نوع اسناد را با چند گزینهٔ ساده انتخاب کنید؛ پیشرفت کار و زمان تقریبی باقیمانده را ببینید.</p></div>
                 <div class="new-item"><h3>کتابخانه‌ای مرتب</h3><p>هر مجموعه با تعداد فایل‌ها و حجم آن نمایش داده می‌شود؛ زیرپوشه‌ها جمع‌وجور و قابل گسترش‌اند.</p></div>
@@ -194,25 +205,26 @@
 <section class="section" id="download">
     <div class="container">
         <div class="download-panel">
-            <span class="eyebrow">دانلود رایگان</span>
+            <span class="eyebrow">دانلود</span>
             <h2>متن‌یاب ۲ را دریافت کنید</h2>
-            <p>نسخهٔ کامل، رایگان و بدون محدودیت برای ویندوز. نیازی به نصب، ثبت‌نام یا سریال نیست.</p>
+            <p>نصب‌کنندهٔ ویندوز را دریافت کنید، با چند کلیک نصب کنید و با کد اشتراک یا سه روز مهمانی شروع کنید.</p>
 
             <div class="download-main">
                 <article class="release-card">
                     <div><span class="new-badge">نسخهٔ ۲٫۰</span><h3 style="margin-top:10px">متن‌یاب ۲ برای ویندوز</h3></div>
-                    <p data-release-content="kotlin">فایل را از حالت فشرده خارج کنید و Matnyaab.exe را اجرا کنید. همهٔ امکانات رایگان و بدون محدودیت است.</p>
+                    <p data-release-content="kotlin">نصب‌کننده را اجرا کنید؛ میان‌بر متن‌یاب روی میز کار و منوی شروع ساخته می‌شود.</p>
                     <div class="release-meta">
-                        <span><strong>نوع فایل:</strong> <span data-release-delivery="kotlin">ZIP آماده اجرا برای ویندوز ۱۰ و ۱۱ (۶۴ بیتی)</span></span>
+                        <span><strong>نوع فایل:</strong> <span data-release-delivery="kotlin">نصب‌کنندهٔ ویندوز ۱۰ و ۱۱ (۶۴ بیتی)</span></span>
                         <span><strong>اندازه:</strong> <span data-release-size="kotlin">در حال دریافت اطلاعات…</span></span>
                     </div>
-                    <a class="btn btn-primary" data-release-link="kotlin" href="/downloadFiles/Matnyaab-2.0-win-x64.zip">دانلود رایگان متن‌یاب ۲ <span aria-hidden="true">↓</span></a>
+                    <a class="btn btn-primary" data-release-link="kotlin" href="/downloadFiles/Matnyaab-Setup-2.1.exe">دانلود نصب‌کنندهٔ متن‌یاب ۲ <span aria-hidden="true">↓</span></a>
+                    <small class="muted" style="color:var(--muted-2)">نسخهٔ بدون نصب: <a data-release-portable href="/downloadFiles/Matnyaab-2.1-win-x64-portable.zip" style="color:var(--accent-soft)">فایل ZIP</a></small>
                 </article>
                 <div style="display:grid;gap:14px">
                     <ul class="req-list">
                         <li>ویندوز ۱۰ یا ۱۱، ۶۴ بیتی</li>
-                        <li>بدون نیاز به نصب</li>
-                        <li>بدون ثبت‌نام و سریال</li>
+                        <li>نصب با چند کلیک</li>
+                        <li>بدون سریال؛ با کد اشتراک</li>
                         <li>فارسی و راست‌به‌چپ</li>
                     </ul>
                     <div class="classic-card">
@@ -229,7 +241,8 @@
     </div>
 </section>
 
-@include('partials.support')
+@include('partials.pricing')
+@include('partials.contact')
 
 <section class="section" id="faq">
     <div class="container">
@@ -272,6 +285,8 @@
                     const delivery = document.querySelector('[data-release-delivery="kotlin"]');
                     const content = document.querySelector('[data-release-content="kotlin"]');
                     if (link && kotlin.url) link.href = kotlin.url;
+                    const portable = document.querySelector('[data-release-portable]');
+                    if (portable && kotlin.portable_url) portable.href = kotlin.portable_url;
                     if (size && kotlin.size_bytes) size.textContent = formatBytes(Number(kotlin.size_bytes));
                     if (delivery && kotlin.delivery) delivery.textContent = kotlin.delivery;
                     if (content && kotlin.content_summary) content.textContent = kotlin.content_summary;
@@ -309,7 +324,7 @@
         // کپی شماره کارت
         document.querySelectorAll('[data-copy-card]').forEach(btn => {
             btn.addEventListener('click', async () => {
-                const num = document.querySelector('[data-card-number]')?.dataset.cardNumber || '';
+                const num = btn.dataset.copyCard || '';
                 try { await navigator.clipboard.writeText(num); btn.textContent = 'کپی شد ✓'; }
                 catch (_) { btn.textContent = num; }
                 setTimeout(() => { btn.textContent = 'کپی شماره کارت'; }, 2500);

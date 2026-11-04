@@ -136,6 +136,6 @@ class AdminController extends Controller
 
     private function authorizeSuperuser(Request $request): void
     {
-        abort_unless($request->user()?->is_superuser, 403);
+        abort_unless(\App\Services\AdminAuth::check(), 403);
     }
 }

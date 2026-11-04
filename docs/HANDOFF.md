@@ -271,3 +271,20 @@ trust-based card-to-card, announced on the homepage. Online purchase is no longe
   - SEO: canonical/OG/Twitter meta, JSON-LD (SoftwareApplication, WebSite, FAQPage), `/robots.txt`, `/sitemap.xml`.
   - Profile no longer shows a purchase form. `buysubscription`/IDPay code is kept dormant for compatibility tests.
 - Deployer publishes `public/assets/matnyaab-v2` in addition to the hero assets.
+
+## Trust-based subscriptions, admin panel, installer — 2026-11-04
+
+Owner decision: the app is **not free**. Payment is trust-based card-to-card; prices: monthly 89,000, 6 months 299,000,
+yearly 490,000 toman (editable in admin). Primary card 6037-9977-7025-9241 (محمد کاظم رحیمی), secondary 5041-7212-0222-7469.
+
+- Data (no SQLite change): JSON files in `MATNYAAB_DATA_DIR` (deployer → `shared/data`): `settings.json` (feature flags,
+  cards, plans, texts), `subscriptions.json`, `inbox.json`, `notices.json`, `installs.json`, `admin.json`.
+- `/subscribe` issues a code `MT-XXXX-XXXX` immediately (not verified). Renewal reuses the code and continues from the end date.
+- Client API (CSRF-exempt, throttled): `GET /api/client/config`, `POST /api/client/activate`, `POST /api/client/ping`.
+- Admin: `/adminarea/login` (independent username/password, bootstrap password must be changed on first login) or any
+  existing superuser account via `/login`. Tabs: overview (finance KPIs + renewal follow-up), subscriptions, inbox,
+  notices to clients, settings/feature flags, account. Legacy user tools: `/adminarea?tab=users`.
+- Spam protection: honeypot + signed time token (3 s – 6 h) + link limit + throttle + 24 h duplicate check.
+- Client 2.1: subscription chip with day counter (green / red in last `reminder_days`), code activation, local
+  self-declaration, repeatable 3-day "guest" grace, admin messages, recent searches, CSV export of results.
+- Packaging: Tika limited to document parsers, jlink runtime, Inno Setup installer `Matnyaab-Setup-2.1.exe` + portable ZIP.

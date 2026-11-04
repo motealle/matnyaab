@@ -1,6 +1,10 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminPanelController;
+use App\Http\Controllers\ClientApiController;
+use App\Http\Controllers\SubscribeController;
+use App\Http\Middleware\AdminAccess;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LegacyApiController;
@@ -23,6 +27,32 @@ Route::match(['get', 'post'], 'get_contents', [LegacyApiController::class, 'getC
 Route::match(['get', 'post'], 'statistics', [LegacyApiController::class, 'statistics']);
 Route::get('download_content', [LegacyApiController::class, 'downloadContent']);
 Route::get('download_content_img', [LegacyApiController::class, 'downloadContentImage']);
+Route::get('subscribe', [SubscribeController::class, 'show'])->name('subscribe');
+Route::post('subscribe', [SubscribeController::class, 'store'])->middleware('throttle:8,10')->name('subscribe.store');
+Route::get('subscribe/done', [SubscribeController::class, 'done'])->name('subscribe.done');
+Route::post('contact', [SubscribeController::class, 'contact'])->middleware('throttle:4,10')->name('contact.store');
+Route::prefix('api/client')->middleware('throttle:30,1')->group(function () {
+    Route::get('config', [ClientApiController::class, 'configEndpoint']);
+    Route::post('activate', [ClientApiController::class, 'activate']);
+    Route::post('ping', [ClientApiController::class, 'ping']);
+});
+Route::get('adminarea/login', [AdminPanelController::class, 'showLogin'])->name('admin.login');
+Route::post('adminarea/login', [AdminPanelController::class, 'login'])->middleware('throttle:6,15')->name('admin.login.submit');
+Route::middleware(AdminAccess::class)->prefix('adminarea')->group(function () {
+    Route::get('/', [AdminPanelController::class, 'index'])->name('admin.dashboard');
+    Route::get('account', [AdminPanelController::class, 'account'])->name('admin.account');
+    Route::post('account', [AdminPanelController::class, 'accountSave'])->name('admin.account.save');
+    Route::post('logout', [AdminPanelController::class, 'logout'])->name('admin.logout');
+    Route::post('subscriptions', [AdminPanelController::class, 'subscriptionAction'])->name('admin.subs.action');
+    Route::post('subscriptions/create', [AdminPanelController::class, 'subscriptionCreate'])->name('admin.subs.create');
+    Route::post('inbox', [AdminPanelController::class, 'inboxAction'])->name('admin.inbox.action');
+    Route::post('notices', [AdminPanelController::class, 'noticeCreate'])->name('admin.notices.create');
+    Route::post('notices/action', [AdminPanelController::class, 'noticeAction'])->name('admin.notices.action');
+    Route::post('settings', [AdminPanelController::class, 'settingsSave'])->name('admin.settings.save');
+    Route::post('gift', [AdminController::class, 'gift'])->name('admin.gift');
+    Route::post('license/global', [AdminController::class, 'updateGlobalLicensePolicy'])->name('admin.license.global');
+    Route::post('license/user', [AdminController::class, 'updateUserLicensePolicy'])->name('admin.license.user');
+});
 Route::post('support', [SupportController::class, 'store'])->middleware('throttle:6,10')->name('support.store');
 Route::get('support', fn () => redirect('/#support'));
 Route::redirect('/donate', '/#support');
@@ -32,9 +62,10 @@ Route::get('robots.txt', fn () => response(
 Route::get('sitemap.xml', function () {
     $urls = [
         ['loc' => url('/'), 'priority' => '1.0', 'changefreq' => 'weekly'],
+        ['loc' => url('/subscribe'), 'priority' => '0.8', 'changefreq' => 'monthly'],
         ['loc' => url('/login'), 'priority' => '0.3', 'changefreq' => 'yearly'],
     ];
-    return response()->view('sitemap', ['urls' => $urls, 'lastmod' => '2026-11-03'])
+    return response()->view('sitemap', ['urls' => $urls, 'lastmod' => '2026-11-04'])
         ->header('Content-Type', 'application/xml; charset=utf-8');
 });
 Route::match(['get', 'post'], 'callback-gateway', [SubscriptionController::class, 'callbackGateway'])->name('callback_gateway');
@@ -53,10 +84,6 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('adminarea', [AdminController::class, 'index'])->name('admin.dashboard');
-    Route::post('adminarea/gift', [AdminController::class, 'gift'])->name('admin.gift');
-    Route::post('adminarea/license/global', [AdminController::class, 'updateGlobalLicensePolicy'])->name('admin.license.global');
-    Route::post('adminarea/license/user', [AdminController::class, 'updateUserLicensePolicy'])->name('admin.license.user');
 
     Route::get('smsconfirm', [RegistrationController::class, 'showSmsConfirm'])->name('smsconfirm');
     Route::post('smsconfirm', [RegistrationController::class, 'smsConfirm'])->name('smsconfirm.submit');

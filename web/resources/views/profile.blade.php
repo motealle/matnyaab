@@ -27,7 +27,7 @@
         <div>
             <span class="eyebrow">حساب کاربری</span>
             <h1 class="page-title" style="margin-bottom:3px">حساب شما</h1>
-            <p class="page-subtitle">اطلاعات حساب و سوابق خریدتان را در یک نگاه ببینید. متن‌یاب ۲ برای همه رایگان و بدون محدودیت است.</p>
+            <p class="page-subtitle">اطلاعات حساب و سوابق خریدتان را در یک نگاه ببینید. اشتراک متن‌یاب ۲ اعتمادمحور است و از صفحهٔ «ثبت اشتراک» در یک دقیقه انجام می‌شود.</p>
         </div>
         <div class="nav-actions">
             <a class="btn" href="{{ route('password.change') }}">تغییر رمز عبور</a>
@@ -49,7 +49,7 @@
                         <div class="section-label" style="margin:0 0 3px">وضعیت حساب</div>
                         <div class="muted" style="font-size:12px">{{ $user->username }}</div>
                     </div>
-                    <span class="status-pill status-active">دسترسی کامل و رایگان</span>
+                    <a class="status-pill status-active" href="{{ route('subscribe') }}">ثبت یا تمدید اشتراک</a>
                 </div>
 
                 <div class="stat-grid">
@@ -113,12 +113,12 @@
         <aside class="stack">
             <section class="panel panel-pad">
                 <span class="eyebrow">حمایت از متن‌یاب</span>
-                <h2 style="font-size:21px;margin:5px 0 6px">متن‌یاب رایگان است</h2>
-                <p class="page-subtitle">همهٔ امکانات بدون پرداخت در اختیار شماست. اگر متن‌یاب به کارتان آمده، می‌توانید به‌صورت داوطلبانه و کارت‌به‌کارت از ادامهٔ توسعهٔ آن حمایت کنید.</p>
+                <h2 style="font-size:21px;margin:5px 0 6px">اشتراک اعتمادمحور</h2>
+                <p class="page-subtitle">ماهانه ۸۹ هزار، شش‌ماهه ۲۹۹ هزار و یک‌ساله ۴۹۰ هزار تومان. پرداخت کارت‌به‌کارت است و کد اشتراک بلافاصله داده می‌شود.</p>
                 <div class="help" style="margin:12px 0 4px">شماره کارت</div>
-                <code class="serial" dir="ltr">{{ implode(' ', str_split(preg_replace('/\D/', '', (string) config('services.support.card_number')), 4)) }}</code>
-                <div class="help" style="margin:6px 0 14px">به نام {{ config('services.support.card_holder') }}</div>
-                <a class="btn btn-primary btn-block" href="{{ route('home') }}#support">اعلام واریز</a>
+                <code class="serial" dir="ltr">{{ \App\Services\SiteSettings::cardGroups((app(\App\Services\SiteSettings::class)->cards()[0]['number'] ?? '')) }}</code>
+                <div class="help" style="margin:6px 0 14px">به نام {{ app(\App\Services\SiteSettings::class)->cards()[0]['holder'] ?? '' }}</div>
+                <a class="btn btn-primary btn-block" href="{{ route('subscribe') }}">ثبت یا تمدید اشتراک</a>
             </section>
         </aside>
     </div>

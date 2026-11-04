@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'statistics',
             'callback-gateway',
+            'api/client/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -12,7 +12,7 @@ class SupportReportTest extends TestCase
     {
         parent::setUp();
         $this->path = sys_get_temp_dir().'/matnyaab-support-'.uniqid().'.jsonl';
-        config(['services.support.reports_path' => $this->path]);
+        config(['services.support.reports_path' => $this->path, 'services.matnyaab.data_dir' => sys_get_temp_dir().'/mx-data-'.uniqid()]);
     }
 
     protected function tearDown(): void
@@ -57,8 +57,11 @@ class SupportReportTest extends TestCase
         $this->get('/')
             ->assertOk()
             ->assertSee('متن‌یاب ۲', false)
-            ->assertSee('id="support"', false)
-            ->assertSee('5041 7212 0222 7469', false)
+            ->assertSee('id="pricing"', false)
+            ->assertSee('id="contact"', false)
+            ->assertSee('6037 9977 7025 9241', false)
+            ->assertSee('۸۹٬۰۰۰', false)
+            ->assertDontSee('رایگان و بدون محدودیت', false)
             ->assertSee('application/ld+json', false)
             ->assertSee('data-release-link="kotlin"', false)
             ->assertSee('data-release-link="classic"', false)
