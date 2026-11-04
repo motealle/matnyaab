@@ -48,6 +48,7 @@ Route::middleware(AdminAccess::class)->prefix('adminarea')->group(function () {
     Route::post('inbox', [AdminPanelController::class, 'inboxAction'])->name('admin.inbox.action');
     Route::post('notices', [AdminPanelController::class, 'noticeCreate'])->name('admin.notices.create');
     Route::post('notices/action', [AdminPanelController::class, 'noticeAction'])->name('admin.notices.action');
+    Route::post('purge', [AdminPanelController::class, 'purge'])->name('admin.purge');
     Route::post('settings', [AdminPanelController::class, 'settingsSave'])->name('admin.settings.save');
     Route::post('gift', [AdminController::class, 'gift'])->name('admin.gift');
     Route::post('license/global', [AdminController::class, 'updateGlobalLicensePolicy'])->name('admin.license.global');

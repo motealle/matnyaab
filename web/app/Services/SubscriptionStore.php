@@ -12,6 +12,11 @@ final class SubscriptionStore
 {
     private JsonStore $store;
 
+    public function purge(): void
+    {
+        $this->store->update(function (array &$all) { $all = []; });
+    }
+
     public function __construct(private SiteSettings $settings)
     {
         $this->store = new JsonStore('subscriptions');

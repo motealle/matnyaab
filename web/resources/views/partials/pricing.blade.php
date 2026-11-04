@@ -6,7 +6,8 @@
             <div><span class="eyebrow">اشتراک اعتمادمحور</span><h2>پلن خود را انتخاب کنید</h2></div>
             <p>{{ $settings['texts']['trust_note'] }}</p>
         </div>
-        <div class="price-grid">
+        @php $n = count($plans) + ($settings['flags']['org_enabled'] ? 1 : 0); @endphp
+        <div class="price-grid" style="--cols:{{ $n <= 4 ? max($n, 1) : 3 }}">
             @foreach ($plans as $i => $p)
                 @php $best = $i === count($plans) - 1 && count($plans) > 1; @endphp
                 <article class="price-card {{ $best ? 'is-best' : '' }}">
@@ -34,10 +35,9 @@
                     <li>در <a href="{{ route('subscribe') }}">صفحهٔ ثبت اشتراک</a> فرم کوتاه را بفرستید و <strong>کد اشتراک</strong> را همان لحظه بگیرید.</li>
                     <li>کد را در برنامه وارد کنید؛ روزشمار برنامه و سایت هماهنگ می‌شوند و موعد تمدید را یادآوری می‌کنند.</li>
                 </ol>
+                <div class="account-note"><strong>پیش‌تر اشتراک خریده‌اید؟</strong><span>سوابق خرید شما محفوظ است و از <a href="{{ route('login') }}">حساب کاربری</a> قابل مشاهده است.</span></div>
             </div>
-            <div class="account-note" style="margin-top:0"><strong>پیش‌تر اشتراک خریده‌اید؟</strong><span>سوابق خرید شما محفوظ است و از <a href="{{ route('login') }}">حساب کاربری</a> قابل مشاهده است.</span></div>
-        </div>
-        <div class="card-row">
+            <div class="pay-cards">
                 @foreach ($cards as $i => $c)
                     <div class="bank-card" @if ($i) style="background:linear-gradient(135deg,#334155,#475569)" @endif>
                         <span class="bank-card-label">{{ $i ? 'کارت جایگزین' : 'شماره کارت' }}</span>
@@ -47,5 +47,6 @@
                     </div>
                 @endforeach
             </div>
+        </div>
     </div>
 </section>

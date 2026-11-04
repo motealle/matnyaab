@@ -93,6 +93,17 @@ class AdminPanelController extends Controller
         return back()->with('status', 'انجام شد.');
     }
 
+    public function purge(Request $request): RedirectResponse
+    {
+        $what = $request->validate(['what' => ['required', 'in:inbox,notices,installs,subs']])['what'];
+        $this->messages->purge($what);
+        if ($what === 'subs') {
+            $this->subs->purge();
+        }
+
+        return back()->with('status', 'به‌طور کامل پاک شد.');
+    }
+
     public function noticeCreate(Request $request): RedirectResponse
     {
         $data = $request->validate([

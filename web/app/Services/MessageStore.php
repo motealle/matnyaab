@@ -96,6 +96,12 @@ final class MessageStore
         return $out;
     }
 
+    public function purge(string $what): void
+    {
+        $store = ['inbox' => $this->inbox, 'notices' => $this->notices, 'installs' => $this->installs][$what] ?? null;
+        $store?->update(function (array &$all) { $all = []; });
+    }
+
     public function touchInstall(string $systemId, string $version, ?string $code, string $mode): void
     {
         if ($systemId === '') {
