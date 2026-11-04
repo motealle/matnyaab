@@ -9,7 +9,7 @@
                 <h2 class="hero-title" aria-label="میان هزاران صفحه، ردّ اندیشه را پیدا کنید."><span aria-hidden="true">میان هزاران صفحه،</span><span class="hero-typed-line" aria-hidden="true"><span data-type="ردّ اندیشه را پیدا کنید.">ردّ اندیشه را پیدا کنید.</span><span class="type-caret"></span></span></h2>
                 <p class="hero-description">از کتابخانهٔ شخصی تا اسناد پژوهشی؛ چند واژه را جست‌وجو کنید و دوباره به متن موردنظر برسید.</p>
                 <div class="hero-actions"><a class="btn btn-primary" href="#download">دانلود متن‌یاب ۲ <span aria-hidden="true">↓</span></a><a class="btn hero-secondary" href="#whats-new">تازه‌های نسخه ۲</a></div>
-                <p class="hero-local">همهٔ امکانات، بی‌قفل · اشتراک اعتمادمحور · روی رایانهٔ شما</p>
+                <p class="hero-local">{{ $settings['texts']['tagline'] }} · همهٔ امکانات، بی‌قفل · روی رایانهٔ شما</p>
             </div>
         </article>
         <article class="hero-slide" data-slide data-copy-side="right" style="--subject:22% 50%" role="group" aria-roledescription="اسلاید" aria-label="۲ از ۳" aria-hidden="true" inert>

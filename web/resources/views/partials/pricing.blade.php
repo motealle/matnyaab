@@ -27,19 +27,17 @@
             @endif
         </div>
 
-        <div class="support-grid" style="margin-top:22px">
+        <div class="pay-wrap">
             <div>
                 <ol class="support-steps">
                     <li>مبلغ پلن را به یکی از کارت‌های زیر <strong>کارت‌به‌کارت</strong> کنید.</li>
                     <li>در <a href="{{ route('subscribe') }}">صفحهٔ ثبت اشتراک</a> فرم کوتاه را بفرستید و <strong>کد اشتراک</strong> را همان لحظه بگیرید.</li>
-                    <li>کد را در برنامه وارد کنید؛ روزشمار برنامه و سایت هماهنگ می‌شوند و موعد تمدید را مهربانانه یادآوری می‌کنند.</li>
+                    <li>کد را در برنامه وارد کنید؛ روزشمار برنامه و سایت هماهنگ می‌شوند و موعد تمدید را یادآوری می‌کنند.</li>
                 </ol>
-                <div class="account-note">
-                    <strong>پیش‌تر اشتراک خریده‌اید؟</strong>
-                    <span>سوابق خرید شما محفوظ است و از <a href="{{ route('login') }}">حساب کاربری</a> قابل مشاهده است.</span>
-                </div>
             </div>
-            <div style="display:grid;gap:12px">
+            <div class="account-note" style="margin-top:0"><strong>پیش‌تر اشتراک خریده‌اید؟</strong><span>سوابق خرید شما محفوظ است و از <a href="{{ route('login') }}">حساب کاربری</a> قابل مشاهده است.</span></div>
+        </div>
+        <div class="card-row">
                 @foreach ($cards as $i => $c)
                     <div class="bank-card" @if ($i) style="background:linear-gradient(135deg,#334155,#475569)" @endif>
                         <span class="bank-card-label">{{ $i ? 'کارت جایگزین' : 'شماره کارت' }}</span>
@@ -49,6 +47,5 @@
                     </div>
                 @endforeach
             </div>
-        </div>
     </div>
 </section>

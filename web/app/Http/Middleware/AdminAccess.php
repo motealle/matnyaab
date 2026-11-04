@@ -15,7 +15,7 @@ class AdminAccess
 
             return redirect()->route('admin.login');
         }
-        if (AdminAuth::mustChange() && ! $request->routeIs('admin.account*', 'admin.logout')) {
+        if (AdminAuth::mustChange() && ! $request->routeIs('admin.account*', 'admin.logout') && ! ($request->routeIs('admin.dashboard') && $request->query('tab') === 'account')) {
             return redirect()->route('admin.account')->with('status', 'برای امنیت، لطفاً همین حالا رمز اولیه را تغییر دهید.');
         }
 
