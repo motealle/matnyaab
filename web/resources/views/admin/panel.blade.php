@@ -153,6 +153,7 @@
                         <form method="post" action="{{ route('admin.subs.action') }}">@csrf<input type="hidden" name="code" value="{{ $v['code'] }}"><input type="hidden" name="action" value="contacted"><button class="btn btn-sm">پیام دادم</button></form>
                         <a class="btn btn-sm" href="{{ route('admin.dashboard', ['tab' => 'notices', 'to' => $v['code']]) }}">پیام</a>
                         <form method="post" action="{{ route('admin.subs.action') }}">@csrf<input type="hidden" name="code" value="{{ $v['code'] }}"><input type="hidden" name="action" value="{{ $v['state'] === 'cancelled' ? 'reactivate' : 'cancel' }}"><button class="btn btn-sm">{{ $v['state'] === 'cancelled' ? 'فعال‌سازی' : 'لغو' }}</button></form>
+                        <form method="post" action="{{ route('admin.subs.action') }}" onsubmit="return confirm('حذف کامل اشتراک {{ $v['code'] }}؟\nهشدار: این مورد برای همیشه و به‌طور کامل پاک می‌شود و قابل بازگشت نیست. ادامه می‌دهید؟')">@csrf<input type="hidden" name="code" value="{{ $v['code'] }}"><input type="hidden" name="action" value="delete"><button class="btn btn-sm" style="color:var(--red)">حذف کامل</button></form>
                     </div></td>
                 </tr>
             @empty
@@ -181,7 +182,7 @@
                     <div class="acts">
                         <form method="post" action="{{ route('admin.inbox.action') }}">@csrf<input type="hidden" name="id" value="{{ $m['id'] }}"><input type="hidden" name="action" value="{{ $m['status'] === 'new' ? 'done' : 'new' }}"><button class="btn btn-sm">{{ $m['status'] === 'new' ? 'رسیدگی شد ✓' : 'علامت نخوانده' }}</button></form>
                         @if ($m['code'])<a class="btn btn-sm" href="{{ route('admin.dashboard', ['tab' => 'notices', 'to' => $m['code']]) }}">پاسخ در برنامه</a>@endif
-                        <form method="post" action="{{ route('admin.inbox.action') }}" onsubmit="return confirm('حذف شود؟')">@csrf<input type="hidden" name="id" value="{{ $m['id'] }}"><input type="hidden" name="action" value="delete"><button class="btn btn-sm">حذف</button></form>
+                        <form method="post" action="{{ route('admin.inbox.action') }}" onsubmit="return confirm('هشدار: این مورد برای همیشه و به‌طور کامل پاک می‌شود و قابل بازگشت نیست. ادامه می‌دهید؟')">@csrf<input type="hidden" name="id" value="{{ $m['id'] }}"><input type="hidden" name="action" value="delete"><button class="btn btn-sm" onclick="return confirm('هشدار: این مورد برای همیشه و به‌طور کامل پاک می‌شود و قابل بازگشت نیست. ادامه می‌دهید؟')">حذف</button></form>
                     </div>
                 </div>
             @empty
@@ -221,7 +222,7 @@
                     <p>{{ $n['body'] }}</p>
                     <div class="acts">
                         <form method="post" action="{{ route('admin.notices.action') }}">@csrf<input type="hidden" name="id" value="{{ $n['id'] }}"><input type="hidden" name="action" value="toggle"><button class="btn btn-sm">{{ $n['active'] ? 'توقف نمایش' : 'نمایش دوباره' }}</button></form>
-                        <form method="post" action="{{ route('admin.notices.action') }}">@csrf<input type="hidden" name="id" value="{{ $n['id'] }}"><input type="hidden" name="action" value="delete"><button class="btn btn-sm">حذف</button></form>
+                        <form method="post" action="{{ route('admin.notices.action') }}">@csrf<input type="hidden" name="id" value="{{ $n['id'] }}"><input type="hidden" name="action" value="delete"><button class="btn btn-sm" onclick="return confirm('هشدار: این مورد برای همیشه و به‌طور کامل پاک می‌شود و قابل بازگشت نیست. ادامه می‌دهید؟')">حذف</button></form>
                     </div>
                 </div>
             @empty
@@ -255,6 +256,14 @@
                     </div>
                 @endforeach
             </section>
+            <section class="card" style="border-color:var(--red)"><h2>پاک‌سازی داده‌های تستی</h2>
+                <p class="muted">هر دکمه همهٔ موارد آن بخش را برای همیشه پاک می‌کند (قبل از حذف، هشدار نمایش داده می‌شود).</p>
+                <div class="row">
+                    @foreach (['inbox' => 'همهٔ پیام‌های دریافتی', 'notices' => 'همهٔ پیام‌های برنامه', 'installs' => 'آمار برنامه‌های نصب‌شده', 'subs' => 'همهٔ اشتراک‌ها'] as $k => $l)
+                        <button class="btn btn-sm" style="color:var(--red)" type="submit" form="purge-{{ $k }}" onclick="return confirm('{{ $l }} برای همیشه و کامل پاک می‌شود و قابل بازگشت نیست. مطمئنید؟')">حذف {{ $l }}</button>
+                    @endforeach
+                </div>
+            </section>
             <div class="grid2">
                 <section class="card"><h2>فیچرفلگ‌ها</h2>
                     @foreach ($flagLabels as $k => $l)
@@ -280,6 +289,7 @@
             </div>
             <button class="btn btn-primary btn-block" type="submit">ذخیرهٔ همهٔ تنظیمات</button>
         </form>
+        @foreach (['inbox', 'notices', 'installs', 'subs'] as $k)<form id="purge-{{ $k }}" method="post" action="{{ route('admin.purge') }}" hidden>@csrf<input type="hidden" name="what" value="{{ $k }}"></form>@endforeach
     @endif
 
     @if ($tab === 'account')

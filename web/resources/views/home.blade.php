@@ -121,6 +121,26 @@
     @media(prefers-reduced-motion:reduce){
         .type-caret{animation:none}.real-shot:after{animation:none}.hero-copy,.hero-actions,.hero-meta,.product-stage,.type-line{opacity:1;transform:none;animation:none}
     }
+
+    /* ===== سیستم چیدمان یکپارچه: یک عرض محتوا، ستون‌های صریح، بدون ردیف یتیم ===== */
+    :root{--max:1180px}
+    @media(min-width:1800px){:root{--max:1360px}.section{padding:96px 0}}
+    .section-head{display:block;max-width:none;margin-bottom:32px}
+    .section-head p{max-width:720px;margin:12px 0 0}
+    .feature-grid,.new-grid,.workflow,.price-grid{display:grid;gap:16px;justify-content:stretch}
+    .feature-grid>*,.new-grid>*,.price-grid>.price-card{flex:none;max-width:none;min-width:0}
+    .feature-grid,.new-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .workflow{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .price-grid{grid-template-columns:repeat(var(--cols,3),minmax(0,1fr))}
+    .pay-wrap{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:stretch;margin-top:28px}
+    .pay-cards{display:grid;gap:14px;align-content:start}.pay-cards .bank-card{max-width:none}
+    .support-form{max-width:none;margin:0}
+    .contact-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+    @media(max-width:1099px){.price-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:999px){.feature-grid,.new-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pay-wrap{grid-template-columns:1fr}.contact-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    .download-main{align-items:start}
+    @media(max-width:759px){.workflow{grid-template-columns:1fr}}
+    @media(max-width:639px){.feature-grid,.new-grid,.price-grid,.contact-grid{grid-template-columns:1fr}}
 </style>
 @endpush
 
