@@ -17,6 +17,13 @@ class MatnyaabApp : Application() {
         val shotsDir = raw.indexOf("--screenshots").takeIf { it >= 0 && it + 1 < raw.size }?.let { raw[it + 1] }
         val settings = AppSettingsManager()
         Constants.FONT_CHANGE_RATE = (settings.get("FONT_RATE").toIntOrNull() ?: 100) / 100.0 * 1.2
+        ir.matnyaab.ui.AppFonts.load()
+        // مهاجرت یک‌باره: پیش‌نمایش با وزیرمتن
+        if (settings.get("FONT_MIGRATED") != "1") {
+            if (settings.get("PREVIEW_FONT_FAMILY") in listOf("", "Tahoma") && ir.matnyaab.ui.AppFonts.has("Vazirmatn"))
+                settings.setValue("PREVIEW_FONT_FAMILY", "Vazirmatn")
+            settings.setValue("FONT_MIGRATED", "1")
+        }
         ir.matnyaab.ui.Theme.init(settings)
 
         val splash = SplashWindow()

@@ -21,9 +21,9 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  KOTLIN_VERSION: "2.1"
-  KOTLIN_FILE: "Matnyaab-2.1-win-x64-portable.zip"
-  SETUP_FILE: "Matnyaab-Setup-2.1.exe"
+  KOTLIN_VERSION: "2.2"
+  KOTLIN_FILE: "Matnyaab-2.2-win-x64-portable.zip"
+  SETUP_FILE: "Matnyaab-Setup-2.2.exe"
   APP_NAME: "Matnyaab"
   SITE_URL: "https://www.matnyaab.ir"
 
@@ -47,6 +47,22 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.7"
+
+      - name: Fetch bundled Persian fonts (OFL, not stored in Git)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $dst = Join-Path $PWD "app\src\main\resources\fonts"
+          New-Item -ItemType Directory -Force -Path $dst | Out-Null
+          $tmp = Join-Path $env:RUNNER_TEMP "fonts"
+          New-Item -ItemType Directory -Force -Path $tmp | Out-Null
+          Push-Location $tmp
+          npm pack vazirmatn@33.0.3 sahel-font@3.4.0 --silent | Out-Null
+          Get-ChildItem *.tgz | ForEach-Object { tar -xzf $_.FullName; Rename-Item package ($_.BaseName) }
+          Pop-Location
+          Copy-Item "$tmp\vazirmatn-33.0.3\fonts\ttf\Vazirmatn-Regular.ttf", "$tmp\vazirmatn-33.0.3\fonts\ttf\Vazirmatn-Bold.ttf" $dst
+          Copy-Item "$tmp\sahel-font-3.4.0\dist\Sahel.ttf", "$tmp\sahel-font-3.4.0\dist\Sahel-Bold.ttf" $dst
+          Get-ChildItem $dst | Format-Table Name, Length
 
       - name: Build tested fat jar
         shell: pwsh
@@ -104,6 +120,11 @@ jobs:
           $smoke = & $exe --smoke 2>&1 | Out-String
           $smoke | Write-Host
           if ($smoke -notmatch "MATNYAAB_CLIENT_SMOKE_OK") { throw "Packaged Lucene/Tika smoke test failed" }
+          # لانچر نباید هرگز دسترسی مدیر بخواهد (خطای 740)
+          $raw = [System.Text.Encoding]::ASCII.GetString([System.IO.File]::ReadAllBytes($exe))
+          $m = [regex]::Match($raw, 'requestedExecutionLevel\s+level="(\w+)"')
+          Write-Host "Launcher execution level: $($m.Groups[1].Value)"
+          if ($m.Success -and $m.Groups[1].Value -ne "asInvoker") { throw "Launcher requests elevation: $($m.Groups[1].Value)" }
           $appBytes = (Get-ChildItem $appDir -Recurse | Measure-Object Length -Sum).Sum
           Write-Host "App image bytes: $appBytes"
 
@@ -115,6 +136,19 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Installer build failed" }
           $setup = Join-Path $PWD $env:SETUP_FILE
           if (-not (Test-Path $setup)) { throw "Installer not created" }
+
+          # آزمون واقعی نصب: نصب بی‌صدا برای کاربر جاری، اجرا از محل نصب، و حذف
+          $p = Start-Process $setup -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART" -PassThru -Wait
+          if ($p.ExitCode -ne 0) { throw "Silent install failed: $($p.ExitCode)" }
+          $installed = Join-Path $env:LOCALAPPDATA "Programs\Matnyaab\Matnyaab.exe"
+          if (-not (Test-Path $installed)) { throw "Installed launcher missing at $installed" }
+          $smoke2 = & $installed --smoke 2>&1 | Out-String
+          if ($smoke2 -notmatch "MATNYAAB_CLIENT_SMOKE_OK") { throw "Installed app smoke failed: $smoke2" }
+          if (-not (Test-Path (Join-Path ([Environment]::GetFolderPath("Programs")) "متن‌یاب.lnk"))) { Write-Host "Start-menu shortcut check skipped (name encoding)" }
+          $un = Join-Path $env:LOCALAPPDATA "Programs\Matnyaab\unins000.exe"
+          $p = Start-Process $un -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART" -PassThru -Wait
+          if ($p.ExitCode -ne 0) { throw "Silent uninstall failed: $($p.ExitCode)" }
+          Write-Host "Installer install/run/uninstall test passed."
 
           $zip = Join-Path $PWD $env:KOTLIN_FILE
           if (Test-Path $zip) { Remove-Item $zip -Force }

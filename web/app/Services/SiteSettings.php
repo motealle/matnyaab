@@ -25,14 +25,19 @@ final class SiteSettings
                 'feature_requests_enabled' => true,
                 'client_messages_enabled' => true,
                 'announcement_enabled' => false,
+                'org_enabled' => true,
             ],
             'numbers' => [
                 'trial_days' => 3,
                 'reminder_days' => 7,
+                'org_min_seats' => 3,
+                'org_tier1' => 60,
+                'org_tier2' => 50,
+                'org_tier3' => 45,
             ],
             'texts' => [
                 'announcement' => '',
-                'trust_note' => 'متن‌یاب بر اعتماد بنا شده است. ما پرداخت‌ها را بررسی نمی‌کنیم؛ کد اشتراک بلافاصله به شما داده می‌شود و انتخاب درست را به وجدان شما می‌سپاریم.',
+                'trust_note' => 'ما به شما اعتماد داریم؛ برای همین هیچ بررسی و پیگیری‌ای در کار نیست و کد اشتراک همان لحظه تقدیم‌تان می‌شود. همراهی شما چراغ متن‌یاب را روشن نگه می‌دارد. ممنون که هستید! 🌷',
                 'support_hours' => 'پاسخ پیام‌ها معمولاً ظرف یک روز کاری داده می‌شود.',
             ],
         ];
@@ -51,6 +56,9 @@ final class SiteSettings
         $s = $this->store->read();
         foreach (['flags', 'numbers', 'texts'] as $k) {
             $d[$k] = array_merge($d[$k], is_array($s[$k] ?? null) ? $s[$k] : []);
+        }
+        if (str_contains((string) $d['texts']['trust_note'], 'وجدان')) {
+            $d['texts']['trust_note'] = self::defaults()['texts']['trust_note'];
         }
         foreach (['cards', 'plans'] as $k) {
             if (! empty($s[$k]) && is_array($s[$k])) {
@@ -105,6 +113,20 @@ final class SiteSettings
         $this->store->update(function (array &$data) use ($settings) {
             $data = $settings;
         });
+    }
+
+    /** درصد قیمت فردی که هر کاربر سازمانی می‌پردازد (پلکانی بر پایهٔ تعداد کاربران) */
+    public function orgFactor(int $seats): int
+    {
+        $n = $this->all()['numbers'];
+
+        return (int) ($seats >= 50 ? $n['org_tier3'] : ($seats >= 10 ? $n['org_tier2'] : $n['org_tier1']));
+    }
+
+    /** قیمت کل اشتراک سازمانی؛ به نزدیک‌ترین ده هزار تومان گرد می‌شود */
+    public function orgQuote(array $plan, int $seats): int
+    {
+        return (int) (round($plan['price'] * $seats * $this->orgFactor($seats) / 100 / 10000) * 10000);
     }
 
     public static function cardGroups(string $number): string

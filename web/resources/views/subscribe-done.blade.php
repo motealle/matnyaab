@@ -6,10 +6,10 @@
 <div class="container page-shell" style="max-width:680px">
     <section class="panel panel-pad" style="text-align:center">
         <div style="font-size:42px">🌿</div>
-        <h1 class="page-title" style="font-size:26px">{{ $kind === 'renew' ? 'تمدید شما ثبت شد' : 'اشتراک شما ثبت شد' }}</h1>
-        <p class="page-subtitle">{{ $s['name'] }} عزیز، از اعتمادتان سپاسگزاریم. اشتراک {{ $s['plan_title'] }} تا {{ $s['end'] }} معتبر است.</p>
+        <h1 class="page-title" style="font-size:26px">{{ $kind === 'renew' ? 'تمدیدتان ثبت شد، ممنون! 🌷' : 'خوش آمدید؛ اشتراک‌تان ثبت شد! 🌷' }}</h1>
+        <p class="page-subtitle">{{ $s['name'] }} عزیز، خیلی ممنون که همراه ما هستید. اشتراک {{ $s['plan_title'] }} تا {{ $s['end'] }} برقرار است.@if (! empty($s['org'])) این کد را به همهٔ همکاران‌تان در «{{ $s['org'] }}» بدهید؛ همه با همین یک کد وارد می‌شوند.@endif</p>
         <div style="margin:18px auto;padding:18px;border:2px dashed var(--accent);border-radius:16px;max-width:360px">
-            <small class="muted">کد اشتراک</small>
+            <small class="muted">{{ empty($s['org']) ? 'کد اشتراک' : 'کد گروهی ('.$s['seats'].' کاربر)' }}</small>
             <div id="code" style="font-size:30px;font-weight:800;letter-spacing:.08em;direction:ltr;font-family:Consolas,monospace">{{ $s['code'] }}</div>
             <button class="btn btn-primary" type="button" id="copy" style="margin-top:8px">کپی کد</button>
         </div>

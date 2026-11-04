@@ -94,7 +94,8 @@ object Theme {
     val FONT get() = "-fx-font-family: '${uiFont()}';"
 
     private var cachedFont: String? = null
-    fun uiFont(): String = cachedFont ?: run {
+    fun uiFont(): String = cachedFont ?: AppFonts.best(settings?.get("UI_FONT")).also { cachedFont = it }
+    private fun legacyUiFont(): String = run {
         val fams = try { Font.getFamilies() } catch (e: Exception) { emptyList<String>() }
         (listOf("Segoe UI", Constants.GENERAL_FONT_NAME_PERSIAN).firstOrNull { it in fams } ?: "System").also { cachedFont = it }
     }

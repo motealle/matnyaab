@@ -146,9 +146,14 @@ class AdminPanelController extends Controller
         foreach (array_keys(SiteSettings::defaults()['flags']) as $f) {
             $flags[$f] = ! empty($in['flags'][$f]);
         }
+        $num = fn ($k, $min, $max, $def) => max($min, min($max, (int) SupportReportService::normalizeDigits((string) ($in['numbers'][$k] ?? $def)) ?: $def));
         $numbers = [
-            'trial_days' => max(1, min(30, (int) ($in['numbers']['trial_days'] ?? 3))),
-            'reminder_days' => max(1, min(60, (int) ($in['numbers']['reminder_days'] ?? 7))),
+            'trial_days' => $num('trial_days', 1, 30, 3),
+            'reminder_days' => $num('reminder_days', 1, 60, 7),
+            'org_min_seats' => $num('org_min_seats', 2, 100, 3),
+            'org_tier1' => $num('org_tier1', 10, 100, 60),
+            'org_tier2' => $num('org_tier2', 10, 100, 50),
+            'org_tier3' => $num('org_tier3', 10, 100, 45),
         ];
         $texts = [];
         foreach (array_keys(SiteSettings::defaults()['texts']) as $t) {

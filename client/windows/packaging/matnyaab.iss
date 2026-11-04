@@ -17,11 +17,12 @@ AppVerName=متن‌یاب {#AppVersion}
 AppPublisher=Matnyaab
 AppPublisherURL=https://www.matnyaab.ir
 AppSupportURL=https://www.matnyaab.ir/#contact
-DefaultDirName={autopf}\Matnyaab
+DefaultDirName={userpf}\Matnyaab
 DefaultGroupName=متن‌یاب
 DisableProgramGroupPage=yes
+; فقط نصب برای کاربر جاری: هیچ‌وقت به دسترسی مدیر ویندوز نیاز ندارد
 PrivilegesRequired=lowest
-PrivilegesRequiredOverridesAllowed=dialog
+UsePreviousAppDir=no
 ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
 OutputDir={#OutputDir}
@@ -50,4 +51,20 @@ Name: "{group}\{cm:UninstallProgram,متن‌یاب}"; Filename: "{uninstallexe}
 Name: "{autodesktop}\متن‌یاب"; Filename: "{app}\Matnyaab.exe"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\Matnyaab.exe"; Description: "{cm:LaunchProgram,Matnyaab}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\Matnyaab.exe"; Description: "{cm:LaunchProgram,Matnyaab}"; Flags: nowait postinstall skipifsilent shellexec
+
+[Code]
+// اگر نسخهٔ پیشین «برای همهٔ کاربران» (Program Files) نصب شده، پیشنهاد حذف آن داده می‌شود
+function InitializeSetup(): Boolean;
+var
+  S: String;
+  R: Integer;
+begin
+  Result := True;
+  if RegQueryStringValue(HKLM, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{8F4B2C1E-5D7A-4E39-9C61-6A2B7D0E3F15}_is1', 'UninstallString', S) then
+  begin
+    if SuppressibleMsgBox('A previous all-users copy of Matnyaab was found in Program Files.' + #13#10 +
+      'Remove it now to avoid two copies? (Your indexes and settings are kept.)', mbConfirmation, MB_YESNO, IDNO) = IDYES then
+      ShellExec('runas', RemoveQuotes(S), '/SILENT /SUPPRESSMSGBOXES /NORESTART', '', SW_SHOW, ewWaitUntilTerminated, R);
+  end;
+end;

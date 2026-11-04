@@ -43,6 +43,11 @@ class SettingsDialog(owner: Window?, private val settings: AppSettingsManager) {
             // پیش‌نمایش زنده: با انتخاب، همهٔ پنجره‌ها بلافاصله رنگ می‌گیرند
             setOnAction { Theme.setPalette(Theme.PALETTES[selectionModel.selectedIndex].id) }
         }
+        val fonts = AppFonts.choices()
+        val cmbFont = ComboBox(FXCollections.observableArrayList(fonts.map { it.second })).apply {
+            selectionModel.select(fonts.indexOfFirst { it.first == Theme.uiFont() }.coerceAtLeast(0))
+            maxWidth = Double.MAX_VALUE
+        }
         val btnSave = Button("ذخیره").apply {
             style = Theme.primaryButton(); prefWidth = 120.0; prefHeight = Constants.OPTION_BUTTONS_HEIGHT
             setOnMouseEntered { style = Theme.primaryButtonHover() }
@@ -50,10 +55,12 @@ class SettingsDialog(owner: Window?, private val settings: AppSettingsManager) {
             setOnAction {
                 saved = true
                 settings.setValue("TIKA_MEM", cmbMem.value)
+                val oldFont = settings.get("UI_FONT")
+                fonts.getOrNull(cmbFont.selectionModel.selectedIndex)?.let { settings.setValue("UI_FONT", it.first) }
                 val oldRate = settings.get("FONT_RATE")
                 settings.setValue("FONT_RATE", slider.value.toInt())
-                if (oldRate != slider.value.toInt().toString())
-                    CustomMessageBox.show(stage, "تنظیمات", "پوسته اعمال شد. تغییر اندازهٔ قلم پس از اجرای دوبارهٔ برنامه اعمال می‌شود.")
+                if (oldRate != slider.value.toInt().toString() || oldFont != settings.get("UI_FONT"))
+                    CustomMessageBox.show(stage, "تنظیمات", "پوسته همین حالا اعمال شد. قلم و اندازهٔ تازه هم از اجرای بعدی برنامه سر جایشان می‌نشینند. 🌷")
                 stage.close()
             }
         }
@@ -61,8 +68,9 @@ class SettingsDialog(owner: Window?, private val settings: AppSettingsManager) {
         val grid = GridPane().apply {
             hgap = 10.0; vgap = 14.0
             add(Label("پوستهٔ رنگی:").styled(), 0, 0); add(cmbTheme, 1, 0)
-            add(Label("اندازهٔ قلم برنامه (درصد):").styled(), 0, 1); add(slider, 1, 1)
-            add(Label("حافظهٔ موتور استخراج متن:").styled(), 0, 2); add(cmbMem, 1, 2)
+            add(Label("قلم برنامه:").styled(), 0, 1); add(cmbFont, 1, 1)
+            add(Label("اندازهٔ قلم برنامه (درصد):").styled(), 0, 2); add(slider, 1, 2)
+            add(Label("حافظهٔ موتور استخراج متن:").styled(), 0, 3); add(cmbMem, 1, 3)
         }
         val content = VBox(20.0, grid, btnSave).apply {
             padding = Insets(20.0); style = "-fx-background-color: ${Constants.OPTION_BACKGROUND_COLOR};"
@@ -73,7 +81,7 @@ class SettingsDialog(owner: Window?, private val settings: AppSettingsManager) {
             center = content
             style = "-fx-border-color: ${Constants.BORDER_COLOR};"
         }
-        stage.scene = Scene(root, 480.0, 330.0)
+        stage.scene = Scene(root, 500.0, 400.0)
         Theme.install(stage.scene, stage)
         // بستن بدون ذخیره، پوستهٔ قبلی را برمی‌گرداند
         stage.setOnHidden { if (!saved) Theme.setPalette(original) }

@@ -17,6 +17,14 @@
                     <a class="btn {{ $best ? 'btn-primary' : '' }} btn-block" href="{{ route('subscribe', ['plan' => $p['id']]) }}">ثبت اشتراک {{ $p['title'] }}</a>
                 </article>
             @endforeach
+            @if ($settings['flags']['org_enabled'])
+                <article class="price-card">
+                    <h3>سازمانی</h3>
+                    <div class="price"><b>تا {{ $fa(100 - (int) $settings['numbers']['org_tier3']) }}٪</b> <span>تخفیف</span></div>
+                    <p>برای حوزه‌ها، کتابخانه‌ها و مؤسسه‌ها؛ از {{ $fa($settings['numbers']['org_min_seats']) }} کاربر، با یک کد گروهی و روزشمار مشترک.</p>
+                    <a class="btn btn-block" href="{{ route('subscribe', ['type' => 'org']) }}">محاسبهٔ قیمت سازمانی</a>
+                </article>
+            @endif
         </div>
 
         <div class="support-grid" style="margin-top:22px">

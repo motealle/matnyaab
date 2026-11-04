@@ -48,6 +48,24 @@ class TrustSubscriptionTest extends TestCase
         $this->assertSame(210, $res['subscription']['days_left']);
     }
 
+    public function test_org_subscription_uses_tiered_price_and_shared_code(): void
+    {
+        $r = $this->post('/subscribe', ['type' => 'org', 'plan' => 'm12', 'seats' => 10, 'org' => 'کتابخانهٔ نمونه', 'name' => 'مسئول', 'contact' => 'a@b.ir', 'trust' => '1', '_ts' => $this->oldToken()]);
+        $r->assertRedirect();
+        parse_str(parse_url($r->headers->get('Location'), PHP_URL_QUERY), $q);
+        $sub = (new \App\Services\SubscriptionStore(new \App\Services\SiteSettings))->find($q['code']);
+        $this->assertSame(2450000, $sub['price']);
+        $this->assertSame(10, $sub['seats']);
+        foreach (['PC1', 'PC2', 'PC3'] as $pc) {
+            $res = $this->postJson('/api/client/activate', ['code' => $q['code'], 'system_id' => $pc])->json();
+            $this->assertSame('کتابخانهٔ نمونه', $res['subscription']['org']);
+            $this->assertSame(365, $res['subscription']['days_left']);
+        }
+        $this->post('/subscribe', ['type' => 'org', 'plan' => 'm12', 'seats' => 1, 'org' => 'x', 'name' => 'x', 'contact' => 'x', 'trust' => '1', '_ts' => $this->oldToken()])
+            ->assertSessionHasErrors('seats');
+        $this->get('/subscribe?type=org')->assertOk()->assertSee('data-seats', false);
+    }
+
     public function test_spam_submissions_are_rejected(): void
     {
         $this->post('/subscribe', ['plan' => 'm1', 'name' => 'x', 'contact' => 'y', 'trust' => '1', '_ts' => SpamGuard::token()])
