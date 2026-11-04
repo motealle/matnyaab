@@ -109,7 +109,7 @@ class SubscriptionDialog(owner: Window?, private val m: SubscriptionManager, pri
             wrap(body),
         )
         if (s.start != null && s.end != null) {
-            details.children.add(Label("${s.planTitle} · از ${PersianUtil.toJalali(s.start.atStartOfDay())} تا ${PersianUtil.toJalali(s.end.atStartOfDay())}").apply { styleClass.add("muted") })
+            details.children.add(Label("${s.planTitle} · از ${SubTexts.fa(PersianUtil.toJalali(s.start.atStartOfDay()).replace('-', '/'))} تا ${SubTexts.fa(PersianUtil.toJalali(s.end.atStartOfDay()).replace('-', '/'))}").apply { styleClass.add("muted") })
             details.children.add(ProgressBar(s.dayNumber.toDouble() / s.daysTotal).apply { maxWidth = Double.MAX_VALUE; prefHeight = 8.0 })
             if (s.code.isNotBlank() && s.kind == Kind.CODE) details.children.add(Label("کد اشتراک: ${s.code}").apply { styleClass.add("muted") })
         }

@@ -64,7 +64,7 @@ class SubscriptionManager(private val settings: AppSettingsManager, private val 
             return if (c.startsWith("MT") && c.length == 10) "MT-${c.substring(2, 6)}-${c.substring(6, 10)}" else ""
         }
 
-        fun money(n: Int): String = ir.matnyaab.util.PersianUtil.toPersianNumbers(String.format(java.util.Locale.US, "%,d", n).replace(',', '٬'))
+        fun money(n: Int): String = ir.matnyaab.util.PersianUtil.toPersianNumbers(String.format(java.util.Locale.US, "%,d", n)).replace(',', '٬')
     }
 
     @Volatile var config: Config = loadCachedConfig(); private set

@@ -61,7 +61,12 @@ jobs:
           New-Item -ItemType Directory -Force -Path $inputDir, $releaseDir | Out-Null
           $jar = Join-Path $PWD "app\build\libs\matnyaab-all.jar"
           if (-not (Test-Path $jar)) { throw "Expected fat jar not found: $jar" }
-          Copy-Item $jar $inputDir
+          # jar بدون فشرده‌سازی داخلی ذخیره می‌شود تا فشرده‌سازی LZMA2 نصب‌کننده بسیار مؤثرتر شود
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $jarX = Join-Path $PWD "jar-x"
+          if (Test-Path $jarX) { Remove-Item $jarX -Recurse -Force }
+          [System.IO.Compression.ZipFile]::ExtractToDirectory($jar, $jarX)
+          [System.IO.Compression.ZipFile]::CreateFromDirectory($jarX, (Join-Path $inputDir "matnyaab-all.jar"), [System.IO.Compression.CompressionLevel]::NoCompression, $false)
 
           # Java runtime سفارشی و کوچک به‌جای کل JDK
           $mods = ""
