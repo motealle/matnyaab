@@ -8,8 +8,8 @@
                 <p class="hero-kicker">در امتداد اندیشه</p>
                 <h2 class="hero-title" aria-label="میان هزاران صفحه، ردّ اندیشه را پیدا کنید."><span aria-hidden="true">میان هزاران صفحه،</span><span class="hero-typed-line" aria-hidden="true"><span data-type="ردّ اندیشه را پیدا کنید.">ردّ اندیشه را پیدا کنید.</span><span class="type-caret"></span></span></h2>
                 <p class="hero-description">از کتابخانهٔ شخصی تا اسناد پژوهشی؛ چند واژه را جست‌وجو کنید و دوباره به متن موردنظر برسید.</p>
-                <div class="hero-actions"><a class="btn btn-primary" href="#download">دانلود رایگان متن‌یاب ۲ <span aria-hidden="true">↓</span></a><a class="btn hero-secondary" href="#whats-new">تازه‌های نسخه ۲</a></div>
-                <p class="hero-local">رایگان و بدون محدودیت · جست‌وجو در فایل‌ها، روی رایانهٔ شما</p>
+                <div class="hero-actions"><a class="btn btn-primary" href="#download">دانلود متن‌یاب ۲ <span aria-hidden="true">↓</span></a><a class="btn hero-secondary" href="#whats-new">تازه‌های نسخه ۲</a></div>
+                <p class="hero-local">همهٔ امکانات، بی‌قفل · اشتراک اعتمادمحور · روی رایانهٔ شما</p>
             </div>
         </article>
         <article class="hero-slide" data-slide data-copy-side="right" style="--subject:22% 50%" role="group" aria-roledescription="اسلاید" aria-label="۲ از ۳" aria-hidden="true" inert>
@@ -19,8 +19,8 @@
                 <p class="hero-kicker">از واژه تا منبع</p>
                 <h2 class="hero-title" aria-label="از واژه‌ای که یادتان مانده، دوباره آغاز کنید."><span aria-hidden="true">از واژه‌ای که یادتان مانده،</span><span class="hero-typed-line" aria-hidden="true"><span data-type="دوباره آغاز کنید.">دوباره آغاز کنید.</span><span class="type-caret"></span></span></h2>
                 <p class="hero-description">گاهی یک عبارت، سرنخِ یک پژوهش است. آن را در محتوای فایل‌های خود دنبال کنید.</p>
-                <div class="hero-actions"><a class="btn btn-primary" href="#download">دانلود رایگان متن‌یاب ۲ <span aria-hidden="true">↓</span></a><a class="btn hero-secondary" href="#whats-new">تازه‌های نسخه ۲</a></div>
-                <p class="hero-local">رایگان و بدون محدودیت · جست‌وجو در فایل‌ها، روی رایانهٔ شما</p>
+                <div class="hero-actions"><a class="btn btn-primary" href="#download">دانلود متن‌یاب ۲ <span aria-hidden="true">↓</span></a><a class="btn hero-secondary" href="#whats-new">تازه‌های نسخه ۲</a></div>
+                <p class="hero-local">همهٔ امکانات، بی‌قفل · اشتراک اعتمادمحور · روی رایانهٔ شما</p>
             </div>
         </article>
         <article class="hero-slide" data-slide data-copy-side="right" style="--subject:23% 50%" role="group" aria-roledescription="اسلاید" aria-label="۳ از ۳" aria-hidden="true" inert>
@@ -30,8 +30,8 @@
                 <p class="hero-kicker">فرصتی برای تمرکز</p>
                 <h2 class="hero-title" aria-label="وقت شما برای اندیشیدن است؛ زودتر به متن برسید."><span aria-hidden="true">وقت شما برای اندیشیدن است؛</span><span class="hero-typed-line" aria-hidden="true"><span data-type="زودتر به متن برسید.">زودتر به متن برسید.</span><span class="type-caret"></span></span></h2>
                 <p class="hero-description">پوشه‌ها را آماده کنید و به‌جای بازکردن تک‌تک فایل‌ها، میان نوشته‌هایشان جست‌وجو کنید.</p>
-                <div class="hero-actions"><a class="btn btn-primary" href="#download">دانلود رایگان متن‌یاب ۲ <span aria-hidden="true">↓</span></a><a class="btn hero-secondary" href="#whats-new">تازه‌های نسخه ۲</a></div>
-                <p class="hero-local">رایگان و بدون محدودیت · جست‌وجو در فایل‌ها، روی رایانهٔ شما</p>
+                <div class="hero-actions"><a class="btn btn-primary" href="#download">دانلود متن‌یاب ۲ <span aria-hidden="true">↓</span></a><a class="btn hero-secondary" href="#whats-new">تازه‌های نسخه ۲</a></div>
+                <p class="hero-local">همهٔ امکانات، بی‌قفل · اشتراک اعتمادمحور · روی رایانهٔ شما</p>
             </div>
         </article>
     </div>

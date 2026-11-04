@@ -116,6 +116,7 @@ try {
         'QUEUE_CONNECTION=sync',
         'LICENSE_POLICY_PATH=' . $licensePolicy,
         'SUPPORT_REPORTS_PATH=' . $sharedDir . DIRECTORY_SEPARATOR . 'support-reports.jsonl',
+        'MATNYAAB_DATA_DIR=' . $sharedDir . DIRECTORY_SEPARATOR . 'data',
     ];
 
     $runtimeEnvFile = $sharedDir . DIRECTORY_SEPARATOR . 'runtime-services.env';

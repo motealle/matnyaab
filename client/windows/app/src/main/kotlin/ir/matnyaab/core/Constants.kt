@@ -7,11 +7,11 @@ import java.nio.file.Paths
 object Constants {
     const val APP_NAME = "MATNYAAB"
     const val APP_NAME_PERSIAN = "متن‌یاب"
-    const val APP_VERSION = "2.0"
+    const val APP_VERSION = "2.1"
     /** نام لاتین نمایشی (پوشه تنظیمات کاربر همچنان APP_NAME است تا داده‌های قبلی حفظ شوند) */
     const val APP_NAME_LATIN = "Matnyaab"
-    const val APP_VERSION_PERSIAN = "۲٫۰"
-    const val SUPPORT_URL = "https://www.matnyaab.ir/#support"
+    const val APP_VERSION_PERSIAN = "۲٫۱"
+    const val SUPPORT_URL = "https://www.matnyaab.ir/subscribe"
     const val APP_ARCH = "x64"
 
     const val BASE_URL = "https://www.matnyaab.ir"

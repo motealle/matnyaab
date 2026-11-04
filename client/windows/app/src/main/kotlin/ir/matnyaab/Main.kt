@@ -63,6 +63,7 @@ fun main(args: Array<String>) {
     if (args.contains("--screenshots")) {
         // پوشهٔ تنظیمات جدا تا داده‌های واقعی کاربر دست نخورد
         System.setProperty("matnyaab.home", java.nio.file.Files.createTempDirectory("matnyaab-shots").toString())
+        System.setProperty("matnyaab.shots", "1")
     }
     Application.launch(MatnyaabApp::class.java, *args)
 }

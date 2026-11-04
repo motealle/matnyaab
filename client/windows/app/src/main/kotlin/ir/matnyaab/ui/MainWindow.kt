@@ -49,6 +49,12 @@ class MainWindow(
         isVisible = false
     }
 
+    // ---------------- اشتراک اعتمادمحور
+    internal val subs = SubscriptionManager(settings, license.systemId)
+    private val subChip = Button().apply { isFocusTraversable = false }
+    private val msgChip = Button().apply { isVisible = false; isManaged = false; isFocusTraversable = false }
+    private var gateShown = false
+
     // ---------------- نوار وضعیت
     private val lblIndexSize = Label()
     private val downloadBar = ProgressBar(0.0).apply {
@@ -77,6 +83,77 @@ class MainWindow(
         startBackgroundThreads()
         // کاربر تازه: بخش افزودن پوشه باز شود تا قدم اول روشن باشد
         if (indexer.allObjects.isEmpty()) accordions.getOrNull(1)?.expand()
+        if (System.getProperty("matnyaab.shots") != null) subs.declareLocal(subs.config.plans.last())
+        refreshSubChip()
+        startSubscriptionSync()
+    }
+
+    // ------------------------------------------------------------------ اشتراک
+    private fun refreshSubChip() {
+        val mood = subs.mood()
+        subChip.text = SubTexts.chip(subs)
+        val (bg, fg) = when (mood) {
+            SubscriptionManager.Mood.GOOD -> "rgba(16,124,65,0.14)" to "-mx-success"
+            SubscriptionManager.Mood.SOON, SubscriptionManager.Mood.ENDED -> "rgba(196,43,28,0.13)" to "-mx-danger"
+            SubscriptionManager.Mood.NONE -> "-mx-accent-soft" to "-mx-accent-text"
+        }
+        subChip.style = "-fx-background-color: $bg; -fx-text-fill: $fg; -fx-background-radius: 12; -fx-padding: 3 12 3 12; -fx-cursor: hand; -fx-font-weight: bold;"
+        subChip.tooltip = Tooltip("اشتراک، روزشمار و تمدید")
+        val n = subs.unseenCount()
+        msgChip.text = "✉ " + PersianUtil.toPersianNumbers(n)
+        msgChip.isVisible = n > 0; msgChip.isManaged = n > 0
+        msgChip.style = "-fx-background-color: -mx-accent; -fx-text-fill: white; -fx-background-radius: 12; -fx-padding: 3 10 3 10; -fx-cursor: hand;"
+        msgChip.tooltip = Tooltip("پیام‌های تازه از متن‌یاب")
+    }
+
+    private fun showSubscription() { SubscriptionDialog(stage, subs) { refreshSubChip() }.show(); refreshSubChip() }
+
+    /** یادآوری مهربان: بدون اشتراک/پایان‌یافته → یک بار هنگام شروع؛ هفتهٔ پایانی → روزی یک بار */
+    private fun subscriptionOnStart() {
+        if (System.getProperty("matnyaab.shots") != null) return
+        val mood = subs.mood()
+        when (mood) {
+            SubscriptionManager.Mood.NONE, SubscriptionManager.Mood.ENDED -> { gateShown = true; showSubscription() }
+            SubscriptionManager.Mood.SOON -> {
+                val today = java.time.LocalDate.now().toString()
+                if (settings.get("REMINDER_SHOWN") != today) {
+                    settings.setValue("REMINDER_SHOWN", today)
+                    val (t, b) = SubTexts.headline(subs)
+                    val r = CustomMessageBox.show(stage, t, b, listOf("تمدید در سایت", "بعداً"))
+                    if (r == 0) try { Desktop.getDesktop().browse(java.net.URI(subs.subscribeUrl())) } catch (e: Exception) {}
+                }
+            }
+            else -> {}
+        }
+    }
+
+    /** جست‌وجو هرگز قفل نمی‌شود؛ فقط بار اول در هر اجرا، اگر اشتراکی نیست، پنجرهٔ اشتراک یادآوری می‌شود */
+    private fun subscriptionGate() {
+        val mood = subs.mood()
+        if (!gateShown && (mood == SubscriptionManager.Mood.NONE || mood == SubscriptionManager.Mood.ENDED)) {
+            gateShown = true; showSubscription()
+        }
+    }
+
+    private fun startSubscriptionSync() {
+        Thread {
+            var first = true
+            while (true) {
+                val fresh = subs.sync()
+                Platform.runLater {
+                    refreshSubChip()
+                    if (first) subscriptionOnStart()
+                    fresh.firstOrNull()?.let { n ->
+                        if (System.getProperty("matnyaab.shots") == null) {
+                            CustomMessageBox.show(stage, n.title, n.body)
+                            subs.markAllSeen(); refreshSubChip()
+                        }
+                    }
+                    first = false
+                }
+                try { Thread.sleep(6 * 3600_000L) } catch (e: InterruptedException) { return@Thread }
+            }
+        }.apply { isDaemon = true }.start()
     }
 
     fun show() = stage.show()
@@ -93,7 +170,7 @@ class MainWindow(
         buildTable()
 
         // ----- پنل راست: گزینه‌ها
-        searchPanel = SearchPanel(::quickSearch, ::advancedSearch)
+        searchPanel = SearchPanel(::quickSearch, ::advancedSearch, settings)
         scopeTree = ScopeTree(indexer, { stage },
             onAddDocument = ::selectDirectory,
             onUpdateIndex = ::showIncrementalDialog,
@@ -115,7 +192,7 @@ class MainWindow(
             scopeTree,
         )
         val accScope = AccordionButton(1, "محدوده جستجو", scopeBox, ::onAccordionOpen)
-        val accSettings = AccordionButton(2, "تنظیمات و حمایت", buildSettingsBox(), ::onAccordionOpen)
+        val accSettings = AccordionButton(2, "تنظیمات و اشتراک", buildSettingsBox(), ::onAccordionOpen)
         val accContents = AccordionButton(3, "بسته‌های محتوایی", contentPacks, ::onAccordionOpen)
         accordions.addAll(listOf(accSearch, accScope, accSettings, accContents))
 
@@ -135,6 +212,10 @@ class MainWindow(
             Label("نتایج جست‌وجو").apply { styleClass.add("section-title") },
             Region().also { HBox.setHgrow(it, Priority.ALWAYS) },
             lblResultCount,
+            Button("⭳ خروجی").apply {
+                style = Theme.addButton(); tooltip = Tooltip("ذخیرهٔ فهرست نتایج در فایل CSV (قابل بازکردن در اکسل)")
+                setOnAction { exportResults() }
+            },
         ).apply {
             nodeOrientation = NodeOrientation.RIGHT_TO_LEFT
             alignment = Pos.CENTER_RIGHT
@@ -224,12 +305,13 @@ class MainWindow(
         return VBox(6.0,
             btn("تنظیمات و پوستهٔ رنگی") { SettingsDialog(stage, settings).show() },
             btn("راهنمای برنامه") { preview.showHelp() },
-            Button("♥  حمایت از متن‌یاب").apply {
+            Button("★  اشتراک و تمدید").apply {
                 style = Theme.addButton(); prefHeight = Constants.OPTION_BUTTONS_HEIGHT; maxWidth = Double.MAX_VALUE
                 setOnMouseEntered { style = Theme.addButton(hover = true) }
                 setOnMouseExited { style = Theme.addButton() }
-                setOnAction { showSupportDialog() }
+                setOnAction { showSubscription() }
             },
+            btn("پشتیبانی و پیشنهاد قابلیت") { try { Desktop.getDesktop().browse(java.net.URI(subs.config.contactUrl)) } catch (e: Exception) {} },
         ).apply { padding = Insets(8.0) }
     }
 
@@ -268,7 +350,9 @@ class MainWindow(
         newsPane.setOnMouseClicked { e -> if (e.clickCount == 2) { newsEnabled = !newsEnabled; newsLabel.isVisible = newsEnabled } }
         HBox.setHgrow(newsPane, Priority.ALWAYS)
 
-        return HBox(12.0, statusGlyph, newsPane, downloadBar, btnUpdate, lblIndexSize).apply {
+        subChip.setOnAction { showSubscription() }
+        msgChip.setOnAction { MessagesDialog.show(stage, subs); refreshSubChip() }
+        return HBox(12.0, subChip, msgChip, statusGlyph, newsPane, downloadBar, btnUpdate, lblIndexSize).apply {
             nodeOrientation = NodeOrientation.RIGHT_TO_LEFT
             alignment = Pos.CENTER_RIGHT
             padding = Insets(4.0, 10.0, 4.0, 10.0)
@@ -280,11 +364,13 @@ class MainWindow(
 
     /** معادل basicSearching */
     private fun quickSearch(text: String) {
+        subscriptionGate()
         runSearch { indexer.makeSimpleQuery(text).also { indexer.makeAdvancedQuery(text.split(" ").filter { w -> w.isNotBlank() }, emptyList(), emptyList(), 0) } }
     }
 
     /** معادل advanceSearching با منطق ستاره‌دار کردن کلمات غیردقیق */
     private fun advancedSearch(p: AdvancedSearchParams) {
+        subscriptionGate()
         fun extractWords(s: String) = s.trim().replace(Regex("\\s+"), " ").split(" ").filter { it.isNotBlank() }
         fun star(words: List<String>, accuracy: Boolean) =
             if (accuracy) words else words.map { "*$it*" }
@@ -321,6 +407,19 @@ class MainWindow(
                 }
             }
         }.apply { isDaemon = true }.start()
+    }
+
+    private fun exportResults() {
+        if (table.items.isEmpty()) { CustomMessageBox.show(stage, "خروجی نتایج", "ابتدا جست‌وجو کنید تا نتیجه‌ای برای ذخیره باشد."); return }
+        val f = javafx.stage.FileChooser().apply {
+            title = "ذخیرهٔ نتایج"; initialFileName = "matnyaab-results.csv"
+            extensionFilters.add(javafx.stage.FileChooser.ExtensionFilter("CSV", "*.csv"))
+        }.showSaveDialog(stage) ?: return
+        fun q(v: Any) = "\"" + v.toString().replace("\"", "\"\"") + "\""
+        val lines = listOf(listOf("فایل", "مسیر", "اندازه (بایت)", "امتیاز", "مجموعه").joinToString(",") { q(it) }) +
+            table.items.map { h -> listOf(File(h.path).name, h.path, h.size, h.score, h.indexName).joinToString(",") { q(it) } }
+        f.writeText("\uFEFF" + lines.joinToString("\r\n"), Charsets.UTF_8)
+        CustomMessageBox.show(stage, "خروجی نتایج", "${PersianUtil.toPersianNumbers(table.items.size)} نتیجه ذخیره شد.")
     }
 
     // ------------------------------------------------------------------ پیش‌نمایش و عملیات فایل
@@ -447,8 +546,6 @@ class MainWindow(
     }
 
     // ------------------------------------------------------------------ اشتراک، اخبار، بروزرسانی
-
-    private fun showSupportDialog() = SupportDialog(stage).show()
 
     private fun startBackgroundThreads() {
         // وضعیت موتور استخراج متن: با یک پارس کوچک گرم می‌شود و سبز می‌شود (معادل TikaRunThread)

@@ -107,7 +107,7 @@ object DemoShots {
             }
         }
         step(2.5) {
-            val d = SupportDialog(stage).showNonBlocking()
+            val d = SubscriptionDialog(stage, main.subs) {}.showNonBlocking()
             PauseTransition(Duration.seconds(1.2)).apply {
                 setOnFinished { save(d.scene.root, File(dir, "support.png")); d.close() }
                 play()

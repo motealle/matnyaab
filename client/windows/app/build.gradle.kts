@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "ir.matnyaab"
-version = "2.0"
+version = "2.1"
 
 repositories { mavenCentral() }
 
@@ -28,7 +28,10 @@ dependencies {
 
     // جایگزین سرور Tika (بدون نیاز به سرور REST جدا؛ به صورت کتابخانه داخلی)
     implementation("org.apache.tika:tika-core:$tikaVersion")
-    implementation("org.apache.tika:tika-parsers-standard-package:$tikaVersion")
+    // فقط پارسرهای اسناد متنی (به‌جای بستهٔ کامل) تا حجم برنامه چند برابر کمتر شود
+    listOf("microsoft", "pdf", "text", "html", "xml", "miscoffice", "pkg").forEach {
+        implementation("org.apache.tika:tika-parser-$it-module:$tikaVersion")
+    }
 
     // JSON (fileInfo.json / file_list.txt / ارتباط با سرور)
     implementation("com.google.code.gson:gson:2.11.0")
@@ -58,6 +61,8 @@ java { toolchain.languageVersion.set(JavaLanguageVersion.of(17)) }
 tasks.test { useJUnitPlatform() }
 
 tasks.shadowJar {
-    archiveFileName.set("matnyaab-2.0-all.jar")
+    archiveFileName.set("matnyaab-all.jar")
+    // امضاها و فایل‌های غیرضروری کتابخانه‌ها
+    exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA", "META-INF/maven/**", "**/*.md", "**/LICENSE*.txt")
     mergeServiceFiles()
 }

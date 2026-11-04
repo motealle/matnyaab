@@ -177,7 +177,8 @@
             <a href="{{ route('home') }}#whats-new">تازه‌های نسخه ۲</a>
             <a href="{{ route('home') }}#features">امکانات</a>
             <a href="{{ route('home') }}#download">دانلود</a>
-            <a href="{{ route('home') }}#support">حمایت</a>
+            <a href="{{ route('home') }}#pricing">اشتراک</a>
+            <a href="{{ route('home') }}#contact">پشتیبانی</a>
         </nav>
 
         <button class="btn nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" aria-label="بازکردن فهرست ناوبری"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
@@ -197,7 +198,7 @@
                 </form>
             @else
                 <a class="btn desktop-only" href="{{ route('login') }}">ورود</a>
-                <a class="btn btn-primary" href="{{ route('home') }}#download">دانلود رایگان</a>
+                <a class="btn btn-primary" href="{{ route('home') }}#download">دانلود متن‌یاب</a>
             @endauth
         </div>
     </div>
@@ -207,8 +208,8 @@
 
 <footer class="site-footer">
     <div class="container footer-row">
-        <span>© {{ date('Y') }} متن‌یاب · رایگان و بدون محدودیت</span>
-        <span><a href="{{ route('home') }}#download">دانلود</a> · <a href="{{ route('home') }}#support">حمایت از متن‌یاب</a> · جست‌وجو در محتوای فایل‌ها، روی رایانهٔ شما</span>
+        <span>© {{ date('Y') }} متن‌یاب · اشتراک اعتمادمحور</span>
+        <span><a href="{{ route('home') }}#download">دانلود</a> · <a href="{{ route('subscribe') }}">ثبت یا تمدید اشتراک</a> · <a href="{{ route('home') }}#contact">پشتیبانی</a> · جست‌وجو در محتوای فایل‌ها، روی رایانهٔ شما</span>
     </div>
 </footer>
 

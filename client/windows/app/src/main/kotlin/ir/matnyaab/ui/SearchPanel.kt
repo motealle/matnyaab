@@ -27,6 +27,7 @@ data class AdvancedSearchParams(
 class SearchPanel(
     private val onQuickSearch: (String) -> Unit,
     private val onAdvancedSearch: (AdvancedSearchParams) -> Unit,
+    private val settings: ir.matnyaab.core.AppSettingsManager? = null,
 ) : VBox(8.0) {
 
     private val quickInput = TextField().apply { promptText = "واژه یا عبارت موردنظر…" }
@@ -59,7 +60,18 @@ class SearchPanel(
         quickInput.prefHeight = Constants.OPTION_BUTTONS_HEIGHT
         quickInput.style = Theme.FONT
         quickInput.setOnAction { fireQuick() }
-        val quickRow = HBox(6.0, quickInput, btnQuick).apply {
+        // جست‌وجوهای اخیر
+        val btnRecent = Button("🕘").apply {
+            style = Theme.addButton(); prefHeight = Constants.OPTION_BUTTONS_HEIGHT
+            tooltip = javafx.scene.control.Tooltip("جست‌وجوهای اخیر")
+            setOnAction {
+                val items = recent().map { q ->
+                    javafx.scene.control.MenuItem(q).apply { setOnAction { quickInput.text = q; fireQuick() } }
+                }.ifEmpty { listOf(javafx.scene.control.MenuItem("هنوز جست‌وجویی نکرده‌اید").apply { isDisable = true }) }
+                javafx.scene.control.ContextMenu(*items.toTypedArray()).show(this, javafx.geometry.Side.BOTTOM, 0.0, 0.0)
+            }
+        }
+        val quickRow = HBox(6.0, quickInput, btnRecent, btnQuick).apply {
             alignment = Pos.CENTER
             HBox.setHgrow(quickInput, Priority.ALWAYS)
         }
@@ -85,7 +97,18 @@ class SearchPanel(
 
     fun focusQuick() { quickInput.requestFocus(); quickInput.selectAll() }
 
-    private fun fireQuick() { if (quickInput.text.isNotBlank()) onQuickSearch(quickInput.text.trim()) }
+    private fun recent(): List<String> =
+        settings?.get("RECENT_SEARCHES")?.split('\u001F')?.filter { it.isNotBlank() } ?: emptyList()
+
+    private fun remember(q: String) {
+        val s = settings ?: return
+        s.setValue("RECENT_SEARCHES", (listOf(q) + recent().filter { it != q }).take(15).joinToString("\u001F"))
+    }
+
+    private fun fireQuick() {
+        val q = quickInput.text.trim()
+        if (q.isNotBlank()) { remember(q); onQuickSearch(q) }
+    }
 
     private fun fireAdvanced() {
         onAdvancedSearch(

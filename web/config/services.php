@@ -56,6 +56,10 @@ return [
         'policy_path' => env('LICENSE_POLICY_PATH', storage_path('app/license-policy.json')),
     ],
 
+    'matnyaab' => [
+        'data_dir' => env('MATNYAAB_DATA_DIR', storage_path('app/private/data')),
+    ],
+
     // حمایت داوطلبانه (کارت‌به‌کارت، اعتمادمحور). این شماره کارت عمداً عمومی است و روی سایت نمایش داده می‌شود.
     'support' => [
         'card_number' => env('SUPPORT_CARD_NUMBER', '5041721202227469'),
