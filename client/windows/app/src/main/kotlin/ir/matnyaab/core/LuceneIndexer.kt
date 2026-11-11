@@ -57,6 +57,8 @@ class LuceneIndexer(private val settings: AppSettingsManager) {
     var lastQuerySlop: Int = 0; private set
     var lastAllWords: List<String> = emptyList(); private set
     var lastAnyWords: List<String> = emptyList(); private set
+    /** آخرین جست‌وجوی نسل دوم (برای برجسته‌سازی و شمارش هماهنگ) */
+    var lastEngine: ir.matnyaab.core.search.MatchEngine? = null; private set
 
     // ------------------------------------------------------------------ ساخت و بارگذاری
 
@@ -174,6 +176,7 @@ class LuceneIndexer(private val settings: AppSettingsManager) {
      *  - slop>0: SpanNear بین کلمات «همه کلمات» با فاصله حداکثر slop
      */
     fun makeAdvancedQuery(allWords: List<String>, anyWords: List<String>, noneWords: List<String>, slop: Int): Query {
+        lastEngine = null
         lastQueryWords = allWords + anyWords
         lastQuerySlop = slop
         lastAllWords = allWords
@@ -234,6 +237,23 @@ class LuceneIndexer(private val settings: AppSettingsManager) {
             catch (e: Exception) { /* فهرست خراب — رد می‌شود */ }
         }
         return searchResult
+    }
+
+    /**
+     * جست‌وجوی نسل دوم: نامزدها با لوسین، داوری و شمارش دقیق با MatchEngine روی متن ذخیره‌شده.
+     * مرتب‌سازی پیش‌فرض: پوشش عبارت‌ها، سپس تعداد موارد، سپس امتیاز.
+     */
+    fun searchSpec(spec: ir.matnyaab.core.search.SearchSpec, selectedObjects: List<IndexerInfo>, maskedPaths: Set<String>): List<SearchHit> {
+        val engine = ir.matnyaab.core.search.MatchEngine(spec)
+        lastEngine = engine
+        val raw = search(engine.candidateQuery(), selectedObjects, maskedPaths).toList()
+        val out = raw.mapNotNull { h ->
+            val r = engine.evaluate(h.content)
+            if (r.ok) h.copy(matches = r.total, perPhrase = r.perPhrase.toList()) else null
+        }.sortedWith(compareByDescending<SearchHit> { it.perPhrase.count { c -> c > 0 } }.thenByDescending { it.matches }.thenByDescending { it.score })
+        searchResult.clear(); searchResult.addAll(out)
+        lastEngine = engine
+        return out
     }
 
     // ------------------------------------------------------------------ هایلایت
@@ -297,7 +317,8 @@ class LuceneIndexer(private val settings: AppSettingsManager) {
 
     /** هایلایت بر اساس آخرین کوئری اجراشده — جایگزین fastHighlight (هماهنگ کامل با کوئری) */
     fun highlightLastQuery(content: String): Pair<String, Int> {
-        val (ranges, count) = findMatchRanges(content, lastAllWords, lastAnyWords, lastQuerySlop)
+        val (ranges, count) = lastEngine?.let { e -> e.ranges(content).let { Pair(it, it.size) } }
+            ?: findMatchRanges(content, lastAllWords, lastAnyWords, lastQuerySlop)
         val sb = StringBuilder()
         var pos = 0
         for (r in ranges) {
@@ -313,7 +334,7 @@ class LuceneIndexer(private val settings: AppSettingsManager) {
     }
 
     /** فقط شمارش موارد یافت‌شده در یک متن (برای مجموع کل نتایج در نوار بالای جدول) */
-    fun countMatches(content: String): Int =
+    fun countMatches(content: String): Int = lastEngine?.evaluate(content)?.total ?:
         findMatchRanges(content, lastAllWords, lastAnyWords, lastQuerySlop).second
 
     private fun wordToRegex(word: String): Regex {

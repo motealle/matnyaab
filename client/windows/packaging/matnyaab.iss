@@ -50,6 +50,11 @@ Name: "{group}\متن‌یاب"; Filename: "{app}\Matnyaab.exe"
 Name: "{group}\{cm:UninstallProgram,متن‌یاب}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\متن‌یاب"; Filename: "{app}\Matnyaab.exe"; Tasks: desktopicon
 
+[Registry]
+; مسیر نصب برای افزونهٔ متن‌یاب در ورد
+Root: HKCU; Subkey: "Software\Matnyaab"; ValueType: string; ValueName: "InstallPath"; ValueData: "{app}"; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Matnyaab"; ValueType: string; ValueName: "Version"; ValueData: "{#AppVersion}"; Flags: uninsdeletevalue
+
 [Run]
 Filename: "{app}\Matnyaab.exe"; Description: "{cm:LaunchProgram,Matnyaab}"; Flags: nowait postinstall skipifsilent shellexec
 

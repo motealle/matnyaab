@@ -79,3 +79,18 @@
 .section-title { -fx-font-weight: bold; -fx-text-fill: -mx-text; }
 .empty-hint { -fx-text-fill: -mx-muted; -fx-wrap-text: true; -fx-text-alignment: center; }
 .badge-free { -fx-background-color: -mx-accent-soft; -fx-text-fill: -mx-accent-text; -fx-background-radius: 10; -fx-padding: 2 10 2 10; -fx-font-weight: bold; }
+
+/* ---- جست‌وجوی نسل دوم (۲٫۳) ---- */
+.seg { -fx-background-color: -mx-surface-2; -fx-background-radius: 10; -fx-border-color: -mx-border; -fx-border-radius: 10; -fx-padding: 3; }
+.seg-btn { -fx-background-color: transparent; -fx-background-radius: 8; -fx-text-fill: -mx-muted; -fx-padding: 6 4 6 4; -fx-cursor: hand; }
+.seg-btn:hover { -fx-background-color: -mx-hover; -fx-text-fill: -mx-text; }
+.seg-btn:selected { -fx-background-color: -mx-surface; -fx-text-fill: -mx-accent-text; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 4, 0, 0, 1); }
+.opt-card { -fx-background-color: -mx-surface-2; -fx-background-radius: 10; -fx-border-color: -mx-border; -fx-border-radius: 10; -fx-padding: 8 10 10 10; }
+.opt-head { -fx-background-color: transparent; -fx-text-fill: -mx-text; -fx-cursor: hand; -fx-padding: 2 0 2 0; }
+.opt-summary { -fx-text-fill: -mx-muted; }
+.hint { -fx-text-fill: -mx-muted; }
+.phrase-area { -fx-background-color: -mx-surface; -fx-background-radius: 8; -fx-border-color: -mx-border; -fx-border-radius: 8; }
+.phrase-area .content { -fx-background-color: -mx-surface; -fx-background-radius: 8; }
+.radio-button { -fx-text-fill: -mx-text; }
+.match-pill { -fx-background-color: -mx-accent-soft; -fx-text-fill: -mx-accent-text; -fx-background-radius: 10; -fx-padding: 1 8 1 8; }
+.summary-bar { -fx-background-color: -mx-surface-2; -fx-border-color: -mx-border; -fx-border-width: 0 0 1 0; -fx-padding: 6 8 6 8; }

@@ -16,6 +16,10 @@ data class SearchHit(
     val size: Long,
     val time: Double,
     val content: String,
+    /** تعداد موارد یافت‌شده (جست‌وجوی نسل دوم؛ ‎-1 یعنی محاسبه نشده) */
+    val matches: Int = -1,
+    /** تعداد موارد هر عبارت در جست‌وجوی چند عبارتی */
+    val perPhrase: List<Int> = emptyList(),
 )
 
 /** اطلاعات فایل در file_list.txt */

@@ -31,6 +31,18 @@ class PreviewPane(private val settings: AppSettingsManager) : VBox() {
         maxWidth = Double.MAX_VALUE
         isVisible = false; isManaged = false
     }
+    private val lblSummary = Label().apply {
+        styleClass.add("summary-bar"); maxWidth = Double.MAX_VALUE; isWrapText = true
+        isVisible = false; isManaged = false
+    }
+
+    /** خلاصهٔ تطبیق فایل جاری (مثلاً «۳ از ۵ عبارت») بالای پیش‌نمایش */
+    fun setSummary(text: String?) {
+        lblSummary.text = text ?: ""
+        lblSummary.style = Theme.FONT
+        lblSummary.isVisible = !text.isNullOrBlank(); lblSummary.isManaged = lblSummary.isVisible
+    }
+
     private val counter = Label("۰/۰").apply { style = Theme.FONT }
 
     private var previewHtml = ""           // متن هایلایت‌شده سراسری فعلی
@@ -68,7 +80,7 @@ class PreviewPane(private val settings: AppSettingsManager) : VBox() {
         }
 
         VBox.setVgrow(webView, Priority.ALWAYS)
-        children.addAll(toolbar, lblError, webView)
+        children.addAll(toolbar, lblSummary, lblError, webView)
         setAlignButtons()
         Theme.onChange { if (!helpMode) render() else showHelp() }
 

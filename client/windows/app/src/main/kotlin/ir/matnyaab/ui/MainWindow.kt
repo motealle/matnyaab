@@ -34,6 +34,10 @@ class MainWindow(
 ) {
     // ---------------- جدول نتایج
     private val table = TableView<SearchHit>()
+    private lateinit var cCount: TableColumn<SearchHit, Int>
+    private lateinit var cCover: TableColumn<SearchHit, Int>
+    private var specMode: SearchMode? = null
+    private val phraseSummary = Label().apply { styleClass.add("summary-bar"); isWrapText = true; maxWidth = Double.MAX_VALUE; isVisible = false; isManaged = false }
     private val lblResultCount = Label().apply { style = Theme.FONT }
 
     // ---------------- پیش‌نمایش
@@ -81,6 +85,7 @@ class MainWindow(
         loadExistingIndexers()
         importOldWhooshIndexes()
         startBackgroundThreads()
+        startBridge()
         // کاربر تازه: بخش افزودن پوشه باز شود تا قدم اول روشن باشد
         if (indexer.allObjects.isEmpty()) accordions.getOrNull(1)?.expand()
         if (System.getProperty("matnyaab.shots") != null) subs.declareLocal(subs.config.plans.last())
@@ -170,7 +175,7 @@ class MainWindow(
         buildTable()
 
         // ----- پنل راست: گزینه‌ها
-        searchPanel = SearchPanel(::quickSearch, ::advancedSearch, settings)
+        searchPanel = SearchPanel(::quickSearch, ::advancedSearch, settings, ::specSearch)
         scopeTree = ScopeTree(indexer, { stage },
             onAddDocument = ::selectDirectory,
             onUpdateIndex = ::showIncrementalDialog,
@@ -222,7 +227,8 @@ class MainWindow(
             padding = Insets(4.0, 8.0, 4.0, 8.0)
             style = "-fx-background-color: ${Constants.SURFACE_COLOR}; -fx-background-radius: 8 8 0 0; -fx-border-color: ${Constants.BORDER_COLOR}; -fx-border-width: 0 0 1 0;"
         }
-        val resultsBox = VBox(resultsHeader, table).also { VBox.setVgrow(table, Priority.ALWAYS) }
+        phraseSummary.style = Theme.FONT
+        val resultsBox = VBox(resultsHeader, phraseSummary, table).also { VBox.setVgrow(table, Priority.ALWAYS) }
 
         // ----- چیدمان سه‌پنلی با نسبت ۲/۳/۲ (چپ به راست: محتوا، فایل‌ها، گزینه‌ها)
         // پنل‌ها به صورت کارت‌های سفید گردگوشه روی زمینهٔ روشن (فلوئنت)
@@ -272,7 +278,26 @@ class MainWindow(
         val cScore = col("امتیاز", 70.0) { PersianUtil.toPersianNumbers(it.score) }
         val cTitle = col("عنوان", 160.0) { File(it.path).nameWithoutExtension }
         val cDomain = col("دامنه", 100.0) { it.indexName }
-        table.columns.addAll(cFile, cSize, cScore, cTitle, cDomain)
+        // ستون‌های جست‌وجوی نسل دوم: تعداد موارد و پوشش عبارت‌ها (با مرتب‌سازی عددی)
+        cCount = TableColumn<SearchHit, Int>("تعداد").apply {
+            prefWidth = 62.0; isVisible = false
+            setCellValueFactory { SimpleObjectProperty(it.value.matches) }
+            setCellFactory { object : TableCell<SearchHit, Int>() {
+                override fun updateItem(v: Int?, empty: Boolean) { super.updateItem(v, empty); text = if (empty || v == null || v < 0) "" else PersianUtil.toPersianNumbers(v) }
+            } }
+        }
+        cCover = TableColumn<SearchHit, Int>("عبارت‌ها").apply {
+            prefWidth = 72.0; isVisible = false
+            setCellValueFactory { SimpleObjectProperty(it.value.perPhrase.count { c -> c > 0 }) }
+            setCellFactory { object : TableCell<SearchHit, Int>() {
+                override fun updateItem(v: Int?, empty: Boolean) {
+                    super.updateItem(v, empty)
+                    val h = tableRow?.item
+                    text = if (empty || v == null || h == null) "" else PersianUtil.toPersianNumbers("$v/${h.perPhrase.size}")
+                }
+            } }
+        }
+        table.columns.addAll(cFile, cCount, cCover, cSize, cScore, cTitle, cDomain)
 
         table.setRowFactory {
             val row = TableRow<SearchHit>()
@@ -365,6 +390,7 @@ class MainWindow(
     /** معادل basicSearching */
     private fun quickSearch(text: String) {
         subscriptionGate()
+        setSpecMode(null, null)
         runSearch { indexer.makeSimpleQuery(text).also { indexer.makeAdvancedQuery(text.split(" ").filter { w -> w.isNotBlank() }, emptyList(), emptyList(), 0) } }
     }
 
@@ -381,8 +407,50 @@ class MainWindow(
         if (allW.isEmpty() && anyW.isEmpty()) return
         // مطابق نسخه اصلی: اگر کمتر از ۲ کلمه در «همه کلمات» باشد فاصله بی‌معناست
         val slop = if (allW.size < 2) 0 else p.spaceBetween
+        setSpecMode(null, null)
         runSearch { indexer.makeAdvancedQuery(allW, anyW, noneW, slop) }
     }
+
+    /** جست‌وجوی نسل دوم (واژه/عبارت، چند واژه، چند عبارت) */
+    private fun specSearch(spec: ir.matnyaab.core.search.SearchSpec, mode: SearchMode) {
+        subscriptionGate()
+        waitOverlay.showOverlay()
+        val (selected, masked) = scopeTree.getSelectedDocs()
+        Thread {
+            try {
+                val hits = indexer.searchSpec(spec, selected, masked)
+                val phrases = indexer.lastEngine?.let { e -> (0 until e.phraseCount).map { e.phrase(it) } } ?: spec.cleanPhrases
+                val totals = IntArray(phrases.size).also { t -> hits.forEach { h -> h.perPhrase.forEachIndexed { i, c -> t[i] += c } } }
+                Platform.runLater {
+                    setSpecMode(mode, if (mode != SearchMode.PHRASE && phrases.size > 1)
+                        phrases.indices.joinToString("   ·   ") { i -> "«${phrases[i]}» ${PersianUtil.toPersianNumbers(totals[i])}" } else null)
+                    table.items = FXCollections.observableArrayList(hits)
+                    lblResultCount.text = PersianUtil.toPersianNumbers(hits.size) + " فایل — " +
+                        PersianUtil.toPersianNumbers(hits.sumOf { it.matches }) + " مورد"
+                    preview.clear(); preview.setSummary(null)
+                    waitOverlay.hideOverlay()
+                }
+            } catch (e: Exception) {
+                Platform.runLater {
+                    waitOverlay.hideOverlay()
+                    CustomMessageBox.show(stage, "خطا", "خطا در جستجو: ${e.message}")
+                }
+            }
+        }.apply { isDaemon = true }.start()
+    }
+
+    private fun setSpecMode(mode: SearchMode?, summary: String?) {
+        specMode = mode
+        cCount.isVisible = mode != null
+        cCover.isVisible = mode != null && mode != SearchMode.PHRASE && summary != null
+        phraseSummary.text = summary ?: ""
+        phraseSummary.isVisible = summary != null; phraseSummary.isManaged = summary != null
+        if (mode == null) preview.setSummary(null)
+    }
+
+    /** اجرای جست‌وجو از بیرون (پل افزونهٔ ورد) */
+    internal fun externalSearch(text: String) = searchPanel.runPhrase(text)
+    fun externalSearchLater(text: String) = Platform.runLater { externalSearch(text) }
 
     private fun runSearch(queryBuilder: () -> org.apache.lucene.search.Query) {
         waitOverlay.showOverlay()
@@ -416,8 +484,9 @@ class MainWindow(
             extensionFilters.add(javafx.stage.FileChooser.ExtensionFilter("CSV", "*.csv"))
         }.showSaveDialog(stage) ?: return
         fun q(v: Any) = "\"" + v.toString().replace("\"", "\"\"") + "\""
-        val lines = listOf(listOf("فایل", "مسیر", "اندازه (بایت)", "امتیاز", "مجموعه").joinToString(",") { q(it) }) +
-            table.items.map { h -> listOf(File(h.path).name, h.path, h.size, h.score, h.indexName).joinToString(",") { q(it) } }
+        val phrases = indexer.lastEngine?.takeIf { specMode != null }?.let { e -> (0 until e.phraseCount).map { e.phrase(it) } } ?: emptyList()
+        val lines = listOf((listOf("فایل", "مسیر", "اندازه (بایت)", "امتیاز", "مجموعه", "تعداد موارد") + phrases).joinToString(",") { q(it) }) +
+            table.items.map { h -> (listOf(File(h.path).name, h.path, h.size, h.score, h.indexName, h.matches.coerceAtLeast(0)) + h.perPhrase).joinToString(",") { q(it) } }
         f.writeText("\uFEFF" + lines.joinToString("\r\n"), Charsets.UTF_8)
         CustomMessageBox.show(stage, "خروجی نتایج", "${PersianUtil.toPersianNumbers(table.items.size)} نتیجه ذخیره شد.")
     }
@@ -434,6 +503,11 @@ class MainWindow(
         }
         val (html, count) = indexer.highlightLastQuery(hit.content)
         preview.showContent(html, count, error)
+        val engine = indexer.lastEngine
+        preview.setSummary(if (specMode != null && engine != null && hit.perPhrase.size > 1)
+            "این فایل: " + PersianUtil.toPersianNumbers(hit.perPhrase.count { it > 0 }) + " از " + PersianUtil.toPersianNumbers(hit.perPhrase.size) + " — " +
+                hit.perPhrase.indices.filter { hit.perPhrase[it] > 0 }.joinToString(" · ") { "«${engine.phrase(it)}» ${PersianUtil.toPersianNumbers(hit.perPhrase[it])}" }
+        else null)
     }
 
     /** معادل openResultDoc (os.startfile) */
@@ -602,7 +676,36 @@ class MainWindow(
     }
 
     /** معادل closeEvent */
+    // ------------------------------------------------------------------ پل افزونهٔ ورد
+
+    private var bridge: ir.matnyaab.core.bridge.LocalBridge? = null
+
+    private fun startBridge() {
+        if (settings.get("FF_WORD_BRIDGE") == "0" || System.getProperty("matnyaab.shots") == "1") return
+        Thread {
+            runCatching {
+                ir.matnyaab.core.bridge.LocalBridge.stopHeadless()
+                val b = ir.matnyaab.core.bridge.LocalBridge(settings, indexer, "gui", object : ir.matnyaab.core.bridge.LocalBridge.Host {
+                    override fun show(query: String?) = Platform.runLater {
+                        stage.isIconified = false; stage.show(); stage.toFront(); stage.requestFocus()
+                        if (!query.isNullOrBlank()) externalSearch(query)
+                    }
+                    override fun collectionsChanged() = Platform.runLater { loadExistingIndexers(); refreshIndexStatus() }
+                    override fun addFolder(path: String): Boolean {
+                        Platform.runLater {
+                            stage.isIconified = false; stage.toFront()
+                            ScanDirectoryDialog(stage, path, indexer, license) { loadExistingIndexers() }.show()
+                        }
+                        return true
+                    }
+                })
+                b.start(); bridge = b
+            }.onFailure { System.err.println("bridge: ${it.message}") }
+        }.apply { isDaemon = true }.start()
+    }
+
     private fun onClose() {
+        runCatching { bridge?.stop() }
         StatisticsReporter.report("close_app", license.systemId, license.isSubscribed())
         newsLoader?.stop()
         updateChecker?.stop()
