@@ -1,0 +1,5 @@
+bin/
+obj/
+MatnyaabWord/Fonts/*.ttf
+shots/
+*.exe

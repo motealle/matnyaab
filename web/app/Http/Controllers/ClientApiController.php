@@ -21,6 +21,10 @@ class ClientApiController extends Controller
             'plans' => array_map(fn ($p) => ['id' => $p['id'], 'title' => $p['title'], 'days' => (int) $p['days'], 'price' => (int) $p['price']], $this->settings->plans()),
             'cards' => array_map(fn ($c) => ['number' => preg_replace('/\D/', '', $c['number']), 'holder' => $c['holder']], $this->settings->cards()),
             'trial_enabled' => (bool) $s['flags']['trial_enabled'],
+            'ai_catalog' => array_values(array_map(fn ($a) => [
+                'id' => $a['id'], 'title' => $a['title'], 'kind' => $a['kind'], 'base_url' => $a['base_url'], 'hint' => $a['hint'] ?? '',
+                'models' => array_values(array_filter(array_map('trim', explode(',', (string) $a['models'])))), 'enabled' => (bool) $a['enabled'],
+            ], $s['ai_catalog'] ?? [])),
             'trial_days' => max(1, (int) $s['numbers']['trial_days']),
             'reminder_days' => max(1, (int) $s['numbers']['reminder_days']),
             'subscribe_url' => url('/subscribe'),

@@ -288,3 +288,9 @@ yearly 490,000 toman (editable in admin). Primary card 6037-9977-7025-9241 (مح
 - Client 2.1: subscription chip with day counter (green / red in last `reminder_days`), code activation, local
   self-declaration, repeatable 3-day "guest" grace, admin messages, recent searches, CSV export of results.
 - Packaging: Tika limited to document parsers, jlink runtime, Inno Setup installer `Matnyaab-Setup-2.1.exe` + portable ZIP.
+
+## نسخهٔ ۲٫۳ و افزونهٔ ورد (آبان ۱۴۰۵)
+- موتور جست‌وجوی نسل دوم: `client/windows/.../core/search/` — `MatchEngine` (نامزدها با RegexpQuery لوسین، داوری و شمارش دقیق روی متن ذخیره‌شده)، `BoolQuery` (AND/OR/NOT/پرانتز/NEAR‌/n)، `Morph` (هم‌خانواده/ریشه)، `Thesaurus` (مترادف‌ها: `resources/search/synonyms.txt` + `%APPDATA%\MATNYAAB\synonyms.txt`). یکسان‌سازی املا: ی/ک، همزه، آ، ۀ، اعراب، اعداد. فاصله: دقیق / فاصلهٔ اضافه / فاصله≡نیم‌فاصله. پرچم `FF_SEARCH_V2=0` پنل قدیمی را برمی‌گرداند.
+- پل محلی `core/bridge/LocalBridge.kt`: HTTP روی 127.0.0.1 با توکن در `bridge.json`؛ در برنامهٔ باز یا حالت پنهان `Matnyaab.exe --bridge` (۳۰ دقیقه بیکاری ← خروج). مسیرها: ping, search, excerpt, note, add-folder, show, shutdown. پرچم `FF_WORD_BRIDGE=0` خاموشش می‌کند. آزمون سرتاسری در CI ویندوز.
+- افزونهٔ ورد: `client/word/` (C# net472، COM Add-in بدون PIA با dynamic). نصب‌کنندهٔ Inno برای کاربر جاری + ثبت سیستمی فقط اگر خودبه‌خود مدیر است (mscoreei در فرایندهای مدیر HKCU را نمی‌خواند — با Procmon اثبات شد). پوشه‌های نسخه‌دار؛ آزمون CI: فعال‌سازی COM بومی ۳۲/۶۴ بیتی، نصب دوباره، حذف. تصاویر پنل در CI ساخته می‌شوند (`Tests.exe --shots`).
+- سایت: بخش `partials/word-addin.blade.php` (پرچم `word_addin`)، کاتالوگ سرویس‌های هوش مصنوعی در پنل مدیریت (`ai_catalog` ← `/api/client/config`). releases.json کلید `word` را نگه می‌دارد.

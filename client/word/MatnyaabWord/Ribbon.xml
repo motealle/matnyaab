@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<customUI xmlns="http://schemas.microsoft.com/office/2006/01/customui" onLoad="OnRibbonLoad">
+  <ribbon>
+    <tabs>
+      <tab id="tabMatnyaab" label="متن‌یاب" keytip="M">
+        <group id="grpMain" label="متن‌یاب">
+          <button id="btnPane" label="پنل متن‌یاب" size="large" imageMso="FindDialog" onAction="OnAction"
+                  screentip="پنل متن‌یاب" supertip="جست‌وجو در کتابخانهٔ متن‌یاب، ابزار نگارش، قالب‌ها، استناد و دستیار هوشمند — در کنار سند." />
+          <button id="btnSearchSel" label="جست‌وجوی انتخاب" imageMso="FindNext" onAction="OnAction" getVisible="GetVisible"
+                  screentip="جست‌وجوی متن انتخاب‌شده" supertip="متن انتخاب‌شده را در همهٔ اسناد فهرست‌شدهٔ متن‌یاب جست‌وجو می‌کند." />
+          <button id="btnOpenApp" label="بازکردن متن‌یاب" imageMso="FileOpen" onAction="OnAction"
+                  screentip="برنامهٔ متن‌یاب" supertip="پنجرهٔ کامل متن‌یاب را باز می‌کند (با همان متن انتخاب‌شده)." />
+        </group>
+        <group id="grpCite" label="استناد" getVisible="GetVisible">
+          <button id="btnCiteInsert" label="درج با منبع" size="large" imageMso="CitationInsert" onAction="OnAction"
+                  screentip="درج با منبع" supertip="بخش برگزیده از نتایج متن‌یاب را با ارجاع APA و کامنت منبع درج کنید." />
+          <button id="btnBib" label="فهرست منابع" imageMso="BibliographyGallery" onAction="OnAction"
+                  screentip="فهرست منابع (APA)" supertip="بخش «منابع» پایان سند را از منبع‌های درج‌شده می‌سازد یا به‌روز می‌کند." />
+        </group>
+        <group id="grpFootnotes" label="پانویس" getVisible="GetVisible">
+          <button id="btnTermsToFn" label="اصطلاح ← پانویس" size="large" imageMso="FootnoteInsert" onAction="OnAction"
+                  screentip="اصطلاحات لاتین ← پانویس" supertip="اصطلاحات لاتین داخل پرانتز را پیدا می‌کند و پس از بازبینی شما، به پانویس تبدیل می‌کند." />
+          <button id="btnFnToTerms" label="پانویس ← متن" imageMso="EndnoteInsert" onAction="OnAction"
+                  screentip="پانویس‌های لاتین ← درون متن" supertip="پانویس‌های لاتین را به (اصطلاح) درون متن برمی‌گرداند." />
+        </group>
+        <group id="grpStructure" label="ساختار و نگارش" getVisible="GetVisible">
+          <button id="btnHeadings" label="تشخیص سرفصل‌ها" size="large" imageMso="QuickStylesGallery" onAction="OnAction" getVisible="GetVisible"
+                  screentip="تشخیص خودکار سرفصل‌ها" supertip="عنوان‌های سند را تشخیص می‌دهد و پس از تأیید، سبک عنوان ۱ تا ۴ را اعمال می‌کند." />
+          <button id="btnCleanup" label="یکدست‌سازی متن" imageMso="ClearFormatting" onAction="OnAction" getVisible="GetVisible"
+                  screentip="یکدست‌سازی متن فارسی" supertip="ی و ک عربی، نیم‌فاصله‌ها، فاصله‌های اضافه و علائم نگارشی را با پیش‌نمایش اصلاح می‌کند." />
+          <button id="btnToc" label="فهرست مطالب" imageMso="TableOfContentsGallery" onAction="OnAction" getVisible="GetVisible"
+                  screentip="فهرست مطالب" supertip="فهرست مطالب خودکار را در جای مکان‌نما درج می‌کند." />
+        </group>
+        <group id="grpTemplates" label="قالب" getVisible="GetVisible">
+          <button id="btnTemplates" label="قالب‌ها" size="large" imageMso="PageMarginsGallery" onAction="OnAction"
+                  screentip="قالب‌های صفحه‌آرایی" supertip="قالب پایان‌نامه، مقاله و گزارش را با یک کلیک اعمال کنید؛ قالب دلخواه بسازید، تکثیر یا ویرایش کنید." />
+        </group>
+        <group id="grpAi" label="دستیار" getVisible="GetVisible">
+          <button id="btnAi" label="بهبود بند" size="large" imageMso="ReviewThesaurus" onAction="OnAction"
+                  screentip="دستیار هوشمند نگارش" supertip="بند انتخاب‌شده را با مدل دلخواه شما روان، علمی یا کوتاه کنید؛ پیش از جایگزینی پیش‌نمایش می‌بینید." />
+        </group>
+        <group id="grpSettings" label="تنظیمات">
+          <button id="btnSettings" label="تنظیمات" imageMso="ControlsGallery" onAction="OnAction"
+                  screentip="تنظیمات افزونه" supertip="جای پنل، پوسته، قابلیت‌های نمایان، پیوند با متن‌یاب و به‌روزرسانی." />
+          <button id="btnHelp" label="راهنما" imageMso="Help" onAction="OnAction" />
+        </group>
+      </tab>
+    </tabs>
+  </ribbon>
+</customUI>

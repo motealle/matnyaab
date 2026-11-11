@@ -89,7 +89,7 @@ object DemoShots {
         val steps = mutableListOf<Pair<Double, () -> Unit>>()
         fun step(seconds: Double, action: () -> Unit) { steps.add(seconds to action) }
 
-        step(3.0) { main.demoSearch("عدالت") }
+        step(3.0) { main.demoPhrases(listOf("عدالت", "داد", "سیاست مدن", "حکمت عملی")) }
         step(3.5) { main.selectFirstResult() }
         step(2.5) { save(stage.scene.root, File(dir, "main-blue.png")) }
         step(0.3) { main.openPanel(1); main.expandFirstScope(); Theme.setPalette("night") }

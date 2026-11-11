@@ -37,6 +37,7 @@ class MatnyaabApp : Application() {
                 val main = MainWindow(primaryStage, settings, indexer, license)
                 splash.close()
                 main.show()
+                raw.indexOf("--search").takeIf { it >= 0 && it + 1 < raw.size }?.let { main.externalSearchLater(raw[it + 1]) }
                 if (shotsDir != null) ir.matnyaab.ui.DemoShots.run(main, primaryStage, indexer, File(shotsDir))
                 else StatisticsReporter.report("open_app", license.systemId, license.isSubscribed())
             }
@@ -65,6 +66,26 @@ fun main(args: Array<String>) {
             probe.delete()
         }
         return
+    }
+
+    if (args.contains("--bridge")) {
+        // حالت پنهان برای افزونهٔ ورد: بدون پنجره، فقط پل محلی؛ پس از ۳۰ دقیقه بیکاری بسته می‌شود
+        if (ir.matnyaab.core.bridge.LocalBridge.existing()?.let { (port, _) ->
+                runCatching { java.net.Socket().use { s -> s.connect(java.net.InetSocketAddress("127.0.0.1", port), 400) }; true }.getOrDefault(false)
+            } == true) return
+        val settings = AppSettingsManager()
+        val indexer = LuceneIndexer(settings)
+        ir.matnyaab.core.bridge.LocalBridge.loadCollections(indexer)
+        val bridge = ir.matnyaab.core.bridge.LocalBridge(settings, indexer, "headless")
+        val lock = Object()
+        val done = java.util.concurrent.atomic.AtomicBoolean(false)
+        bridge.onShutdown = { done.set(true); synchronized(lock) { lock.notifyAll() } }
+        bridge.start()
+        while (!done.get() && bridge.idleMillis() < 30 * 60_000L) {
+            synchronized(lock) { lock.wait(60_000) }
+        }
+        bridge.stop()
+        kotlin.system.exitProcess(0)
     }
 
     if (args.contains("--screenshots")) {

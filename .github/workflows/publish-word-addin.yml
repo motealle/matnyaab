@@ -1,0 +1,175 @@
+name: Publish Word Add-in
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "client/word/**"
+      - ".github/workflows/publish-word-addin.yml"
+  pull_request:
+    paths:
+      - "client/word/**"
+      - ".github/workflows/publish-word-addin.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: matnyaab-word-addin-release
+  cancel-in-progress: false
+
+env:
+  ADDIN_VERSION: "1.0.0"
+  SETUP_FILE: "Matnyaab-Word-Setup-1.0.0.exe"
+  SITE_URL: "https://www.matnyaab.ir"
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: client/word
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch bundled Persian fonts (OFL)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $dst = Join-Path $PWD "MatnyaabWord\Fonts"
+          New-Item -ItemType Directory -Force -Path $dst | Out-Null
+          $tmp = Join-Path $env:RUNNER_TEMP "fonts"
+          New-Item -ItemType Directory -Force -Path $tmp | Out-Null
+          Push-Location $tmp
+          npm pack vazirmatn@33.0.3 sahel-font@3.4.0 --silent | Out-Null
+          Get-ChildItem *.tgz | ForEach-Object { tar -xzf $_.FullName; Rename-Item package ($_.BaseName) }
+          Pop-Location
+          Copy-Item "$tmp\vazirmatn-33.0.3\fonts\ttf\Vazirmatn-Regular.ttf", "$tmp\vazirmatn-33.0.3\fonts\ttf\Vazirmatn-Bold.ttf" $dst
+          Copy-Item "$tmp\sahel-font-3.4.0\dist\Sahel.ttf", "$tmp\sahel-font-3.4.0\dist\Sahel-Bold.ttf" $dst
+
+      - name: Build and unit-test
+        shell: pwsh
+        run: |
+          dotnet build Tests\Tests.csproj -c Release -nologo
+          if ($LASTEXITCODE -ne 0) { throw "build failed" }
+          $exe = "Tests\bin\Release\net472\Tests.exe"
+          & $exe --shots (Join-Path $PWD "shots")
+          if ($LASTEXITCODE -ne 0) { throw "unit tests failed" }
+          Get-ChildItem shots | Format-Table Name, Length
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup --no-progress -y | Out-Null }
+          & $iscc "/DAddinVersion=$env:ADDIN_VERSION" "/DSourceDir=$PWD\MatnyaabWord\bin\Release\net472" "/DOutputDir=$PWD" "installer\matnyaab-word.iss"
+          if ($LASTEXITCODE -ne 0) { throw "installer build failed" }
+          if (-not (Test-Path $env:SETUP_FILE)) { throw "installer missing" }
+
+      - name: Real install test (COM activation in 64-bit and 32-bit, ribbon XML, uninstall)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $p = Start-Process ".\$env:SETUP_FILE" -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART" -PassThru -Wait
+          if ($p.ExitCode -ne 0) { throw "silent install failed: $($p.ExitCode)" }
+          $dll = Join-Path $env:LOCALAPPDATA "Matnyaab\WordAddin\$env:ADDIN_VERSION\MatnyaabWord.dll"
+          if (-not (Test-Path $dll)) { throw "dll not installed at $dll" }
+          if ((Get-ChildItem (Join-Path (Split-Path $dll) "Fonts") -Filter *.ttf).Count -lt 2) { throw "fonts not installed" }
+          $lb = (Get-ItemProperty "HKCU:\Software\Microsoft\Office\Word\Addins\Matnyaab.Word.Connect").LoadBehavior
+          if ($lb -ne 3) { throw "LoadBehavior is $lb" }
+          # کلاینت بومی COM (مثل خود آفیس): VBScript در ۶۴ و ۳۲ بیتی. اجراکنندهٔ CI مدیر با UAC خاموش است؛
+          # یعنی سخت‌ترین حالت (لایهٔ COM داتنت فقط ثبت سیستمی را می‌خواند) آزموده می‌شود.
+          $vbs = @'
+          Set o = CreateObject("Matnyaab.Word.Connect")
+          x = o.GetCustomUI("Microsoft.Word.Document")
+          If InStr(x, "tabMatnyaab") = 0 Then WScript.Quit 3
+          Set p = CreateObject("Matnyaab.Word.Pane")
+          WScript.Echo "COM_OK"
+          '@
+          Set-Content -Path probe.vbs -Value $vbs -Encoding ASCII
+          foreach ($cs in @("$env:WINDIR\System32\cscript.exe", "$env:WINDIR\SysWOW64\cscript.exe")) {
+            $out = & $cs //nologo probe.vbs 2>&1 | Out-String
+            Write-Host "$cs -> $out"
+            if ($out -notmatch "COM_OK") { throw "COM activation failed in $cs" }
+          }
+          # نصب دوباره (به‌روزرسانی) نباید خطا بدهد
+          $p = Start-Process ".\$env:SETUP_FILE" -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART" -PassThru -Wait
+          if ($p.ExitCode -ne 0) { throw "re-install failed" }
+          $un = Join-Path $env:LOCALAPPDATA "Matnyaab\WordAddin\unins000.exe"
+          $p = Start-Process $un -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART" -PassThru -Wait
+          if ($p.ExitCode -ne 0) { throw "uninstall failed" }
+          if (Test-Path "HKCU:\Software\Microsoft\Office\Word\Addins\Matnyaab.Word.Connect") { throw "addin key left after uninstall" }
+          if (Test-Path "Registry::HKEY_CURRENT_USER\Software\Classes\CLSID\{3B1E5F7A-8C2D-4E6B-A9F0-5D7C1B2E4A61}") { throw "CLSID left after uninstall" }
+          if (Test-Path "Registry::HKEY_LOCAL_MACHINE\Software\Classes\CLSID\{3B1E5F7A-8C2D-4E6B-A9F0-5D7C1B2E4A61}") { throw "machine CLSID left after uninstall" }
+          Write-Host "Install / COM / uninstall test passed."
+
+      - name: Checksum
+        shell: pwsh
+        run: |
+          $h = (Get-FileHash $env:SETUP_FILE -Algorithm SHA256).Hash.ToLowerInvariant()
+          Set-Content -Path "$env:SETUP_FILE.sha256" -Value "$h  $env:SETUP_FILE" -Encoding ascii
+          Write-Host "$env:SETUP_FILE $((Get-Item $env:SETUP_FILE).Length) bytes sha256 $h"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: matnyaab-word-${{ github.sha }}
+          path: |
+            client/word/${{ env.SETUP_FILE }}
+            client/word/${{ env.SETUP_FILE }}.sha256
+          retention-days: 7
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: matnyaab-word-shots-${{ github.sha }}
+          path: client/word/shots/*.png
+          retention-days: 7
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USER: ${{ secrets.FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD_MATNYAAB_IR }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: matnyaab-word-${{ github.sha }}
+          path: release
+
+      - name: Upload installer and merge release manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          server="${FTP_SERVER%/}"; case "$server" in ftp://*|ftps://*) url="$server" ;; *) url="ftp://$server" ;; esac
+          (cd release && sha256sum -c "$SETUP_FILE.sha256")
+          for f in "$SETUP_FILE" "$SETUP_FILE.sha256"; do
+            curl --silent --show-error --fail --retry 3 --connect-timeout 20 --max-time 600 \
+              --user "$FTP_USER:$FTP_PASSWORD" --ftp-method nocwd --ftp-create-dirs \
+              --upload-file "release/$f" "$url/downloadFiles/$f"
+          done
+          curl --silent --show-error --fail --location "$SITE_URL/downloadFiles/releases.json?ts=$(date +%s)" -o releases.json || echo '{"schema":1}' > releases.json
+          python3 - <<'PY'
+          import json, os, hashlib
+          m = json.load(open("releases.json", encoding="utf-8"))
+          f = "release/" + os.environ["SETUP_FILE"]
+          m["word"] = {
+              "label": "متن‌یاب برای ورد",
+              "version": os.environ["ADDIN_VERSION"],
+              "url": "/downloadFiles/" + os.environ["SETUP_FILE"],
+              "size_bytes": os.path.getsize(f),
+              "sha256": hashlib.sha256(open(f, "rb").read()).hexdigest(),
+              "delivery": "افزونهٔ ورد ۲۰۱۰ تا ۳۶۵ (۳۲ و ۶۴ بیتی) — بدون نیاز به دسترسی مدیر",
+              "notes": "جست‌وجو و درج با منبع، پانویس، سرفصل، قالب‌ها و دستیار هوشمند",
+          }
+          json.dump(m, open("releases.json", "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+          PY
+          curl --silent --show-error --fail --retry 3 --connect-timeout 20 --max-time 120 \
+            --user "$FTP_USER:$FTP_PASSWORD" --ftp-method nocwd --ftp-create-dirs \
+            --upload-file releases.json "$url/downloadFiles/releases.json"
+          curl --silent --show-error --fail --location -o /dev/null -w "%{http_code} %{size_download}\n" "$SITE_URL/downloadFiles/$SETUP_FILE"

@@ -166,13 +166,29 @@ class AdminPanelController extends Controller
             'org_tier2' => $num('org_tier2', 10, 100, 50),
             'org_tier3' => $num('org_tier3', 10, 100, 45),
         ];
+        $ai = [];
+        foreach ((array) ($in['ai'] ?? []) as $i => $a) {
+            $title = mb_substr(trim((string) ($a['title'] ?? '')), 0, 60);
+            if ($title === '') {
+                continue;
+            }
+            $ai[] = [
+                'id' => preg_replace('/[^a-z0-9_-]/', '', strtolower((string) ($a['id'] ?? ''))) ?: 'ai'.$i,
+                'title' => $title,
+                'kind' => in_array($a['kind'] ?? '', ['openai', 'anthropic', 'gemini'], true) ? $a['kind'] : 'openai',
+                'base_url' => mb_substr(trim((string) ($a['base_url'] ?? '')), 0, 200),
+                'models' => mb_substr(trim((string) ($a['models'] ?? '')), 0, 300),
+                'hint' => mb_substr(trim((string) ($a['hint'] ?? '')), 0, 200),
+                'enabled' => ! empty($a['enabled']),
+            ];
+        }
         $texts = [];
         foreach (array_keys(SiteSettings::defaults()['texts']) as $t) {
             $texts[$t] = mb_substr(trim((string) ($in['texts'][$t] ?? '')), 0, 800);
         }
         $this->settings->save([
             'cards' => $cards ?: $cur['cards'], 'plans' => $plans ?: $cur['plans'],
-            'flags' => $flags, 'numbers' => $numbers, 'texts' => $texts,
+            'flags' => $flags, 'numbers' => $numbers, 'texts' => $texts, 'ai_catalog' => $ai ?: $cur['ai_catalog'],
         ]);
 
         return redirect()->route('admin.dashboard', ['tab' => 'settings'])->with('status', 'تنظیمات ذخیره شد و بلافاصله روی سایت و برنامه اعمال می‌شود.');
