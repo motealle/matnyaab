@@ -255,8 +255,8 @@
                         <span><strong>نوع فایل:</strong> <span data-release-delivery="kotlin">نصب‌کنندهٔ ویندوز ۱۰ و ۱۱ (۶۴ بیتی)</span></span>
                         <span><strong>اندازه:</strong> <span data-release-size="kotlin">در حال دریافت اطلاعات…</span></span>
                     </div>
-                    <a class="btn btn-primary" data-release-link="kotlin" href="/downloadFiles/Matnyaab-Setup-2.3.exe">دانلود نصب‌کنندهٔ متن‌یاب ۲ <span aria-hidden="true">↓</span></a>
-                    <small class="muted" style="color:var(--muted-2)">نسخهٔ بدون نصب: <a data-release-portable href="/downloadFiles/Matnyaab-2.3-win-x64-portable.zip" style="color:var(--accent-soft)">فایل ZIP</a></small>
+                    <a class="btn btn-primary" data-release-link="kotlin" href="/downloadFiles/Matnyaab-Setup-2.4.exe">دانلود نصب‌کنندهٔ متن‌یاب ۲ <span aria-hidden="true">↓</span></a>
+                    <small class="muted" style="color:var(--muted-2)">نسخهٔ بدون نصب: <a data-release-portable href="/downloadFiles/Matnyaab-2.4-win-x64-portable.zip" style="color:var(--accent-soft)">فایل ZIP</a></small>
                 </article>
                 <div style="display:grid;gap:14px">
                     <ul class="req-list">
@@ -268,7 +268,7 @@
                     <div class="classic-card">
                         <div>
                             <strong style="color:var(--text)">متن‌یاب برای ورد</strong><br>
-                            جست‌وجو و درج با منبع، پانویس، سرفصل و قالب‌ها درون ورد: <a data-release-link="word" href="/downloadFiles/Matnyaab-Word-Setup-1.0.0.exe">دریافت افزونه</a> · <a href="#word">معرفی</a>
+                            جست‌وجو و درج با منبع، پانویس، سرفصل و قالب‌ها درون ورد: <a data-release-link="word" href="/downloadFiles/Matnyaab-Word-Setup-1.0.1.exe">دریافت افزونه</a> · <a href="#word">معرفی</a>
                         </div>
                     </div>
                     <div class="classic-card">

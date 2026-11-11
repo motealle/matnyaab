@@ -94,3 +94,5 @@
 .radio-button { -fx-text-fill: -mx-text; }
 .match-pill { -fx-background-color: -mx-accent-soft; -fx-text-fill: -mx-accent-text; -fx-background-radius: 10; -fx-padding: 1 8 1 8; }
 .summary-bar { -fx-background-color: -mx-surface-2; -fx-border-color: -mx-border; -fx-border-width: 0 0 1 0; -fx-padding: 6 8 6 8; }
+.rel-bar > .bar { -fx-background-color: -mx-accent; -fx-background-insets: 0; -fx-background-radius: 5; -fx-padding: 0.25em; }
+.rel-bar > .track { -fx-background-color: -mx-accent-soft; -fx-background-insets: 0; -fx-background-radius: 5; }
