@@ -72,6 +72,13 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
+          # ثبت لاگ بارگذاری اسمبلی‌ها (Fusion) برای عیب‌یابی دقیق
+          New-Item -ItemType Directory -Force -Path C:\fuslog | Out-Null
+          foreach ($v in @("HKLM:\SOFTWARE\Microsoft\Fusion", "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Fusion")) {
+            New-Item -Path $v -Force | Out-Null
+            Set-ItemProperty $v -Name ForceLog -Value 1 -Type DWord; Set-ItemProperty $v -Name LogFailures -Value 1 -Type DWord
+            Set-ItemProperty $v -Name LogPath -Value "C:\fuslog\" -Type String
+          }
           $p = Start-Process ".\$env:SETUP_FILE" -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART" -PassThru -Wait
           if ($p.ExitCode -ne 0) { throw "silent install failed: $($p.ExitCode)" }
           $dll = Join-Path $env:LOCALAPPDATA "Matnyaab\WordAddin\$env:ADDIN_VERSION\MatnyaabWord.dll"
@@ -101,6 +108,7 @@ jobs:
           if ($fail) {
             Get-ChildItem (Join-Path $env:LOCALAPPDATA "Matnyaab") -Recurse -ErrorAction SilentlyContinue | Select-Object -First 20 | Format-Table FullName | Out-String | Write-Host
             if (Test-Path (Join-Path $env:LOCALAPPDATA "Matnyaab\word-addin.log")) { Get-Content (Join-Path $env:LOCALAPPDATA "Matnyaab\word-addin.log") | Write-Host }
+            Get-ChildItem C:\fuslog -Recurse -Filter *.htm | Select-Object -First 6 | ForEach-Object { Write-Host "== $($_.FullName)"; (Get-Content $_.FullName -Raw) -replace '<[^>]+>','' | Write-Host }
             throw "native COM activation failed"
           }
           # نصب دوباره (به‌روزرسانی) نباید خطا بدهد
@@ -129,6 +137,7 @@ jobs:
           retention-days: 7
 
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: matnyaab-word-shots-${{ github.sha }}
           path: client/word/shots/*.png
