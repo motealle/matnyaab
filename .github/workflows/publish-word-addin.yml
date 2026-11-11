@@ -139,7 +139,11 @@ jobs:
             & pm\Procmon64.exe /AcceptEula /OpenLog "$PWD\trace.pml" /SaveAs "$PWD\trace.csv"; Start-Sleep 10
             $rows = Import-Csv trace.csv | Where-Object { $_."Process Name" -eq "cscript.exe" }
             $rows | Where-Object { $_.Operation -eq "Load Image" } | ForEach-Object { Write-Host ("IMG: " + $_.Path) }
-            $rows | Where-Object { $_.Result -ne "SUCCESS" -and $_.Path -notmatch "probe.vbs|D:\\a\\|TreatAs|InprocHandler|LocalServer32|\\InprocServer32\\InprocServer32" -and $_.Path -notmatch "^HKCR\\CLSID\\\{3B1E" } | Select-Object -Last 80 | ForEach-Object { Write-Host ("PM: " + $_.Operation + " | " + $_.Result + " | " + $_.Path) }
+            $start = ($rows | Select-Object -Index 0); $on = $false
+            foreach ($r in $rows) { if ($r.Path -match "mscoree.dll.local") { $on = $true }; if ($on -and ($r.Path -match "3B1E|NETFramework|Matnyaab|clr\.dll|mscorlib|Server")) { Write-Host ("SEQ: " + $r.Operation + " | " + $r.Result + " | " + $r.Path + " | " + $r.Detail) } }
+            Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\.NETFramework" -Name AlwaysReadHKCRForCLSIDs -Value 1 -Type DWord
+            $o3 = & "$env:WINDIR\System32\cscript.exe" //nologo probe.vbs 2>&1 | Out-String
+            Write-Host "with AlwaysReadHKCRForCLSIDs=1 -> $o3"
             Get-ChildItem (Join-Path $env:LOCALAPPDATA "Matnyaab") -Recurse -ErrorAction SilentlyContinue | Select-Object -First 20 | Format-Table FullName | Out-String | Write-Host
             if (Test-Path (Join-Path $env:LOCALAPPDATA "Matnyaab\word-addin.log")) { Get-Content (Join-Path $env:LOCALAPPDATA "Matnyaab\word-addin.log") | Write-Host }
             Get-ChildItem C:\fuslog -Recurse -Filter *.htm | Select-Object -First 6 | ForEach-Object { Write-Host "== $($_.FullName)"; (Get-Content $_.FullName -Raw) -replace '<[^>]+>','' | Write-Host }
