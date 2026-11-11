@@ -68,6 +68,17 @@ fun main(args: Array<String>) {
         return
     }
 
+    // آزمون خودکار بستهٔ معنایی در CI: --semantic-selftest <pack.zip> <out.json>
+    args.indexOf("--semantic-selftest").takeIf { it >= 0 && it + 2 < args.size }?.let { i ->
+        val out = File(args[i + 2])
+        val code = try {
+            val r = ir.matnyaab.core.semantic.SemanticPack.selfTest(File(args[i + 1]))
+            out.writeText(com.google.gson.Gson().toJson(r)); if (r["ok"] == true) 0 else 2
+        } catch (e: Throwable) { out.writeText("{\"ok\":false,\"error\":\"" + (e.toString().replace("\"", "'")) + "\"}"); 1 }
+        ir.matnyaab.core.semantic.SemanticPack.unload()
+        kotlin.system.exitProcess(code)
+    }
+
     if (args.contains("--bridge")) {
         // حالت پنهان برای افزونهٔ ورد: بدون پنجره، فقط پل محلی؛ پس از ۳۰ دقیقه بیکاری بسته می‌شود
         if (ir.matnyaab.core.bridge.LocalBridge.existing()?.let { (port, _) ->
@@ -76,6 +87,7 @@ fun main(args: Array<String>) {
         val settings = AppSettingsManager()
         val indexer = LuceneIndexer(settings)
         ir.matnyaab.core.bridge.LocalBridge.loadCollections(indexer)
+        ir.matnyaab.core.semantic.SemanticService.start(settings) { indexer.allObjects.toList() }
         val bridge = ir.matnyaab.core.bridge.LocalBridge(settings, indexer, "headless")
         val lock = Object()
         val done = java.util.concurrent.atomic.AtomicBoolean(false)

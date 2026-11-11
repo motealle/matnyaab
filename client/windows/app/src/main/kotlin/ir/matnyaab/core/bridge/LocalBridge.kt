@@ -164,6 +164,7 @@ class LocalBridge(
                 "accentText" to p.accentText, "canvas" to p.canvas, "surface" to p.surface, "surface2" to p.surface2,
                 "text" to p.text, "muted" to p.muted, "border" to p.border, "hover" to p.hover, "danger" to p.danger, "success" to p.success),
             "font" to settings.get("UI_FONT"),
+            "semantic" to ir.matnyaab.core.semantic.SemanticService.active(settings),
         )
     }
 
@@ -177,7 +178,7 @@ class LocalBridge(
             synonyms = r.bool("synonyms", false),
             spacing = when (r.str("spacing")) { "exact" -> Spacing.EXACT; "collapse" -> Spacing.COLLAPSE; else -> Spacing.UNIFY },
             ignorePunct = r.bool("ignorePunct", true), normalizeLetters = r.bool("normalizeLetters", true),
-            strict = r.bool("strict", false), expression = r.str("expression")?.takeIf { it.isNotBlank() },
+            strict = r.bool("strict", false), semantic = r.bool("semantic", false), expression = r.str("expression")?.takeIf { it.isNotBlank() },
         )
     }
 
@@ -197,11 +198,12 @@ class LocalBridge(
             "totalFiles" to hits.size, "totalMatches" to hits.sumOf { it.matches },
             "results" to hits.take(limit).map { h ->
                 mapOf("path" to h.path, "name" to h.name, "collection" to h.indexName, "matches" to h.matches,
-                    "perPhrase" to h.perPhrase, "size" to h.size, "time" to h.time,
+                    "perPhrase" to h.perPhrase, "size" to h.size, "time" to h.time, "semantic" to h.semantic,
                     "relevance" to h.relevance, "density" to h.density,
-                    "snippets" to engine.snippets(h.content, max = r.get("snippets")?.asInt ?: 4, radius = 160).map {
+                    "snippets" to (if (h.matches == 0 && h.chunkStart >= 0) listOf(mapOf("before" to "", "match" to h.content.substring(h.chunkStart.coerceAtMost(h.content.length), h.chunkEnd.coerceAtMost(h.content.length)).take(600), "after" to "", "start" to h.chunkStart, "end" to h.chunkEnd, "phrase" to -1))
+                    else engine.snippets(h.content, max = r.get("snippets")?.asInt ?: 4, radius = 160).map {
                         mapOf("before" to it.before, "match" to it.match, "after" to it.after, "start" to it.start, "end" to it.end, "phrase" to it.phrase)
-                    })
+                    }))
             },
         )
     }

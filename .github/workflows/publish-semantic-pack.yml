@@ -1,0 +1,164 @@
+name: Publish Semantic Pack
+
+# بستهٔ اختیاری «جست‌وجوی معنایی»: مدل آفلاین multilingual-e5-small (ONNX کوانتیزه)
+# + ONNX Runtime ویندوز + ماژول متن‌یاب. جدا از برنامهٔ پایه ساخته، آزموده و منتشر می‌شود.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "client/windows/semantic/**"
+      - "client/windows/app/src/main/kotlin/ir/matnyaab/core/semantic/**"
+      - ".github/workflows/publish-semantic-pack.yml"
+  pull_request:
+    paths:
+      - "client/windows/semantic/**"
+      - "client/windows/app/src/main/kotlin/ir/matnyaab/core/semantic/**"
+      - ".github/workflows/publish-semantic-pack.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: matnyaab-semantic-pack
+  cancel-in-progress: false
+
+env:
+  PACK_VERSION: "1"
+  PACK_FILE: "Matnyaab-Semantic-Pack-1.zip"
+  MODEL_REPO: "https://huggingface.co/Xenova/multilingual-e5-small/resolve/main"
+  SITE_URL: "https://www.matnyaab.ir"
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: client/windows
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Gradle 8.7
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
+
+      - name: Download offline model (MIT license)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $pack = Join-Path $PWD "pack"
+          New-Item -ItemType Directory -Force -Path "$pack\model","$pack\lib","$pack\native" | Out-Null
+          Invoke-WebRequest "$env:MODEL_REPO/onnx/model_quantized.onnx" -OutFile "$pack\model\model.onnx"
+          Invoke-WebRequest "$env:MODEL_REPO/tokenizer.json" -OutFile "$pack\model\tokenizer.json"
+          Get-ChildItem "$pack\model" | Format-Table Name, Length
+          if ((Get-Item "$pack\model\model.onnx").Length -lt 50MB) { throw "model too small" }
+
+      - name: Build module and test Persian semantic quality
+        shell: pwsh
+        run: |
+          gradle --no-daemon :semantic:jar :semantic:copyOrt :semantic:test "-Dmatnyaab.semantic.dir=$PWD\pack" :app:shadowJar
+          if ($LASTEXITCODE -ne 0) { throw "build/test failed" }
+
+      - name: Assemble pack (Windows x64 natives only)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
+          $pack = Join-Path $PWD "pack"
+          Copy-Item "semantic\build\libs\matnyaab-semantic.jar" "$pack\lib\"
+          $ort = Get-ChildItem "semantic\build\ort" -Filter "onnxruntime-*.jar" | Select-Object -First 1
+          $dst = Join-Path "$pack\lib" $ort.Name
+          Copy-Item $ort.FullName $dst
+          # استخراج کتابخانه‌های ویندوز و حذف کتابخانه‌های بومی از jar (کوچک‌تر شدن بسته)
+          $z = [IO.Compression.ZipFile]::Open($dst, "Update")
+          foreach ($e in @($z.Entries)) {
+            if ($e.FullName -like "ai/onnxruntime/native/win-x64/*" -and $e.Name -like "*.dll") {
+              [IO.Compression.ZipFileExtensions]::ExtractToFile($e, (Join-Path "$pack\native" $e.Name), $true)
+            }
+            if ($e.FullName -like "ai/onnxruntime/native/*" -and -not $e.FullName.EndsWith("/")) { $e.Delete() }
+          }
+          $z.Dispose()
+          foreach ($d in @("vcruntime140.dll", "vcruntime140_1.dll", "msvcp140.dll")) {
+            $src = Join-Path "$env:WINDIR\System32" $d
+            if (Test-Path $src) { Copy-Item $src "$pack\native\" }
+          }
+          if (-not (Test-Path "$pack\native\onnxruntime.dll")) { throw "onnxruntime.dll missing" }
+          '{"api":1,"version":"' + $env:PACK_VERSION + '","model":"multilingual-e5-small","dim":384,"license":"MIT (model), MIT (ONNX Runtime)"}' | Set-Content "$pack\pack.json" -Encoding UTF8
+          Get-ChildItem $pack -Recurse -File | Format-Table FullName, Length
+          $zip = Join-Path $PWD $env:PACK_FILE
+          if (Test-Path $zip) { Remove-Item $zip }
+          [IO.Compression.ZipFile]::CreateFromDirectory($pack, $zip, [IO.Compression.CompressionLevel]::Optimal, $false)
+          $h = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          Set-Content "$zip.sha256" "$h  $env:PACK_FILE" -Encoding ascii
+          Write-Host "$env:PACK_FILE $((Get-Item $zip).Length) bytes sha256 $h"
+
+      - name: End-to-end self-test (install pack into the real app and embed Persian text)
+        shell: pwsh
+        run: |
+          $out = Join-Path $PWD "selftest.json"
+          & java -cp "app\build\libs\matnyaab-all.jar" ir.matnyaab.MainKt --semantic-selftest (Join-Path $PWD $env:PACK_FILE) $out
+          $code = $LASTEXITCODE
+          Get-Content $out | Write-Host
+          if ($code -ne 0) { throw "semantic self-test failed ($code)" }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: matnyaab-semantic-${{ github.sha }}
+          path: |
+            client/windows/${{ env.PACK_FILE }}
+            client/windows/${{ env.PACK_FILE }}.sha256
+          retention-days: 5
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USER: ${{ secrets.FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD_MATNYAAB_IR }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: matnyaab-semantic-${{ github.sha }}
+          path: release
+
+      - name: Upload pack and merge release manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          server="${FTP_SERVER%/}"; case "$server" in ftp://*|ftps://*) url="$server" ;; *) url="ftp://$server" ;; esac
+          (cd release && sha256sum -c "$PACK_FILE.sha256")
+          for f in "$PACK_FILE" "$PACK_FILE.sha256"; do
+            curl --silent --show-error --fail --retry 3 --connect-timeout 20 --max-time 1800 \
+              --user "$FTP_USER:$FTP_PASSWORD" --ftp-method nocwd --ftp-create-dirs \
+              --upload-file "release/$f" "$url/downloadFiles/$f"
+          done
+          curl --silent --show-error --fail --location "$SITE_URL/downloadFiles/releases.json?ts=$(date +%s)" -o releases.json || echo '{"schema":1}' > releases.json
+          python3 - <<'PY'
+          import json, os, hashlib
+          m = json.load(open("releases.json", encoding="utf-8"))
+          f = "release/" + os.environ["PACK_FILE"]
+          m["semantic"] = {
+              "label": "بستهٔ جست‌وجوی معنایی (اختیاری)",
+              "version": os.environ["PACK_VERSION"],
+              "url": "/downloadFiles/" + os.environ["PACK_FILE"],
+              "size_bytes": os.path.getsize(f),
+              "sha256": hashlib.sha256(open(f, "rb").read()).hexdigest(),
+              "model": "multilingual-e5-small (offline, int8)",
+          }
+          json.dump(m, open("releases.json", "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+          PY
+          curl --silent --show-error --fail --retry 3 --connect-timeout 20 --max-time 120 \
+            --user "$FTP_USER:$FTP_PASSWORD" --ftp-method nocwd --ftp-create-dirs \
+            --upload-file releases.json "$url/downloadFiles/releases.json"
+          curl --silent --show-error --fail --location -o /dev/null -w "%{http_code} %{size_download}\n" "$SITE_URL/downloadFiles/$PACK_FILE"
