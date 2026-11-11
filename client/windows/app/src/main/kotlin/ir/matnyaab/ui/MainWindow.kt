@@ -165,6 +165,7 @@ class MainWindow(
 
     // ---- برای تولید خودکار تصاویر معرفی (حالت --screenshots)
     internal fun demoSearch(text: String) = quickSearch(text)
+    internal fun demoPhrases(lines: List<String>) = searchPanel.runPhrases(lines)
     internal fun selectFirstResult() { if (table.items.isNotEmpty()) table.selectionModel.select(0) }
     internal fun openPanel(i: Int) { accordions.getOrNull(i)?.let { if (!it.isOpen) it.expand() } }
     internal fun expandFirstScope() { scopeTree.tree.root.children.firstOrNull()?.isExpanded = true }

@@ -145,6 +145,26 @@ jobs:
           $smoke2 = & $installed --smoke 2>&1 | Out-String
           if ($smoke2 -notmatch "MATNYAAB_CLIENT_SMOKE_OK") { throw "Installed app smoke failed: $smoke2" }
           if (-not (Test-Path (Join-Path ([Environment]::GetFolderPath("Programs")) "متن‌یاب.lnk"))) { Write-Host "Start-menu shortcut check skipped (name encoding)" }
+          # پل افزونهٔ ورد: حالت پنهان، جست‌وجوی منطقی، یادداشت و جست‌وجوی دوباره
+          $bp = Start-Process $installed -ArgumentList "--bridge" -PassThru
+          $bf = Join-Path $env:APPDATA "MATNYAAB\bridge.json"
+          for ($i = 0; $i -lt 120 -and -not (Test-Path $bf); $i++) { Start-Sleep -Milliseconds 500 }
+          if (-not (Test-Path $bf)) { throw "bridge did not start" }
+          $b = Get-Content $bf -Raw | ConvertFrom-Json
+          $h = @{ "X-Matnyaab-Token" = $b.token }
+          $base = "http://127.0.0.1:$($b.port)/v1"
+          $ping = Invoke-RestMethod -Method Post -Uri "$base/ping" -Headers $h -Body "{}" -ContentType "application/json; charset=utf-8"
+          if (-not $ping.ok) { throw "bridge ping failed" }
+          $bad = try { Invoke-WebRequest -Method Post -Uri "$base/ping" -Body "{}" -SkipHttpErrorCheck | Select-Object -ExpandProperty StatusCode } catch { 0 }
+          if ($bad -ne 401) { throw "bridge accepted a request without token ($bad)" }
+          $note = Invoke-RestMethod -Method Post -Uri "$base/note" -Headers $h -ContentType "application/json; charset=utf-8" -Body ([Text.Encoding]::UTF8.GetBytes('{"text":"آزمون پل متن‌یاب: جهاد، نفس و تقوا","title":"آزمون پل"}'))
+          if (-not $note.ok) { throw "bridge note failed" }
+          $sr = Invoke-RestMethod -Method Post -Uri "$base/search" -Headers $h -ContentType "application/json; charset=utf-8" -Body ([Text.Encoding]::UTF8.GetBytes('{"expression":"(جهاد OR مبارزه) AND نفس NOT نظامی"}'))
+          Write-Host "bridge search files: $($sr.totalFiles) matches: $($sr.totalMatches)"
+          if ($sr.totalFiles -lt 1) { throw "bridge boolean search found nothing" }
+          Invoke-RestMethod -Method Post -Uri "$base/shutdown" -Headers $h -Body "{}" -ContentType "application/json" | Out-Null
+          if (-not $bp.WaitForExit(15000)) { $bp.Kill(); throw "bridge did not exit" }
+          Write-Host "Bridge test passed."
           $un = Join-Path $env:LOCALAPPDATA "Programs\Matnyaab\unins000.exe"
           $p = Start-Process $un -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART" -PassThru -Wait
           if ($p.ExitCode -ne 0) { throw "Silent uninstall failed: $($p.ExitCode)" }
@@ -330,6 +350,15 @@ jobs:
                   "content_summary": "نصب‌کننده را اجرا کنید؛ میان‌بر متن‌یاب روی میز کار و منوی شروع ساخته می‌شود. بسته‌های محتوایی را از داخل برنامه دریافت کنید.",
               },
           }
+          # بخش‌های دیگر (مثل افزونهٔ ورد) حفظ شوند
+          import urllib.request
+          try:
+              old = json.load(urllib.request.urlopen(os.environ["SITE_URL"] + "/downloadFiles/releases.json", timeout=30))
+          except Exception:
+              old = {}
+          for k, v in old.items():
+              if k not in manifest:
+                  manifest[k] = v
           with open("releases.json", "w", encoding="utf-8") as f:
               json.dump(manifest, f, ensure_ascii=False, indent=2)
               f.write("\n")
