@@ -66,6 +66,11 @@ class SearchPanel(
     private val whole = RadioButton("واژهٔ کامل")
     private val partial = RadioButton("بخشی از واژه")
     private val family = RadioButton("هم‌خانواده").apply { tooltip = Tooltip("واژه‌های هم‌ریشه: علم ← عالم، علوم، تعلیم، معلم…") }
+    private val semantic = CheckBox("جست‌وجوی مفهومی (معنایی)").apply {
+        tooltip = Tooltip("متن‌های هم‌معنا را هم پیدا می‌کند، حتی اگر واژه‌ها فرق کنند؛ نتیجه‌های مفهومی با نشان «مفهومی» می‌آیند")
+    }
+    private val semanticHint = Label().apply { isWrapText = true; styleClass.add("hint") }
+    private val semanticRow = VBox(2.0, semantic, semanticHint)
     private val synonyms = CheckBox("مترادف‌ها هم جست‌وجو شوند (خودسازی ← تزکیه نفس…)")
     private val spacing = ComboBox<String>().apply {
         items.addAll("یکسان‌سازی فاصله و نیم‌فاصله", "نادیده‌گرفتن فاصله‌های اضافه", "فاصله‌گذاری دقیق")
@@ -137,6 +142,7 @@ class SearchPanel(
             strict,
             HBox(12.0, whole, partial, family).apply { alignment = Pos.CENTER_RIGHT },
             label("فاصله‌ها:"), spacing, punct, letters,
+            semanticRow,
             HBox(6.0, synonyms, Hyperlink("فهرست…").apply {
                 tooltip = Tooltip("ویرایش فهرست مترادف‌های شخصی (هر سطر یک گروه)")
                 setOnAction {
@@ -158,7 +164,7 @@ class SearchPanel(
             }
         }
         optSummary.style = "${Theme.FONT} -fx-font-size: ${Constants.FONT_SIZE_SMALL}px;"
-        listOf(strict, whole, partial, family, synonyms, punct, letters, wordsAll, wordsAny, phrasesAll, phrasesAny).forEach {
+        listOf(strict, whole, partial, family, synonyms, semantic, semanticHint, punct, letters, wordsAll, wordsAny, phrasesAll, phrasesAny).forEach {
             it.style = "${Theme.FONT} -fx-font-size: ${Constants.FONT_SIZE_SMALL}px;"
         }
         spacing.style = Theme.FONT
@@ -248,6 +254,7 @@ class SearchPanel(
         val parts = if (s) listOf("دقیق: همان شکل، ترتیب و فاصله") else listOfNotNull(
             if (partial.isSelected) "بخشی از واژه" else if (family.isSelected) "هم‌خانواده" else "واژهٔ کامل",
             if (synonyms.isSelected) "با مترادف‌ها" else null,
+            if (semantic.isSelected && semanticRow.isVisible) "+ مفهومی" else null,
             listOf("یکسان‌سازی فاصله و نیم‌فاصله", "بی‌اعتنا به فاصلهٔ اضافه", "فاصلهٔ دقیق")[spacing.selectionModel.selectedIndex.coerceAtLeast(0)],
             if (punct.isSelected) "بی‌اعتنا به علائم" else null,
         )
@@ -259,6 +266,7 @@ class SearchPanel(
         phrases = phrases, combine = combine, exclude = exclude,
         match = if (partial.isSelected) MatchType.PARTIAL else if (family.isSelected) MatchType.FAMILY else MatchType.WHOLE,
         synonyms = synonyms.isSelected,
+        semantic = semantic.isSelected && semanticRow.isVisible,
         spacing = when (spacing.selectionModel.selectedIndex) { 1 -> Spacing.COLLAPSE; 2 -> Spacing.EXACT; else -> Spacing.UNIFY },
         ignorePunct = punct.isSelected, normalizeLetters = letters.isSelected, strict = strict.isSelected,
     )
@@ -310,6 +318,23 @@ class SearchPanel(
             searchButton("جست‌وجوی منطقی"), Separator(), legacyOpen, legacy)
     }
 
+    /** نمایش گزینهٔ معنایی فقط وقتی بسته نصب و روشن است، همراه با درصد آماده‌سازی */
+    fun refreshSemantic() {
+        val s = settings ?: return
+        val on = ir.matnyaab.core.semantic.SemanticService.active(s)
+        semanticRow.isVisible = on; semanticRow.isManaged = on
+        val pct = ir.matnyaab.core.semantic.SemanticService.percent()
+        val st = ir.matnyaab.core.semantic.SemanticService.status
+        semanticHint.text = when {
+            !on -> ""
+            st.startsWith("خطا") -> st
+            ir.matnyaab.core.semantic.SemanticService.total > 0 && pct < 100 -> "آماده‌سازی ${ir.matnyaab.util.PersianUtil.toPersianNumbers(pct)}٪ — روی اسناد آماده کار می‌کند"
+            else -> ""
+        }
+        semanticHint.isVisible = semanticHint.text.isNotEmpty(); semanticHint.isManaged = semanticHint.isVisible
+        syncOptions()
+    }
+
     /** جست‌وجوی سریع از بیرون (مثلاً تصاویر معرفی یا افزونهٔ ورد) */
     fun runPhrase(text: String) {
         if (!v2) { quickInput.text = text; fireQuick(); return }
@@ -327,6 +352,7 @@ class SearchPanel(
             if (strict.isSelected) 1 else 0, if (partial.isSelected) 1 else if (family.isSelected) 2 else 0, spacing.selectionModel.selectedIndex.coerceAtLeast(0),
             if (punct.isSelected) 1 else 0, if (letters.isSelected) 1 else 0,
             if (wordsAny.isSelected) 1 else 0, if (phrasesAll.isSelected) 1 else 0, if (synonyms.isSelected) 1 else 0,
+            if (semantic.isSelected) 1 else 0,
         ).joinToString(","))
     }
 
@@ -336,6 +362,7 @@ class SearchPanel(
         strict.isSelected = f(0, 0) == 1
         (when (f(1, 0)) { 1 -> partial; 2 -> family; else -> whole }).isSelected = true
         synonyms.isSelected = f(7, 0) == 1
+        semantic.isSelected = f(8, 1) == 1
         spacing.selectionModel.select(f(2, 0).coerceIn(0, 2))
         punct.isSelected = f(3, 1) == 1
         letters.isSelected = f(4, 1) == 1

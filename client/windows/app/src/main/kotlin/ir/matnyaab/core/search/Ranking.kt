@@ -63,6 +63,34 @@ object Ranking {
         }.let { sort(it, SortMode.RELEVANCE) }
     }
 
+    /**
+     * ادغام نتایج متنی و معنایی با «ادغام رتبه‌های متقابل» (RRF):
+     * امتیاز = ۱/(۶۰+رتبهٔ متنی) + ۱/(۶۰+رتبهٔ معنایی). سندی که در هر دو فهرست بالاست، بالاتر می‌رود؛
+     * سندی که واژه‌ها را ندارد ولی هم‌معناست هم (با علامت «مفهومی») پیدا می‌شود.
+     */
+    fun hybrid(lexical: List<SearchHit>, semantic: List<ir.matnyaab.core.semantic.SemanticHit>, fetch: (String) -> SearchHit?): List<SearchHit> {
+        if (semantic.isEmpty()) return lexical
+        val top = semantic.first().similarity
+        // آستانه بر پایهٔ سنجش واقعی روی جمله‌های فارسی در CI: هم‌معنا ≈ ۰٫۸۳–۰٫۸۶، نامرتبط ≈ ۰٫۷۷–۰٫۸۱
+        val sem = semantic.filter { it.similarity >= maxOf(0.80, top - 0.035) }.take(100)
+        val semRank = sem.withIndex().associate { it.value.path to it.index }
+        val semBy = sem.associateBy { it.path }
+        val lexRank = lexical.withIndex().associate { it.value.path to it.index }
+        val all = LinkedHashMap<String, SearchHit>()
+        lexical.forEach { all[it.path] = it }
+        sem.forEach { h -> if (h.path !in all) fetch(h.path)?.let { all[h.path] = it } }
+        val k = 60.0
+        val scored = all.values.map { h ->
+            val sc = (lexRank[h.path]?.let { 1.0 / (k + it) } ?: 0.0) + (semRank[h.path]?.let { 1.0 / (k + it) } ?: 0.0)
+            val sh = semBy[h.path]
+            h.copy(semantic = sh?.similarity ?: -1.0, chunkStart = sh?.chunkStart ?: -1, chunkEnd = sh?.chunkEnd ?: -1,
+                matches = h.matches.coerceAtLeast(0)) to sc
+        }
+        val max = scored.maxOf { it.second }
+        return scored.map { (h, sc) -> h.copy(relevance = (sc / max * 100).toInt().coerceIn(1, 100)) }
+            .sortedByDescending { it.relevance }
+    }
+
     fun sort(hits: List<SearchHit>, mode: SortMode): List<SearchHit> = when (mode) {
         SortMode.RELEVANCE -> hits.sortedWith(compareByDescending<SearchHit> { it.relevance.takeIf { r -> r >= 0 } ?: it.score }.thenByDescending { it.matches }.thenByDescending { it.score })
         SortMode.COUNT -> hits.sortedWith(compareByDescending<SearchHit> { it.matches }.thenByDescending { it.relevance })

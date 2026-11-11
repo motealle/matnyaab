@@ -145,6 +145,25 @@ class MatchEngineTest {
         assertEquals(listOf("b", "a"), byDate)
     }
 
+    @Test fun hybridAddsConceptualHits() {
+        fun hit(p: String) = ir.matnyaab.core.SearchHit("c", p, p, 1, 1, 0.0, "متن نمونه", matches = 2, relevance = 50)
+        val lex = listOf(hit("/a"), hit("/b"))
+        val sem = listOf(ir.matnyaab.core.semantic.SemanticHit("/c", 0.86, 0, 4, 2), ir.matnyaab.core.semantic.SemanticHit("/a", 0.84, 0, 4, 1),
+            ir.matnyaab.core.semantic.SemanticHit("/z", 0.50, 0, 4, 1))
+        val r = Ranking.hybrid(lex, sem) { p -> ir.matnyaab.core.SearchHit("c", p, p, 0, 1, 0.0, "متن مفهومی", matches = 0) }
+        assertEquals("/a", r.first().path)
+        assertTrue(r.any { it.path == "/c" && it.matches == 0 && it.semantic > 0.8 })
+        assertTrue(r.none { it.path == "/z" })
+    }
+
+    @Test fun chunking() {
+        val text = (1..450).joinToString(" ") { "w$it" }
+        val c = ir.matnyaab.core.semantic.SemanticIndex.chunks(text)
+        assertEquals(3, c.size)
+        assertEquals("w1", text.substring(c[0].start, c[0].start + 2))
+        assertTrue(c[1].text.startsWith("w161 "))
+    }
+
     @Test fun luceneCandidatesFindPunctuationGluedTokens() {
         val home = Files.createTempDirectory("mx-test")
         System.setProperty("matnyaab.home", home.toString())

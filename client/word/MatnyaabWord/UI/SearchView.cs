@@ -16,7 +16,7 @@ namespace Matnyaab.Word.UI
         private readonly Btn _mPhrase, _mPhrases, _mBool;
         private readonly TextBox _input = Kit.Input("واژه یا عبارت؛ مثلاً: تهذیب نفس");
         private readonly TextBox _inputMulti = Kit.Input("", true, 4);
-        private readonly CheckBox _strict, _punct, _syn;
+        private readonly CheckBox _strict, _punct, _syn, _sem;
         private readonly ComboBox _match = Kit.Combo(new[] { "واژهٔ کامل", "بخشی از واژه (مجاهد ← مجاهدت)", "هم‌خانواده (علم ← عالم، تعلیم، معلم)" });
         private readonly ComboBox _spacing = Kit.Combo(new[] { "یکسان‌سازی فاصله و نیم‌فاصله", "نادیده‌گرفتن فاصله‌های اضافه", "فاصله‌گذاری دقیق" });
         private readonly Card _opts = new Card { Soft = true };
@@ -39,9 +39,10 @@ namespace Matnyaab.Word.UI
 
             _strict = Kit.Check("جست‌وجوی دقیق (همان شکل، ترتیب و فاصله)", false, v => SyncOpts());
             _syn = Kit.Check("مترادف‌ها هم جست‌وجو شوند (خودسازی ← تزکیه نفس…)");
+            _sem = Kit.Check("جست‌وجوی مفهومی (اگر در متن‌یاب فعال است)", true);
             _punct = Kit.Check("بی‌اعتنا به علائم نگارشی میان واژه‌ها", true);
             _opts.Add(Kit.Hint("شیوهٔ تطبیق"));
-            _opts.Add(_strict); _opts.Add(_match); _opts.Add(_spacing); _opts.Add(_punct); _opts.Add(_syn);
+            _opts.Add(_strict); _opts.Add(_match); _opts.Add(_spacing); _opts.Add(_punct); _opts.Add(_syn); _opts.Add(_sem);
             Add(_opts);
 
             var go = Kit.Button("جست‌وجو در متن‌یاب", () => Run(null), BtnKind.Primary);
@@ -98,7 +99,7 @@ namespace Matnyaab.Word.UI
             AddinSettings.Current.Remember(q); AddinSettings.Save(false);
             var body = new Dictionary<string, object>
             {
-                ["strict"] = _strict.Checked, ["match"] = _match.SelectedIndex == 1 ? "partial" : _match.SelectedIndex == 2 ? "family" : "whole", ["synonyms"] = _syn.Checked,
+                ["strict"] = _strict.Checked, ["match"] = _match.SelectedIndex == 1 ? "partial" : _match.SelectedIndex == 2 ? "family" : "whole", ["synonyms"] = _syn.Checked, ["semantic"] = _sem.Checked,
                 ["spacing"] = _spacing.SelectedIndex == 1 ? "collapse" : _spacing.SelectedIndex == 2 ? "exact" : "unify",
                 ["ignorePunct"] = _punct.Checked, ["sort"] = SortIds[Math.Max(0, _sort.SelectedIndex)], ["limit"] = 60, ["snippets"] = 5,
             };
@@ -180,7 +181,8 @@ namespace Matnyaab.Word.UI
             var name = r.Str("name");
             Add(new ThemedLabel { Text = System.IO.Path.GetFileNameWithoutExtension(name), Role = "title" });
             var ext = System.IO.Path.GetExtension(name).TrimStart('.').ToUpperInvariant();
-            var meta = (ext.Length > 0 ? ext + " · " : "") + r.Str("collection") + " · " + Fa.Num(r.Int("matches")) + " مورد" + (r.Int("relevance", -1) >= 0 ? " · ارتباط " + Fa.Num(r.Int("relevance")) + "٪" : "");
+            var conceptual = r.Int("matches") == 0 && r.TryGetValue("semantic", out var sv) && Convert.ToDouble(sv) >= 0;
+            var meta = (conceptual ? "مفهومی · " : "") + (ext.Length > 0 ? ext + " · " : "") + r.Str("collection") + " · " + Fa.Num(r.Int("matches")) + " مورد" + (r.Int("relevance", -1) >= 0 ? " · ارتباط " + Fa.Num(r.Int("relevance")) + "٪" : "");
             if (phrases.Count > 1 && r.TryGetValue("perPhrase", out var pp) && pp is System.Collections.IEnumerable e)
             {
                 var counts = e.Cast<object>().Select(x => Convert.ToInt32(x)).ToList();

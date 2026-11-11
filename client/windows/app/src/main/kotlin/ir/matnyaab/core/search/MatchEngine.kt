@@ -35,6 +35,8 @@ data class SearchSpec(
     val strict: Boolean = false,
     /** هر عبارت همراه با مترادف‌هایش (از فهرست مترادف‌ها) جست‌وجو شود */
     val synonyms: Boolean = false,
+    /** افزودن نتایج «مفهومی» از جست‌وجوی معنایی (در صورت نصب بستهٔ معنایی) */
+    val semantic: Boolean = false,
     /** پرس‌وجوی منطقی (AND/OR/NOT/NEAR)؛ در این حالت phrases نادیده گرفته می‌شود */
     val expression: String? = null,
 ) {
@@ -101,6 +103,9 @@ class MatchEngine(val spec: SearchSpec) {
     }
 
     val phraseCount get() = phrases.size
+
+    /** متن پرس‌وجو برای مدل معنایی (عبارت‌های مثبت) */
+    fun semanticQuery(): String = (ast?.positiveLeaves() ?: phrases).joinToString("، ")
     fun phrase(i: Int) = phrases[i]
 
     private fun charClass(c: Char): String {

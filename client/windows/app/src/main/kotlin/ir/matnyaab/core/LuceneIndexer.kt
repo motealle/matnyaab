@@ -253,10 +253,47 @@ class LuceneIndexer(private val settings: AppSettingsManager) {
         lastEngine = engine
         val raw = search(engine.candidateQuery(), selectedObjects, maskedPaths).toList()
         val scored = raw.mapNotNull { h -> engine.evaluate(h.content).takeIf { it.ok }?.let { ir.matnyaab.core.search.Ranking.Scored(h, it) } }
-        val out = ir.matnyaab.core.search.Ranking.rank(scored, lastDocCount, engine)
+        var out = ir.matnyaab.core.search.Ranking.rank(scored, lastDocCount, engine)
+        if (spec.semantic && ir.matnyaab.core.semantic.SemanticService.usable(settings)) {
+            val sem = runCatching { ir.matnyaab.core.semantic.SemanticService.search(engine.semanticQuery(), selectedObjects) }
+                .getOrElse { System.err.println("semantic search: $it"); emptyList() }
+                .filter { it.path !in maskedPaths }
+            val byPath = HashMap<String, IndexerInfo>()
+            out = ir.matnyaab.core.search.Ranking.hybrid(out, sem) { p -> docByPath(selectedObjects, p, byPath) }
+        }
         searchResult.clear(); searchResult.addAll(out)
         lastEngine = engine
         return out
+    }
+
+    /** خواندن یک سند از فهرست‌ها با مسیرش (برای نتایج مفهومی) */
+    fun docByPath(cols: List<IndexerInfo>, path: String, @Suppress("UNUSED_PARAMETER") cache: MutableMap<String, IndexerInfo>): SearchHit? {
+        for (c in cols) {
+            val hit = runCatching {
+                FSDirectory.open(Path.of(c.savePath)).use { d ->
+                    DirectoryReader.open(d).use { r ->
+                        val s = IndexSearcher(r)
+                        val top = s.search(TermQuery(Term("path", path)), 1)
+                        top.scoreDocs.firstOrNull()?.let { sd ->
+                            val doc = s.storedFields().document(sd.doc)
+                            SearchHit(c.indexName, path, doc.get("name") ?: File(path).name, 0,
+                                doc.getField("size")?.numericValue()?.toLong() ?: 0, doc.getField("time")?.numericValue()?.toDouble() ?: 0.0,
+                                doc.get("content") ?: "", matches = 0)
+                        }
+                    }
+                }
+            }.getOrNull()
+            if (hit != null) return hit
+        }
+        return null
+    }
+
+    /** برجسته‌سازی بازهٔ «بخش مرتبط» در نتایج مفهومی */
+    fun highlightRange(content: String, start: Int, end: Int): String {
+        val a = start.coerceIn(0, content.length); val b = end.coerceIn(a, content.length)
+        return escapeHtml(content.substring(0, a)) + "<span id=\"sem\" style=\" background-color:#DDEBFF; border-radius:3px;\">" +
+            escapeHtml(content.substring(a, b)) + "</span>" + escapeHtml(content.substring(b)) +
+            "<script>setTimeout(function(){var e=document.getElementById('sem');if(e)e.scrollIntoView();},80)</script>"
     }
 
     // ------------------------------------------------------------------ هایلایت

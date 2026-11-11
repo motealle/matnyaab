@@ -92,6 +92,7 @@ class MainWindow(
         importOldWhooshIndexes()
         startBackgroundThreads()
         startBridge()
+        startSemantic()
         // کاربر تازه: بخش افزودن پوشه باز شود تا قدم اول روشن باشد
         if (indexer.allObjects.isEmpty()) accordions.getOrNull(1)?.expand()
         if (System.getProperty("matnyaab.shots") != null) subs.declareLocal(subs.config.plans.last())
@@ -322,7 +323,12 @@ class MainWindow(
             prefWidth = 62.0; isVisible = false
             setCellValueFactory { SimpleObjectProperty(it.value.matches) }
             setCellFactory { object : TableCell<SearchHit, Int>() {
-                override fun updateItem(v: Int?, empty: Boolean) { super.updateItem(v, empty); text = if (empty || v == null || v < 0) "" else PersianUtil.toPersianNumbers(v) }
+                override fun updateItem(v: Int?, empty: Boolean) {
+                    super.updateItem(v, empty)
+                    val h = tableRow?.item
+                    text = if (empty || v == null || v < 0) "" else if (v == 0 && h != null && h.semantic >= 0) "مفهومی" else PersianUtil.toPersianNumbers(v)
+                    style = if (text == "مفهومی") "-fx-text-fill: -mx-accent-text; -fx-font-size: 11px;" else ""
+                }
             } }
         }
         cCover = TableColumn<SearchHit, Int>("عبارت‌ها").apply {
@@ -373,6 +379,7 @@ class MainWindow(
         }
         return VBox(6.0,
             btn("تنظیمات و پوستهٔ رنگی") { SettingsDialog(stage, settings).show() },
+            btn("جست‌وجوی معنایی (اختیاری)") { openSemantic() },
             btn("راهنمای برنامه") { preview.showHelp() },
             Button("★  اشتراک و تمدید").apply {
                 style = Theme.addButton(); prefHeight = Constants.OPTION_BUTTONS_HEIGHT; maxWidth = Double.MAX_VALUE
@@ -546,8 +553,14 @@ class MainWindow(
             f.lastModified() / 1000.0 > hit.time -> "فایل تغییر کرده است"
             else -> null
         }
-        val (html, count) = indexer.highlightLastQuery(hit.content)
+        val (html, count) = if (hit.matches == 0 && hit.chunkStart >= 0) indexer.highlightRange(hit.content, hit.chunkStart, hit.chunkEnd) to 0
+            else indexer.highlightLastQuery(hit.content)
         preview.showContent(html, count, error)
+        if (hit.matches == 0 && hit.chunkStart >= 0) {
+            preview.setSummary("نتیجهٔ مفهومی: واژه‌های جست‌وجو در این سند نیامده‌اند، ولی این بخش از نظر معنا نزدیک است (شباهت " +
+                PersianUtil.toPersianNumbers((hit.semantic * 100).toInt()) + "٪).")
+            return
+        }
         val engine = indexer.lastEngine
         preview.setSummary(if (specMode != null && engine != null && hit.perPhrase.size > 1)
             "این فایل: " + PersianUtil.toPersianNumbers(hit.perPhrase.count { it > 0 }) + " از " + PersianUtil.toPersianNumbers(hit.perPhrase.size) + " — " +
@@ -598,6 +611,19 @@ class MainWindow(
     }
 
     /** معادل loadExistingdIndexers: خواندن همه پوشه‌های فهرست از روی fileInfo.json */
+    private fun openSemantic() {
+        SemanticDialog(stage, settings, { indexer.allObjects.toList() }) { searchPanel.refreshSemantic() }.show()
+        searchPanel.refreshSemantic()
+    }
+
+    /** راه‌اندازی/همگام‌سازی پس‌زمینهٔ بردارها (فقط اگر کاربر جست‌وجوی معنایی را روشن کرده باشد) */
+    private fun startSemantic() {
+        if (System.getProperty("matnyaab.shots") == "1") return
+        ir.matnyaab.core.semantic.SemanticService.listener = { Platform.runLater { searchPanel.refreshSemantic() } }
+        ir.matnyaab.core.semantic.SemanticService.start(settings) { indexer.allObjects.toList() }
+        searchPanel.refreshSemantic()
+    }
+
     private fun loadExistingIndexers() {
         indexer.allObjects.clear()
         val root = Constants.INDEX_DIR
@@ -617,6 +643,7 @@ class MainWindow(
         }
         scopeTree.reload()
         refreshIndexStatus()
+        ir.matnyaab.core.semantic.SemanticService.start(settings) { indexer.allObjects.toList() }
     }
 
     /**

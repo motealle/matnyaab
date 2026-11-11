@@ -25,6 +25,10 @@ data class SearchHit(
     /** تراکم: تعداد موارد در هر هزار واژه */
     val density: Double = 0.0,
     val words: Int = 0,
+    /** شباهت معنایی ۰ تا ۱ (‎-1 = بدون جست‌وجوی معنایی) و بازهٔ بهترین تکه */
+    val semantic: Double = -1.0,
+    val chunkStart: Int = -1,
+    val chunkEnd: Int = -1,
 )
 
 /** اطلاعات فایل در file_list.txt */

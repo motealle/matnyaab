@@ -21,9 +21,9 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  KOTLIN_VERSION: "2.4"
-  KOTLIN_FILE: "Matnyaab-2.4-win-x64-portable.zip"
-  SETUP_FILE: "Matnyaab-Setup-2.4.exe"
+  KOTLIN_VERSION: "2.5"
+  KOTLIN_FILE: "Matnyaab-2.5-win-x64-portable.zip"
+  SETUP_FILE: "Matnyaab-Setup-2.5.exe"
   APP_NAME: "Matnyaab"
   SITE_URL: "https://www.matnyaab.ir"
 
@@ -90,7 +90,7 @@ jobs:
           if ($LASTEXITCODE -ne 0 -or $mods -notmatch "java.base") {
             $mods = "java.base,java.desktop,java.xml,java.sql,java.naming,java.management,java.logging,java.prefs,java.datatransfer,java.security.jgss,java.instrument,java.compiler"
           }
-          $extra = "jdk.crypto.ec,jdk.localedata,jdk.charsets,jdk.zipfs,jdk.unsupported,jdk.jsobject,java.scripting,jdk.xml.dom,java.net.http,jdk.httpserver,jdk.management,java.security.sasl"
+          $extra = "jdk.crypto.ec,jdk.localedata,jdk.charsets,jdk.zipfs,jdk.unsupported,jdk.jsobject,java.scripting,jdk.xml.dom,java.net.http,jdk.httpserver,java.logging,jdk.management,java.security.sasl"
           Write-Host "Runtime modules: $mods,$extra"
           $runtime = Join-Path $PWD "runtime"
           & jlink --add-modules "$mods,$extra" --strip-debug --no-header-files --no-man-pages --compress=2 --include-locales=en,fa --output $runtime
