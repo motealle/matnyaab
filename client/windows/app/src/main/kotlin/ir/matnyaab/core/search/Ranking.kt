@@ -71,7 +71,8 @@ object Ranking {
     fun hybrid(lexical: List<SearchHit>, semantic: List<ir.matnyaab.core.semantic.SemanticHit>, fetch: (String) -> SearchHit?): List<SearchHit> {
         if (semantic.isEmpty()) return lexical
         val top = semantic.first().similarity
-        val sem = semantic.filter { it.similarity >= maxOf(0.72, top - 0.10) }.take(150)
+        // آستانه بر پایهٔ سنجش واقعی روی جمله‌های فارسی در CI: هم‌معنا ≈ ۰٫۸۳–۰٫۸۶، نامرتبط ≈ ۰٫۷۷–۰٫۸۱
+        val sem = semantic.filter { it.similarity >= maxOf(0.80, top - 0.035) }.take(100)
         val semRank = sem.withIndex().associate { it.value.path to it.index }
         val semBy = sem.associateBy { it.path }
         val lexRank = lexical.withIndex().associate { it.value.path to it.index }
