@@ -72,13 +72,6 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          # ثبت لاگ بارگذاری اسمبلی‌ها (Fusion) برای عیب‌یابی دقیق
-          New-Item -ItemType Directory -Force -Path C:\fuslog | Out-Null
-          foreach ($v in @("HKLM:\SOFTWARE\Microsoft\Fusion", "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Fusion")) {
-            New-Item -Path $v -Force | Out-Null
-            Set-ItemProperty $v -Name EnableLog -Value 1 -Type DWord; Set-ItemProperty $v -Name ForceLog -Value 1 -Type DWord; Set-ItemProperty $v -Name LogFailures -Value 1 -Type DWord
-            Set-ItemProperty $v -Name LogPath -Value "C:\fuslog\" -Type String
-          }
           $p = Start-Process ".\$env:SETUP_FILE" -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART" -PassThru -Wait
           if ($p.ExitCode -ne 0) { throw "silent install failed: $($p.ExitCode)" }
           $dll = Join-Path $env:LOCALAPPDATA "Matnyaab\WordAddin\$env:ADDIN_VERSION\MatnyaabWord.dll"
@@ -86,12 +79,8 @@ jobs:
           if ((Get-ChildItem (Join-Path (Split-Path $dll) "Fonts") -Filter *.ttf).Count -lt 2) { throw "fonts not installed" }
           $lb = (Get-ItemProperty "HKCU:\Software\Microsoft\Office\Word\Addins\Matnyaab.Word.Connect").LoadBehavior
           if ($lb -ne 3) { throw "LoadBehavior is $lb" }
-          # عیب‌یابی: مقادیر ثبت‌شده
-          foreach ($v in @("CLSID", "Wow6432Node\CLSID")) {
-            $k = "Registry::HKEY_CURRENT_USER\Software\Classes\$v\{3B1E5F7A-8C2D-4E6B-A9F0-5D7C1B2E4A61}\InprocServer32"
-            if (Test-Path $k) { Write-Host "[$v]"; Get-ItemProperty $k | Format-List | Out-String | Write-Host }
-          }
-          # کلاینت بومی COM (مثل خود آفیس): VBScript در ۶۴ و ۳۲ بیتی
+          # کلاینت بومی COM (مثل خود آفیس): VBScript در ۶۴ و ۳۲ بیتی. اجراکنندهٔ CI مدیر با UAC خاموش است؛
+          # یعنی سخت‌ترین حالت (لایهٔ COM داتنت فقط ثبت سیستمی را می‌خواند) آزموده می‌شود.
           $vbs = @'
           Set o = CreateObject("Matnyaab.Word.Connect")
           x = o.GetCustomUI("Microsoft.Word.Document")
@@ -100,54 +89,10 @@ jobs:
           WScript.Echo "COM_OK"
           '@
           Set-Content -Path probe.vbs -Value $vbs -Encoding ASCII
-          # ورد معمولاً بدون دسترسی مدیر اجرا می‌شود؛ ویندوز ثبت‌های COM کاربر (HKCU) را در فرایندهای Elevated نادیده می‌گیرد.
-          # پس آزمون با توکن «کاربر عادی» (runas /trustlevel) اجرا می‌شود — دقیقاً مثل ورد.
-          $i = 0
           foreach ($cs in @("$env:WINDIR\System32\cscript.exe", "$env:WINDIR\SysWOW64\cscript.exe")) {
-            $i++
-            $outFile = Join-Path $PWD "com-$i.txt"
-            if (Test-Path $outFile) { Remove-Item $outFile }
-            $cmd = "cmd /c `"`"$cs`" //nologo `"$PWD\probe.vbs`" > `"$outFile`" 2>&1`""
-            & runas /trustlevel:0x20000 $cmd | Out-Null
-            for ($t = 0; $t -lt 60 -and -not ((Test-Path $outFile) -and ((Get-Content $outFile -Raw) -match "COM_OK|rror|\(")); $t++) { Start-Sleep -Milliseconds 500 }
-            $out = if (Test-Path $outFile) { Get-Content $outFile -Raw } else { "(no output)" }
-            Write-Host "$cs (standard user) -> $out"
-            if ($out -notmatch "COM_OK") { $fail = $true }
-          }
-          if ($fail) {
-            Write-Host "---- diagnostics ----"
-            & reg query "HKCR\CLSID\{3B1E5F7A-8C2D-4E6B-A9F0-5D7C1B2E4A61}\InprocServer32" 2>&1 | Write-Host
-            & reg query "HKCU\Software\Classes\Matnyaab.Word.Connect\CLSID" 2>&1 | Write-Host
-            $ps5 = @'
-          try { $o = New-Object -ComObject Matnyaab.Word.Connect; "PS5_OK" } catch { "PS5: " + $_.Exception.ToString(); $e = $_.Exception; while ($e) { if ($e.PSObject.Properties["FusionLog"]) { "FUSION: " + $e.FusionLog }; $e = $e.InnerException } }
-          try { $a = [Reflection.Assembly]::LoadFrom($env:ADDIN_DLL); $c = $a.CreateInstance("Matnyaab.Word.Com.Connect"); "PS5_LOADFROM_OK " + ($c -ne $null) } catch { "PS5_LOADFROM: " + $_.Exception.ToString() }
-          '@
-            Set-Content -Path ps5.ps1 -Value $ps5 -Encoding UTF8
-            $env:ADDIN_DLL = $dll
-            & "$env:WINDIR\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -STA -ExecutionPolicy Bypass -File ps5.ps1 2>&1 | Write-Host
-            New-Item -ItemType Directory -Force C:\addin | Out-Null; Copy-Item $dll C:\addin\
-            & "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\RegAsm.exe" C:\addin\MatnyaabWord.dll /codebase /silent 2>&1 | Write-Host
-            $o2 = & "$env:WINDIR\System32\cscript.exe" //nologo probe.vbs 2>&1 | Out-String
-            Write-Host "after regasm C:\addin (HKLM, elevated) -> $o2"
-            # Process Monitor: دقیقاً چه فایل/کلیدی پیدا نمی‌شود
-            Invoke-WebRequest https://download.sysinternals.com/files/ProcessMonitor.zip -OutFile pm.zip; Expand-Archive pm.zip pm -Force
-            Start-Process pm\Procmon64.exe -ArgumentList "/AcceptEula","/Quiet","/Minimized","/BackingFile","$PWD\trace.pml"
-            Start-Sleep 8
-            & "$env:WINDIR\System32\cscript.exe" //nologo probe.vbs 2>&1 | Out-Null
-            Start-Sleep 2
-            & pm\Procmon64.exe /Terminate; Start-Sleep 5
-            & pm\Procmon64.exe /AcceptEula /OpenLog "$PWD\trace.pml" /SaveAs "$PWD\trace.csv"; Start-Sleep 10
-            $rows = Import-Csv trace.csv | Where-Object { $_."Process Name" -eq "cscript.exe" }
-            $rows | Where-Object { $_.Operation -eq "Load Image" } | ForEach-Object { Write-Host ("IMG: " + $_.Path) }
-            $start = ($rows | Select-Object -Index 0); $on = $false
-            foreach ($r in $rows) { if ($r.Path -match "mscoree.dll.local") { $on = $true }; if ($on -and ($r.Path -match "3B1E|NETFramework|Matnyaab|clr\.dll|mscorlib|Server")) { Write-Host ("SEQ: " + $r.Operation + " | " + $r.Result + " | " + $r.Path + " | " + $r.Detail) } }
-            Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\.NETFramework" -Name AlwaysReadHKCRForCLSIDs -Value 1 -Type DWord
-            $o3 = & "$env:WINDIR\System32\cscript.exe" //nologo probe.vbs 2>&1 | Out-String
-            Write-Host "with AlwaysReadHKCRForCLSIDs=1 -> $o3"
-            Get-ChildItem (Join-Path $env:LOCALAPPDATA "Matnyaab") -Recurse -ErrorAction SilentlyContinue | Select-Object -First 20 | Format-Table FullName | Out-String | Write-Host
-            if (Test-Path (Join-Path $env:LOCALAPPDATA "Matnyaab\word-addin.log")) { Get-Content (Join-Path $env:LOCALAPPDATA "Matnyaab\word-addin.log") | Write-Host }
-            Get-ChildItem C:\fuslog -Recurse -Filter *.htm | Select-Object -First 6 | ForEach-Object { Write-Host "== $($_.FullName)"; (Get-Content $_.FullName -Raw) -replace '<[^>]+>','' | Write-Host }
-            throw "native COM activation failed"
+            $out = & $cs //nologo probe.vbs 2>&1 | Out-String
+            Write-Host "$cs -> $out"
+            if ($out -notmatch "COM_OK") { throw "COM activation failed in $cs" }
           }
           # نصب دوباره (به‌روزرسانی) نباید خطا بدهد
           $p = Start-Process ".\$env:SETUP_FILE" -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART" -PassThru -Wait
@@ -157,6 +102,7 @@ jobs:
           if ($p.ExitCode -ne 0) { throw "uninstall failed" }
           if (Test-Path "HKCU:\Software\Microsoft\Office\Word\Addins\Matnyaab.Word.Connect") { throw "addin key left after uninstall" }
           if (Test-Path "Registry::HKEY_CURRENT_USER\Software\Classes\CLSID\{3B1E5F7A-8C2D-4E6B-A9F0-5D7C1B2E4A61}") { throw "CLSID left after uninstall" }
+          if (Test-Path "Registry::HKEY_LOCAL_MACHINE\Software\Classes\CLSID\{3B1E5F7A-8C2D-4E6B-A9F0-5D7C1B2E4A61}") { throw "machine CLSID left after uninstall" }
           Write-Host "Install / COM / uninstall test passed."
 
       - name: Checksum
