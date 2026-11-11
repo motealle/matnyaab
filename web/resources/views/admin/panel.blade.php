@@ -14,6 +14,7 @@
         'client_messages_enabled' => 'پیام‌های مدیر در برنامه نمایش داده شود',
         'announcement_enabled' => 'نوار اطلاعیه بالای صفحهٔ اصلی نمایش داده شود',
         'org_enabled' => 'اشتراک سازمانی (چند کاربر با کد گروهی) فعال باشد',
+        'word_addin' => 'بخش «متن‌یاب برای ورد» در صفحهٔ اصلی نمایش داده شود',
     ];
     $targets = ['all' => 'همهٔ کاربران برنامه', 'expiring' => 'نزدیک موعد تمدید', 'expired' => 'اشتراک پایان‌یافته', 'trial' => 'در حال مهمانی سه‌روزه', 'no_code' => 'بدون کد اشتراک'];
 @endphp
@@ -253,6 +254,23 @@
                         <label class="field"><span class="field-label">مدت (روز)</span><input class="input" name="plans[{{ $i }}][days]" inputmode="numeric" value="{{ $p['days'] }}"></label>
                         <label class="field"><span class="field-label">قیمت</span><input class="input" name="plans[{{ $i }}][price]" inputmode="numeric" value="{{ $p['price'] }}"></label>
                         <label class="switch" style="border:0;padding:0 0 10px"><input type="checkbox" name="plans[{{ $i }}][enabled]" value="1" @checked($p['enabled'])> فعال</label>
+                    </div>
+                @endforeach
+            </section>
+            <section class="card"><h2>سرویس‌های هوش مصنوعی (افزونهٔ ورد)</h2>
+                <p class="muted">فهرست پیشنهادی که کاربران در تنظیمات افزونه می‌بینند. کلید API را هر کاربر خودش وارد می‌کند و روی رایانهٔ خودش رمزنگاری می‌شود؛ اینجا هیچ کلیدی ذخیره نمی‌شود. مدل‌ها را با ویرگول جدا کنید.</p>
+                @foreach (range(0, 7) as $i)
+                    @php $a = $settings['ai_catalog'][$i] ?? ['id' => '', 'title' => '', 'kind' => 'openai', 'base_url' => '', 'models' => '', 'hint' => '', 'enabled' => true]; @endphp
+                    <div class="row" style="margin-bottom:10px;align-items:end">
+                        <input type="hidden" name="ai[{{ $i }}][id]" value="{{ $a['id'] }}">
+                        <label class="field"><span class="field-label">نام سرویس</span><input class="input" name="ai[{{ $i }}][title]" value="{{ $a['title'] }}"></label>
+                        <label class="field"><span class="field-label">نوع API</span><select class="input" name="ai[{{ $i }}][kind]">
+                            @foreach (['openai' => 'سازگار با OpenAI', 'anthropic' => 'Anthropic', 'gemini' => 'Gemini'] as $kk => $kl)<option value="{{ $kk }}" @selected(($a['kind'] ?? '') === $kk)>{{ $kl }}</option>@endforeach
+                        </select></label>
+                        <label class="field"><span class="field-label">نشانی پایه</span><input class="input" dir="ltr" name="ai[{{ $i }}][base_url]" value="{{ $a['base_url'] }}"></label>
+                        <label class="field"><span class="field-label">مدل‌ها</span><input class="input" dir="ltr" name="ai[{{ $i }}][models]" value="{{ $a['models'] }}"></label>
+                        <label class="field"><span class="field-label">راهنما</span><input class="input" name="ai[{{ $i }}][hint]" value="{{ $a['hint'] ?? '' }}"></label>
+                        <label class="switch" style="border:0;padding:0 0 10px"><input type="checkbox" name="ai[{{ $i }}][enabled]" value="1" @checked($a['enabled'] ?? true)> فعال</label>
                     </div>
                 @endforeach
             </section>

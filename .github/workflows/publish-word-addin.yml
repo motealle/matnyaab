@@ -79,22 +79,30 @@ jobs:
           if ((Get-ChildItem (Join-Path (Split-Path $dll) "Fonts") -Filter *.ttf).Count -lt 2) { throw "fonts not installed" }
           $lb = (Get-ItemProperty "HKCU:\Software\Microsoft\Office\Word\Addins\Matnyaab.Word.Connect").LoadBehavior
           if ($lb -ne 3) { throw "LoadBehavior is $lb" }
-          $probe = @'
-          $ErrorActionPreference = "Stop"
-          $o = New-Object -ComObject Matnyaab.Word.Connect
-          $x = [xml]$o.GetCustomUI("Microsoft.Word.Document")
-          if ($x.customUI.ribbon.tabs.tab.id -ne "tabMatnyaab") { throw "ribbon xml" }
-          $pane = New-Object -ComObject Matnyaab.Word.Pane
-          if ($pane -eq $null) { throw "pane" }
-          "COM_OK " + [IntPtr]::Size
+          # عیب‌یابی: مقادیر ثبت‌شده
+          foreach ($v in @("CLSID", "Wow6432Node\CLSID")) {
+            $k = "Registry::HKEY_CURRENT_USER\Software\Classes\$v\{3B1E5F7A-8C2D-4E6B-A9F0-5D7C1B2E4A61}\InprocServer32"
+            if (Test-Path $k) { Write-Host "[$v]"; Get-ItemProperty $k | Format-List | Out-String | Write-Host }
+          }
+          # کلاینت بومی COM (مثل خود آفیس): VBScript در ۶۴ و ۳۲ بیتی
+          $vbs = @'
+          Set o = CreateObject("Matnyaab.Word.Connect")
+          x = o.GetCustomUI("Microsoft.Word.Document")
+          If InStr(x, "tabMatnyaab") = 0 Then WScript.Quit 3
+          Set p = CreateObject("Matnyaab.Word.Pane")
+          WScript.Echo "COM_OK"
           '@
-          Set-Content -Path probe.ps1 -Value $probe -Encoding UTF8
-          $r64 = & "$env:WINDIR\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -STA -ExecutionPolicy Bypass -File probe.ps1 2>&1 | Out-String
-          Write-Host $r64
-          if ($r64 -notmatch "COM_OK 8") { throw "64-bit COM activation failed" }
-          $r32 = & "$env:WINDIR\SysWOW64\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -STA -ExecutionPolicy Bypass -File probe.ps1 2>&1 | Out-String
-          Write-Host $r32
-          if ($r32 -notmatch "COM_OK 4") { throw "32-bit COM activation failed" }
+          Set-Content -Path probe.vbs -Value $vbs -Encoding ASCII
+          foreach ($cs in @("$env:WINDIR\System32\cscript.exe", "$env:WINDIR\SysWOW64\cscript.exe")) {
+            $out = & $cs //nologo probe.vbs 2>&1 | Out-String
+            Write-Host "$cs -> $out"
+            if ($out -notmatch "COM_OK") { $fail = $true }
+          }
+          if ($fail) {
+            Get-ChildItem (Join-Path $env:LOCALAPPDATA "Matnyaab") -Recurse -ErrorAction SilentlyContinue | Select-Object -First 20 | Format-Table FullName | Out-String | Write-Host
+            if (Test-Path (Join-Path $env:LOCALAPPDATA "Matnyaab\word-addin.log")) { Get-Content (Join-Path $env:LOCALAPPDATA "Matnyaab\word-addin.log") | Write-Host }
+            throw "native COM activation failed"
+          }
           # نصب دوباره (به‌روزرسانی) نباید خطا بدهد
           $p = Start-Process ".\$env:SETUP_FILE" -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART" -PassThru -Wait
           if ($p.ExitCode -ne 0) { throw "re-install failed" }

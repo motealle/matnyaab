@@ -26,6 +26,15 @@ final class SiteSettings
                 'client_messages_enabled' => true,
                 'announcement_enabled' => false,
                 'org_enabled' => true,
+                'word_addin' => true,
+            ],
+            // کاتالوگ پیشنهادی سرویس‌های هوش مصنوعی برای افزونهٔ ورد (کلیدها نزد خود کاربران است)
+            'ai_catalog' => [
+                ['id' => 'openai', 'title' => 'OpenAI', 'kind' => 'openai', 'base_url' => 'https://api.openai.com/v1', 'models' => 'gpt-4o-mini, gpt-4o', 'hint' => '', 'enabled' => true],
+                ['id' => 'anthropic', 'title' => 'Anthropic Claude', 'kind' => 'anthropic', 'base_url' => 'https://api.anthropic.com/v1', 'models' => 'claude-sonnet-4-5, claude-haiku-4-5', 'hint' => '', 'enabled' => true],
+                ['id' => 'gemini', 'title' => 'Google Gemini', 'kind' => 'gemini', 'base_url' => 'https://generativelanguage.googleapis.com/v1beta', 'models' => 'gemini-2.0-flash, gemini-1.5-pro', 'hint' => '', 'enabled' => true],
+                ['id' => 'openrouter', 'title' => 'OpenRouter', 'kind' => 'openai', 'base_url' => 'https://openrouter.ai/api/v1', 'models' => 'openai/gpt-4o-mini', 'hint' => '', 'enabled' => true],
+                ['id' => 'custom', 'title' => 'سرویس سازگار با OpenAI (دلخواه)', 'kind' => 'openai', 'base_url' => '', 'models' => '', 'hint' => 'نشانی پایهٔ API را وارد کنید؛ مثلاً درگاه‌های داخلی یا Ollama محلی (http://localhost:11434/v1)', 'enabled' => true],
             ],
             'numbers' => [
                 'trial_days' => 3,
@@ -61,7 +70,7 @@ final class SiteSettings
         if (str_contains((string) $d['texts']['trust_note'], 'وجدان')) {
             $d['texts']['trust_note'] = self::defaults()['texts']['trust_note'];
         }
-        foreach (['cards', 'plans'] as $k) {
+        foreach (['cards', 'plans', 'ai_catalog'] as $k) {
             if (! empty($s[$k]) && is_array($s[$k])) {
                 $d[$k] = array_values($s[$k]);
             }

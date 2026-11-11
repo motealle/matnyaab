@@ -122,6 +122,17 @@
         .type-caret{animation:none}.real-shot:after{animation:none}.hero-copy,.hero-actions,.hero-meta,.product-stage,.type-line{opacity:1;transform:none;animation:none}
     }
 
+    /* ===== افزونهٔ ورد ===== */
+    .word-wrap{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:28px;align-items:start}
+    .word-features{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .word-gallery{display:grid;gap:12px;justify-items:center}
+    .pane-frame{margin:0;width:100%;max-width:380px;border-radius:18px;overflow:hidden;border:1px solid var(--line-strong);box-shadow:0 24px 60px rgba(15,40,80,.18);background:var(--surface-2)}
+    .pane-frame img{display:block;width:100%;height:auto}
+    .word-download{margin-top:28px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:center;padding:22px 24px;border-radius:18px;border:1px solid var(--line);background:var(--soft-card)}
+    .word-download h3{margin:0 0 6px;font-size:17px}.word-download p{margin:0;color:var(--muted);font-size:13px;line-height:1.95}
+    @media(max-width:999px){.word-wrap{grid-template-columns:1fr}.word-gallery{order:-1}}
+    @media(max-width:639px){.word-features{grid-template-columns:1fr}.word-download{grid-template-columns:1fr}}
+
     /* ===== سیستم چیدمان یکپارچه: یک عرض محتوا، ستون‌های صریح، بدون ردیف یتیم ===== */
     :root{--max:1180px}
     @media(min-width:1800px){:root{--max:1360px}.section{padding:96px 0}}
@@ -153,17 +164,17 @@
 <section class="section" id="whats-new">
     <div class="container">
         <div class="whats-new">
-            <span class="new-badge">تازه منتشر شد</span>
-            <h2>متن‌یاب ۲؛ کامل‌تر، سبک‌تر و زیباتر از همیشه</h2>
-            <p class="lead">نسخهٔ تازهٔ متن‌یاب با نصب‌کنندهٔ ویندوزی و همهٔ امکانات، بدون قفل و سقف حجمی در دسترس است. ظاهر برنامه از نو طراحی شده، افزودن پوشه ساده‌تر شده و برای مطالعه‌های طولانی، پوسته‌های رنگی متنوعی به آن افزوده شده است.</p>
+            <span class="new-badge">تازه: نسخهٔ ۲٫۳ + افزونهٔ ورد</span>
+            <h2>جست‌وجوی دقیق‌تر از همیشه؛ و حالا درون ورد</h2>
+            <p class="lead">متن‌یاب ۲٫۳ با پیشنهادهای پژوهشگران ساخته شد: عبارت دقیق، چند عبارت در یک اجرا، جست‌وجوی منطقی و فاصله‌دار، و کنترل کامل روی فاصله، نیم‌فاصله و علائم نگارشی. در کنارش «متن‌یاب برای ورد» آمده تا نتیجه‌ها را با منبع، مستقیم در نوشته‌تان بنشانید.</p>
 
             <div class="new-grid">
-                <div class="new-item"><h3>اشتراک اعتمادمحور</h3><p>بدون سریال و سقف حجمی؛ پلن را خودتان اعلام می‌کنید و روزشمار برنامه موعد تمدید را به شما یادآوری می‌کند.</p></div>
-                <div class="new-item"><h3>پنج پوستهٔ رنگی</h3><p>آبی، زمردی، یاسی، «کاغذی» برای مطالعهٔ طولانی و «شب» برای کار در تاریکی؛ با یک کلیک.</p></div>
-                <div class="new-item"><h3>افزودن پوشه در چند ثانیه</h3><p>نوع اسناد را با چند گزینهٔ ساده انتخاب کنید؛ پیشرفت کار و زمان تقریبی باقیمانده را ببینید.</p></div>
-                <div class="new-item"><h3>کتابخانه‌ای مرتب</h3><p>هر مجموعه با تعداد فایل‌ها و حجم آن نمایش داده می‌شود؛ زیرپوشه‌ها جمع‌وجور و قابل گسترش‌اند.</p></div>
-                <div class="new-item"><h3>خوانایی بیشتر</h3><p>قلم بزرگ‌تر، دکمه‌های واضح‌تر، نماد تازه و پیش‌نمایشی که واژه‌های جست‌وجوشده را برجسته می‌کند.</p></div>
-                <div class="new-item"><h3>میان‌برهای سریع</h3><p><kbd>Ctrl</kbd>+<kbd>F</kbd> برای جست‌وجو و <kbd>Ctrl</kbd>+<kbd>O</kbd> برای افزودن پوشه، به‌همراه راهنمای کامل فارسی.</p></div>
+                <div class="new-item"><h3>واژه و عبارت، با شمارش دقیق</h3><p>«نفس» یا «تهذیب نفس» را جست‌وجو کنید و ببینید هر فایل چند بار آن را دارد؛ «جهاد، نفس» و «جهاد (نفس)» هم پیدا می‌شوند.</p></div>
+                <div class="new-item"><h3>چند عبارت در یک اجرا</h3><p>هر سطر یک عبارت؛ برای هر فایل می‌بینید «۳ از ۵ عبارت» و تعداد هر کدام. خروجی اکسل هم ستون جدا برای هر عبارت دارد.</p></div>
+                <div class="new-item"><h3>جست‌وجوی منطقی و فاصله‌دار</h3><p><code dir="ltr">(جهاد OR مبارزه) AND نفس NOT نظامی</code> و <code dir="ltr">جهاد NEAR/5 نفس</code> برای واژه‌هایی که تا ۵ واژه از هم فاصله دارند.</p></div>
+                <div class="new-item"><h3>فاصله و نیم‌فاصله به انتخاب شما</h3><p>فاصله‌گذاری دقیق، نادیده‌گرفتن فاصلهٔ اضافه، یا یکسان‌سازی فاصله و نیم‌فاصله؛ به‌همراه یکسان‌سازی ی/ک عربی و اِعراب.</p></div>
+                <div class="new-item"><h3>جست‌وجوی دقیق و بخشی از واژه</h3><p>«مبارزه با نفس» فقط به همان شکل؛ یا «مجاهد» که مجاهدت و مجاهدین را هم بیابد.</p></div>
+                <div class="new-item"><h3>متن‌یاب برای ورد</h3><p>جست‌وجو، درج با ارجاع APA و کامنت منبع، پانویس، سرفصل، قالب پایان‌نامه و دستیار هوشمند؛ <a href="#word">بیشتر ببینید</a>.</p></div>
             </div>
 
             <div class="gallery" data-gallery>
@@ -194,6 +205,10 @@
     </div>
 </section>
 
+@if ($settings['flags']['word_addin'] ?? true)
+@include('partials.word-addin')
+@endif
+
 <section class="section" id="features">
     <div class="container">
         <div class="section-head">
@@ -203,7 +218,7 @@
         <div class="feature-grid">
             <article class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></div><h3>نتایج مرتبط، زودتر در دسترس</h3><p>نتایج بر پایهٔ میزان ارتباط مرتب می‌شوند و تعداد موارد یافت‌شده در هر سند نمایش داده می‌شود.</p></article>
             <article class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/></svg></div><h3>فرمت‌های متنوع</h3><p>Word، PDF، پاورپوینت، اکسل، OneNote، RTF، ODT، EPUB، HTML و متن ساده.</p></article>
-            <article class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h10M4 19h7"/><circle cx="18" cy="17" r="3"/></svg></div><h3>جست‌وجوی پیشرفته</h3><p>«همهٔ این کلمات»، «هر یک از کلمات»، «بدون این کلمات» و فاصلهٔ مجاز میان واژه‌ها؛ با جست‌وجوی دقیق یا بخشی از واژه.</p></article>
+            <article class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h10M4 19h7"/><circle cx="18" cy="17" r="3"/></svg></div><h3>جست‌وجوی پیشرفته</h3><p>عبارت دقیق، چند عبارت هم‌زمان، AND / OR / NOT با پرانتز، NEAR برای واژه‌های نزدیک به هم و کنترل فاصله، نیم‌فاصله و علائم.</p></article>
             <article class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M4 7h6l2 2h8v10H4z"/><path d="M4 7V5h6l2 2"/></svg></div><h3>برای پژوهش و آرشیوهای شخصی</h3><p>برای کتابخانه‌های شخصی، پرونده‌های پژوهشی، جزوه‌ها و مجموعه‌هایی که پیدا کردن مطلب در آن‌ها زمان‌بر شده است.</p></article>
             <article class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></div><h3>بسته‌های محتوایی</h3><p>مجموعه‌های محتوایی آماده را از داخل برنامه دریافت کنید و در کنار فایل‌های خودتان جست‌وجو کنید.</p></article>
             <article class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div><h3>فایل‌ها نزد خودتان می‌مانند</h3><p>فهرست‌گیری و جست‌وجو کاملاً روی رایانهٔ شما انجام می‌شود؛ هیچ سندی به جایی ارسال نمی‌شود.</p></article>
@@ -234,14 +249,14 @@
 
             <div class="download-main">
                 <article class="release-card">
-                    <div><span class="new-badge">نسخهٔ ۲٫۰</span><h3 style="margin-top:10px">متن‌یاب ۲ برای ویندوز</h3></div>
+                    <div><span class="new-badge">نسخهٔ ۲٫۳</span><h3 style="margin-top:10px">متن‌یاب ۲ برای ویندوز</h3></div>
                     <p data-release-content="kotlin">نصب‌کننده را اجرا کنید؛ میان‌بر متن‌یاب روی میز کار و منوی شروع ساخته می‌شود.</p>
                     <div class="release-meta">
                         <span><strong>نوع فایل:</strong> <span data-release-delivery="kotlin">نصب‌کنندهٔ ویندوز ۱۰ و ۱۱ (۶۴ بیتی)</span></span>
                         <span><strong>اندازه:</strong> <span data-release-size="kotlin">در حال دریافت اطلاعات…</span></span>
                     </div>
-                    <a class="btn btn-primary" data-release-link="kotlin" href="/downloadFiles/Matnyaab-Setup-2.2.exe">دانلود نصب‌کنندهٔ متن‌یاب ۲ <span aria-hidden="true">↓</span></a>
-                    <small class="muted" style="color:var(--muted-2)">نسخهٔ بدون نصب: <a data-release-portable href="/downloadFiles/Matnyaab-2.2-win-x64-portable.zip" style="color:var(--accent-soft)">فایل ZIP</a></small>
+                    <a class="btn btn-primary" data-release-link="kotlin" href="/downloadFiles/Matnyaab-Setup-2.3.exe">دانلود نصب‌کنندهٔ متن‌یاب ۲ <span aria-hidden="true">↓</span></a>
+                    <small class="muted" style="color:var(--muted-2)">نسخهٔ بدون نصب: <a data-release-portable href="/downloadFiles/Matnyaab-2.3-win-x64-portable.zip" style="color:var(--accent-soft)">فایل ZIP</a></small>
                 </article>
                 <div style="display:grid;gap:14px">
                     <ul class="req-list">
@@ -250,6 +265,12 @@
                         <li>بدون سریال؛ با کد اشتراک</li>
                         <li>فارسی و راست‌به‌چپ</li>
                     </ul>
+                    <div class="classic-card">
+                        <div>
+                            <strong style="color:var(--text)">متن‌یاب برای ورد</strong><br>
+                            جست‌وجو و درج با منبع، پانویس، سرفصل و قالب‌ها درون ورد: <a data-release-link="word" href="/downloadFiles/Matnyaab-Word-Setup-1.0.0.exe">دریافت افزونه</a> · <a href="#word">معرفی</a>
+                        </div>
+                    </div>
                     <div class="classic-card">
                         <img src="/static/sc1.png" alt="نمای نسخهٔ قدیمی متن‌یاب" loading="lazy" width="120" height="75">
                         <div>
@@ -314,6 +335,9 @@
                     if (delivery && kotlin.delivery) delivery.textContent = kotlin.delivery;
                     if (content && kotlin.content_summary) content.textContent = kotlin.content_summary;
                 }
+                const word = releases.word;
+                const wordLink = document.querySelector('[data-release-link="word"]');
+                if (word && wordLink && word.url) wordLink.href = word.url;
                 const classic = releases.classic;
                 const classicLink = document.querySelector('[data-release-link="classic"]');
                 if (classic && classicLink && classic.url) classicLink.href = classic.url;
@@ -321,8 +345,7 @@
             .catch(() => {});
 
         // گالری تب‌دار: کلیک و کلیدهای جهت
-        const gallery = document.querySelector('[data-gallery]');
-        if (gallery) {
+        document.querySelectorAll('[data-gallery]').forEach(gallery => {
             const tabs = [...gallery.querySelectorAll('[role="tab"]')];
             const select = tab => {
                 tabs.forEach(t => {
@@ -342,7 +365,7 @@
                     select(next); next.focus();
                 });
             });
-        }
+        });
 
         // کپی شماره کارت
         document.querySelectorAll('[data-copy-card]').forEach(btn => {
