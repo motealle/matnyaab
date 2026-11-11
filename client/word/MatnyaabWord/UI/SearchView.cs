@@ -85,7 +85,7 @@ namespace Matnyaab.Word.UI
         {
             if (query != null)
             {
-                if (query.Contains("\n")) { SetMode("phrases"); _inputMulti.Text = query; }
+                if (query.Contains("\n")) { SetMode("phrases"); _inputMulti.Text = query.Replace("\r", "").Replace("\n", "\r\n"); }
                 else { if (_mode == "phrases") SetMode("phrase"); _input.Text = query; }
             }
             var q = CurrentQuery();
@@ -122,7 +122,7 @@ namespace Matnyaab.Word.UI
         public void DemoShow(string query, Dictionary<string, object> res)
         {
             SetMode(query.Contains("\n") ? "phrases" : "phrase");
-            if (query.Contains("\n")) _inputMulti.Text = query; else _input.Text = query;
+            if (query.Contains("\n")) _inputMulti.Text = query.Replace("\r", "").Replace("\n", "\r\n"); else _input.Text = query;
             _offline.Visible = false;
             Show(res);
         }
@@ -173,8 +173,10 @@ namespace Matnyaab.Word.UI
         public ResultCard(Dictionary<string, object> r, List<string> phrases)
         {
             _r = r; _snips = r.List("snippets");
-            Add(new ThemedLabel { Text = r.Str("name"), Role = "title" });
-            var meta = r.Str("collection") + " · " + Fa.Num(r.Int("matches")) + " مورد";
+            var name = r.Str("name");
+            Add(new ThemedLabel { Text = System.IO.Path.GetFileNameWithoutExtension(name), Role = "title" });
+            var ext = System.IO.Path.GetExtension(name).TrimStart('.').ToUpperInvariant();
+            var meta = (ext.Length > 0 ? ext + " · " : "") + r.Str("collection") + " · " + Fa.Num(r.Int("matches")) + " مورد";
             if (phrases.Count > 1 && r.TryGetValue("perPhrase", out var pp) && pp is System.Collections.IEnumerable e)
             {
                 var counts = e.Cast<object>().Select(x => Convert.ToInt32(x)).ToList();
