@@ -21,9 +21,9 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  KOTLIN_VERSION: "2.3"
-  KOTLIN_FILE: "Matnyaab-2.3-win-x64-portable.zip"
-  SETUP_FILE: "Matnyaab-Setup-2.3.exe"
+  KOTLIN_VERSION: "2.4"
+  KOTLIN_FILE: "Matnyaab-2.4-win-x64-portable.zip"
+  SETUP_FILE: "Matnyaab-Setup-2.4.exe"
   APP_NAME: "Matnyaab"
   SITE_URL: "https://www.matnyaab.ir"
 

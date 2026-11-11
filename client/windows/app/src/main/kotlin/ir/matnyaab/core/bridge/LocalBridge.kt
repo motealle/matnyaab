@@ -189,7 +189,8 @@ class LocalBridge(
         val cols = indexer.allObjects.filter { wanted == null || it.indexName in wanted }
         // نمونهٔ مستقل از LuceneIndexer تا وضعیت جست‌وجوی برنامهٔ باز به‌هم نریزد
         val local = LuceneIndexer(settings)
-        val hits = local.searchSpec(spec, cols, emptySet())
+        val sort = runCatching { ir.matnyaab.core.search.SortMode.valueOf((r.str("sort") ?: "RELEVANCE").uppercase()) }.getOrDefault(ir.matnyaab.core.search.SortMode.RELEVANCE)
+        val hits = ir.matnyaab.core.search.Ranking.sort(local.searchSpec(spec, cols, emptySet()), sort)
         return mapOf(
             "ok" to true,
             "phrases" to (0 until engine.phraseCount).map { engine.phrase(it) },
@@ -197,6 +198,7 @@ class LocalBridge(
             "results" to hits.take(limit).map { h ->
                 mapOf("path" to h.path, "name" to h.name, "collection" to h.indexName, "matches" to h.matches,
                     "perPhrase" to h.perPhrase, "size" to h.size, "time" to h.time,
+                    "relevance" to h.relevance, "density" to h.density,
                     "snippets" to engine.snippets(h.content, max = r.get("snippets")?.asInt ?: 4, radius = 160).map {
                         mapOf("before" to it.before, "match" to it.match, "after" to it.after, "start" to it.start, "end" to it.end, "phrase" to it.phrase)
                     })

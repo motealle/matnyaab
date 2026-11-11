@@ -126,6 +126,25 @@ class MatchEngineTest {
         assertEquals(0, n(SearchSpec(listOf("خودسازی")), "سخنرانی دربارهٔ تزکیه نفس"))
     }
 
+    @Test fun rankingPrefersFocusedCoveredAndTitled() {
+        fun hit(name: String, text: String, t: Double = 0.0) = ir.matnyaab.core.SearchHit("c", "/$name", name, 10, 1, t, text)
+        val filler = (1..400).joinToString(" ") { "واژه" }
+        val e = MatchEngine(SearchSpec(listOf("تهذیب نفس", "جهاد اکبر"), Combine.ANY))
+        val items = listOf(
+            hit("long.txt", "تهذیب نفس $filler تهذیب نفس"),
+            hit("short.txt", "تهذیب نفس و باز تهذیب نفس"),
+            hit("both.txt", "تهذیب نفس و جهاد اکبر"),
+            hit("تهذیب نفس.txt", "تهذیب نفس و تهذیب نفس"),
+        ).map { Ranking.Scored(it, e.evaluate(it.content)) }
+        val r = Ranking.rank(items, 100, e).map { it.name }
+        assertEquals("long.txt", r.last())
+        assertTrue(r.indexOf("تهذیب نفس.txt") < r.indexOf("short.txt"))
+        assertTrue(r.indexOf("both.txt") < r.indexOf("long.txt"))
+        assertEquals(100, Ranking.rank(items, 100, e).first().relevance)
+        val byDate = Ranking.sort(listOf(hit("a", "x", 5.0), hit("b", "x", 9.0)), SortMode.NEWEST).map { it.name }
+        assertEquals(listOf("b", "a"), byDate)
+    }
+
     @Test fun luceneCandidatesFindPunctuationGluedTokens() {
         val home = Files.createTempDirectory("mx-test")
         System.setProperty("matnyaab.home", home.toString())

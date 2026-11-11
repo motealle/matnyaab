@@ -207,13 +207,18 @@ class LuceneIndexer(private val settings: AppSettingsManager) {
      * معادل search: روی همه فهرست‌های فعال با maskedPath (مسیرهای حذف‌شده از محدوده)
      * امتیاز = int(score*100)
      */
+    /** تعداد کل اسناد جست‌وجوشده در آخرین جست‌وجو (برای idf) */
+    var lastDocCount = 0; private set
+
     fun search(query: Query, selectedObjects: List<IndexerInfo>, maskedPaths: Set<String>): List<SearchHit> {
         searchResult.clear()
+        lastDocCount = 0
         for (obj in selectedObjects) {
             try {
                 FSDirectory.open(Path.of(obj.savePath)).use { dir ->
                     DirectoryReader.open(dir).use { reader ->
                         val searcher = IndexSearcher(reader)
+                        lastDocCount += reader.numDocs()
                         val top = searcher.search(query, Integer.MAX_VALUE)
                         for (sd in top.scoreDocs) {
                             val doc = searcher.storedFields().document(sd.doc)
@@ -247,10 +252,8 @@ class LuceneIndexer(private val settings: AppSettingsManager) {
         val engine = ir.matnyaab.core.search.MatchEngine(spec)
         lastEngine = engine
         val raw = search(engine.candidateQuery(), selectedObjects, maskedPaths).toList()
-        val out = raw.mapNotNull { h ->
-            val r = engine.evaluate(h.content)
-            if (r.ok) h.copy(matches = r.total, perPhrase = r.perPhrase.toList()) else null
-        }.sortedWith(compareByDescending<SearchHit> { it.perPhrase.count { c -> c > 0 } }.thenByDescending { it.matches }.thenByDescending { it.score })
+        val scored = raw.mapNotNull { h -> engine.evaluate(h.content).takeIf { it.ok }?.let { ir.matnyaab.core.search.Ranking.Scored(h, it) } }
+        val out = ir.matnyaab.core.search.Ranking.rank(scored, lastDocCount, engine)
         searchResult.clear(); searchResult.addAll(out)
         lastEngine = engine
         return out

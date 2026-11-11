@@ -16,7 +16,7 @@
 #endif
 #define ConnectClsid "{{3B1E5F7A-8C2D-4E6B-A9F0-5D7C1B2E4A61}"
 #define PaneClsid "{{9D2A4C6E-1F3B-4A57-8E20-6B4D3C5F7A82}"
-#define AsmName "MatnyaabWord, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+#define AsmName "MatnyaabWord, Version=1.0.1.0, Culture=neutral, PublicKeyToken=null"
 
 [Setup]
 AppId={{5C9E2A41-7D3B-4F18-A6E2-0B9C4D1E8F37}
@@ -65,13 +65,13 @@ Root: HKCU64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\Implemented Catego
 Root: HKCU64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32"; ValueType: string; ValueData: "mscoree.dll"; Check: IsWin64
 Root: HKCU64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32"; ValueType: string; ValueName: "ThreadingModel"; ValueData: "Both"; Check: IsWin64
 Root: HKCU64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32"; ValueType: string; ValueName: "Class"; ValueData: "Matnyaab.Word.Com.Connect"; Check: IsWin64
-Root: HKCU64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "Class"; ValueData: "Matnyaab.Word.Com.Connect"; Check: IsWin64
+Root: HKCU64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "Class"; ValueData: "Matnyaab.Word.Com.Connect"; Check: IsWin64
 Root: HKCU64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32"; ValueType: string; ValueName: "Assembly"; ValueData: "{#AsmName}"; Check: IsWin64
-Root: HKCU64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "Assembly"; ValueData: "{#AsmName}"; Check: IsWin64
+Root: HKCU64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "Assembly"; ValueData: "{#AsmName}"; Check: IsWin64
 Root: HKCU64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32"; ValueType: string; ValueName: "RuntimeVersion"; ValueData: "v4.0.30319"; Check: IsWin64
-Root: HKCU64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "RuntimeVersion"; ValueData: "v4.0.30319"; Check: IsWin64
+Root: HKCU64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "RuntimeVersion"; ValueData: "v4.0.30319"; Check: IsWin64
 Root: HKCU64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32"; ValueType: string; ValueName: "CodeBase"; ValueData: "{code:CodeBase}"; Check: IsWin64
-Root: HKCU64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "CodeBase"; ValueData: "{code:CodeBase}"; Check: IsWin64
+Root: HKCU64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "CodeBase"; ValueData: "{code:CodeBase}"; Check: IsWin64
 Root: HKCU32; Subkey: "Software\Classes\Matnyaab.Word.Connect"; ValueType: string; ValueData: "Matnyaab.Word.Com.Connect"; Flags: uninsdeletekey
 Root: HKCU32; Subkey: "Software\Classes\Matnyaab.Word.Connect\CLSID"; ValueType: string; ValueData: "{#ConnectClsid}"
 Root: HKCU32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}"; ValueType: string; ValueData: "Matnyaab.Word.Com.Connect"; Flags: uninsdeletekey
@@ -80,13 +80,13 @@ Root: HKCU32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\Implemented Catego
 Root: HKCU32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32"; ValueType: string; ValueData: "mscoree.dll"
 Root: HKCU32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32"; ValueType: string; ValueName: "ThreadingModel"; ValueData: "Both"
 Root: HKCU32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32"; ValueType: string; ValueName: "Class"; ValueData: "Matnyaab.Word.Com.Connect"
-Root: HKCU32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "Class"; ValueData: "Matnyaab.Word.Com.Connect"
+Root: HKCU32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "Class"; ValueData: "Matnyaab.Word.Com.Connect"
 Root: HKCU32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32"; ValueType: string; ValueName: "Assembly"; ValueData: "{#AsmName}"
-Root: HKCU32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "Assembly"; ValueData: "{#AsmName}"
+Root: HKCU32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "Assembly"; ValueData: "{#AsmName}"
 Root: HKCU32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32"; ValueType: string; ValueName: "RuntimeVersion"; ValueData: "v4.0.30319"
-Root: HKCU32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "RuntimeVersion"; ValueData: "v4.0.30319"
+Root: HKCU32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "RuntimeVersion"; ValueData: "v4.0.30319"
 Root: HKCU32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32"; ValueType: string; ValueName: "CodeBase"; ValueData: "{code:CodeBase}"
-Root: HKCU32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "CodeBase"; ValueData: "{code:CodeBase}"
+Root: HKCU32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "CodeBase"; ValueData: "{code:CodeBase}"
 
 ; ---- کنترل پنل کناری
 Root: HKCU64; Subkey: "Software\Classes\Matnyaab.Word.Pane"; ValueType: string; ValueData: "Matnyaab.Word.Com.PaneControl"; Flags: uninsdeletekey; Check: IsWin64
@@ -97,13 +97,13 @@ Root: HKCU64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\Implemented Categorie
 Root: HKCU64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32"; ValueType: string; ValueData: "mscoree.dll"; Check: IsWin64
 Root: HKCU64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32"; ValueType: string; ValueName: "ThreadingModel"; ValueData: "Both"; Check: IsWin64
 Root: HKCU64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32"; ValueType: string; ValueName: "Class"; ValueData: "Matnyaab.Word.Com.PaneControl"; Check: IsWin64
-Root: HKCU64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "Class"; ValueData: "Matnyaab.Word.Com.PaneControl"; Check: IsWin64
+Root: HKCU64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "Class"; ValueData: "Matnyaab.Word.Com.PaneControl"; Check: IsWin64
 Root: HKCU64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32"; ValueType: string; ValueName: "Assembly"; ValueData: "{#AsmName}"; Check: IsWin64
-Root: HKCU64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "Assembly"; ValueData: "{#AsmName}"; Check: IsWin64
+Root: HKCU64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "Assembly"; ValueData: "{#AsmName}"; Check: IsWin64
 Root: HKCU64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32"; ValueType: string; ValueName: "RuntimeVersion"; ValueData: "v4.0.30319"; Check: IsWin64
-Root: HKCU64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "RuntimeVersion"; ValueData: "v4.0.30319"; Check: IsWin64
+Root: HKCU64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "RuntimeVersion"; ValueData: "v4.0.30319"; Check: IsWin64
 Root: HKCU64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32"; ValueType: string; ValueName: "CodeBase"; ValueData: "{code:CodeBase}"; Check: IsWin64
-Root: HKCU64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "CodeBase"; ValueData: "{code:CodeBase}"; Check: IsWin64
+Root: HKCU64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "CodeBase"; ValueData: "{code:CodeBase}"; Check: IsWin64
 Root: HKCU32; Subkey: "Software\Classes\Matnyaab.Word.Pane"; ValueType: string; ValueData: "Matnyaab.Word.Com.PaneControl"; Flags: uninsdeletekey
 Root: HKCU32; Subkey: "Software\Classes\Matnyaab.Word.Pane\CLSID"; ValueType: string; ValueData: "{#PaneClsid}"
 Root: HKCU32; Subkey: "Software\Classes\CLSID\{#PaneClsid}"; ValueType: string; ValueData: "Matnyaab.Word.Com.PaneControl"; Flags: uninsdeletekey
@@ -112,13 +112,13 @@ Root: HKCU32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\Implemented Categorie
 Root: HKCU32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32"; ValueType: string; ValueData: "mscoree.dll"
 Root: HKCU32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32"; ValueType: string; ValueName: "ThreadingModel"; ValueData: "Both"
 Root: HKCU32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32"; ValueType: string; ValueName: "Class"; ValueData: "Matnyaab.Word.Com.PaneControl"
-Root: HKCU32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "Class"; ValueData: "Matnyaab.Word.Com.PaneControl"
+Root: HKCU32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "Class"; ValueData: "Matnyaab.Word.Com.PaneControl"
 Root: HKCU32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32"; ValueType: string; ValueName: "Assembly"; ValueData: "{#AsmName}"
-Root: HKCU32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "Assembly"; ValueData: "{#AsmName}"
+Root: HKCU32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "Assembly"; ValueData: "{#AsmName}"
 Root: HKCU32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32"; ValueType: string; ValueName: "RuntimeVersion"; ValueData: "v4.0.30319"
-Root: HKCU32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "RuntimeVersion"; ValueData: "v4.0.30319"
+Root: HKCU32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "RuntimeVersion"; ValueData: "v4.0.30319"
 Root: HKCU32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32"; ValueType: string; ValueName: "CodeBase"; ValueData: "{code:CodeBase}"
-Root: HKCU32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "CodeBase"; ValueData: "{code:CodeBase}"
+Root: HKCU32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "CodeBase"; ValueData: "{code:CodeBase}"
 
 ; ---- همان ثبت در سطح سیستم، فقط اگر نصب‌کننده خودبه‌خود دسترسی مدیر دارد (UAC خاموش یا کاربر مدیر)؛
 ; لایهٔ COM داتنت در فرایندهای مدیر، ثبت‌های HKCU را نمی‌خواند. هیچ درخواست دسترسی‌ای نشان داده نمی‌شود.
@@ -130,13 +130,13 @@ Root: HKLM64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\Implemented Catego
 Root: HKLM64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32"; ValueType: string; ValueData: "mscoree.dll"; Check: IsWin64 and IsAdmin
 Root: HKLM64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32"; ValueType: string; ValueName: "ThreadingModel"; ValueData: "Both"; Check: IsWin64 and IsAdmin
 Root: HKLM64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32"; ValueType: string; ValueName: "Class"; ValueData: "Matnyaab.Word.Com.Connect"; Check: IsWin64 and IsAdmin
-Root: HKLM64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "Class"; ValueData: "Matnyaab.Word.Com.Connect"; Check: IsWin64 and IsAdmin
+Root: HKLM64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "Class"; ValueData: "Matnyaab.Word.Com.Connect"; Check: IsWin64 and IsAdmin
 Root: HKLM64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32"; ValueType: string; ValueName: "Assembly"; ValueData: "{#AsmName}"; Check: IsWin64 and IsAdmin
-Root: HKLM64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "Assembly"; ValueData: "{#AsmName}"; Check: IsWin64 and IsAdmin
+Root: HKLM64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "Assembly"; ValueData: "{#AsmName}"; Check: IsWin64 and IsAdmin
 Root: HKLM64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32"; ValueType: string; ValueName: "RuntimeVersion"; ValueData: "v4.0.30319"; Check: IsWin64 and IsAdmin
-Root: HKLM64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "RuntimeVersion"; ValueData: "v4.0.30319"; Check: IsWin64 and IsAdmin
+Root: HKLM64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "RuntimeVersion"; ValueData: "v4.0.30319"; Check: IsWin64 and IsAdmin
 Root: HKLM64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32"; ValueType: string; ValueName: "CodeBase"; ValueData: "{code:CodeBase}"; Check: IsWin64 and IsAdmin
-Root: HKLM64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "CodeBase"; ValueData: "{code:CodeBase}"; Check: IsWin64 and IsAdmin
+Root: HKLM64; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "CodeBase"; ValueData: "{code:CodeBase}"; Check: IsWin64 and IsAdmin
 Root: HKLM32; Subkey: "Software\Classes\Matnyaab.Word.Connect"; ValueType: string; ValueData: "Matnyaab.Word.Com.Connect"; Flags: uninsdeletekey; Check: IsAdmin
 Root: HKLM32; Subkey: "Software\Classes\Matnyaab.Word.Connect\CLSID"; ValueType: string; ValueData: "{#ConnectClsid}"; Check: IsAdmin
 Root: HKLM32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}"; ValueType: string; ValueData: "Matnyaab.Word.Com.Connect"; Flags: uninsdeletekey; Check: IsAdmin
@@ -145,13 +145,13 @@ Root: HKLM32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\Implemented Catego
 Root: HKLM32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32"; ValueType: string; ValueData: "mscoree.dll"; Check: IsAdmin
 Root: HKLM32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32"; ValueType: string; ValueName: "ThreadingModel"; ValueData: "Both"; Check: IsAdmin
 Root: HKLM32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32"; ValueType: string; ValueName: "Class"; ValueData: "Matnyaab.Word.Com.Connect"; Check: IsAdmin
-Root: HKLM32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "Class"; ValueData: "Matnyaab.Word.Com.Connect"; Check: IsAdmin
+Root: HKLM32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "Class"; ValueData: "Matnyaab.Word.Com.Connect"; Check: IsAdmin
 Root: HKLM32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32"; ValueType: string; ValueName: "Assembly"; ValueData: "{#AsmName}"; Check: IsAdmin
-Root: HKLM32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "Assembly"; ValueData: "{#AsmName}"; Check: IsAdmin
+Root: HKLM32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "Assembly"; ValueData: "{#AsmName}"; Check: IsAdmin
 Root: HKLM32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32"; ValueType: string; ValueName: "RuntimeVersion"; ValueData: "v4.0.30319"; Check: IsAdmin
-Root: HKLM32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "RuntimeVersion"; ValueData: "v4.0.30319"; Check: IsAdmin
+Root: HKLM32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "RuntimeVersion"; ValueData: "v4.0.30319"; Check: IsAdmin
 Root: HKLM32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32"; ValueType: string; ValueName: "CodeBase"; ValueData: "{code:CodeBase}"; Check: IsAdmin
-Root: HKLM32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "CodeBase"; ValueData: "{code:CodeBase}"; Check: IsAdmin
+Root: HKLM32; Subkey: "Software\Classes\CLSID\{#ConnectClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "CodeBase"; ValueData: "{code:CodeBase}"; Check: IsAdmin
 Root: HKLM64; Subkey: "Software\Classes\Matnyaab.Word.Pane"; ValueType: string; ValueData: "Matnyaab.Word.Com.PaneControl"; Flags: uninsdeletekey; Check: IsWin64 and IsAdmin
 Root: HKLM64; Subkey: "Software\Classes\Matnyaab.Word.Pane\CLSID"; ValueType: string; ValueData: "{#PaneClsid}"; Check: IsWin64 and IsAdmin
 Root: HKLM64; Subkey: "Software\Classes\CLSID\{#PaneClsid}"; ValueType: string; ValueData: "Matnyaab.Word.Com.PaneControl"; Flags: uninsdeletekey; Check: IsWin64 and IsAdmin
@@ -160,13 +160,13 @@ Root: HKLM64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\Implemented Categorie
 Root: HKLM64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32"; ValueType: string; ValueData: "mscoree.dll"; Check: IsWin64 and IsAdmin
 Root: HKLM64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32"; ValueType: string; ValueName: "ThreadingModel"; ValueData: "Both"; Check: IsWin64 and IsAdmin
 Root: HKLM64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32"; ValueType: string; ValueName: "Class"; ValueData: "Matnyaab.Word.Com.PaneControl"; Check: IsWin64 and IsAdmin
-Root: HKLM64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "Class"; ValueData: "Matnyaab.Word.Com.PaneControl"; Check: IsWin64 and IsAdmin
+Root: HKLM64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "Class"; ValueData: "Matnyaab.Word.Com.PaneControl"; Check: IsWin64 and IsAdmin
 Root: HKLM64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32"; ValueType: string; ValueName: "Assembly"; ValueData: "{#AsmName}"; Check: IsWin64 and IsAdmin
-Root: HKLM64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "Assembly"; ValueData: "{#AsmName}"; Check: IsWin64 and IsAdmin
+Root: HKLM64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "Assembly"; ValueData: "{#AsmName}"; Check: IsWin64 and IsAdmin
 Root: HKLM64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32"; ValueType: string; ValueName: "RuntimeVersion"; ValueData: "v4.0.30319"; Check: IsWin64 and IsAdmin
-Root: HKLM64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "RuntimeVersion"; ValueData: "v4.0.30319"; Check: IsWin64 and IsAdmin
+Root: HKLM64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "RuntimeVersion"; ValueData: "v4.0.30319"; Check: IsWin64 and IsAdmin
 Root: HKLM64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32"; ValueType: string; ValueName: "CodeBase"; ValueData: "{code:CodeBase}"; Check: IsWin64 and IsAdmin
-Root: HKLM64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "CodeBase"; ValueData: "{code:CodeBase}"; Check: IsWin64 and IsAdmin
+Root: HKLM64; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "CodeBase"; ValueData: "{code:CodeBase}"; Check: IsWin64 and IsAdmin
 Root: HKLM32; Subkey: "Software\Classes\Matnyaab.Word.Pane"; ValueType: string; ValueData: "Matnyaab.Word.Com.PaneControl"; Flags: uninsdeletekey; Check: IsAdmin
 Root: HKLM32; Subkey: "Software\Classes\Matnyaab.Word.Pane\CLSID"; ValueType: string; ValueData: "{#PaneClsid}"; Check: IsAdmin
 Root: HKLM32; Subkey: "Software\Classes\CLSID\{#PaneClsid}"; ValueType: string; ValueData: "Matnyaab.Word.Com.PaneControl"; Flags: uninsdeletekey; Check: IsAdmin
@@ -175,13 +175,13 @@ Root: HKLM32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\Implemented Categorie
 Root: HKLM32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32"; ValueType: string; ValueData: "mscoree.dll"; Check: IsAdmin
 Root: HKLM32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32"; ValueType: string; ValueName: "ThreadingModel"; ValueData: "Both"; Check: IsAdmin
 Root: HKLM32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32"; ValueType: string; ValueName: "Class"; ValueData: "Matnyaab.Word.Com.PaneControl"; Check: IsAdmin
-Root: HKLM32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "Class"; ValueData: "Matnyaab.Word.Com.PaneControl"; Check: IsAdmin
+Root: HKLM32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "Class"; ValueData: "Matnyaab.Word.Com.PaneControl"; Check: IsAdmin
 Root: HKLM32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32"; ValueType: string; ValueName: "Assembly"; ValueData: "{#AsmName}"; Check: IsAdmin
-Root: HKLM32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "Assembly"; ValueData: "{#AsmName}"; Check: IsAdmin
+Root: HKLM32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "Assembly"; ValueData: "{#AsmName}"; Check: IsAdmin
 Root: HKLM32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32"; ValueType: string; ValueName: "RuntimeVersion"; ValueData: "v4.0.30319"; Check: IsAdmin
-Root: HKLM32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "RuntimeVersion"; ValueData: "v4.0.30319"; Check: IsAdmin
+Root: HKLM32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "RuntimeVersion"; ValueData: "v4.0.30319"; Check: IsAdmin
 Root: HKLM32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32"; ValueType: string; ValueName: "CodeBase"; ValueData: "{code:CodeBase}"; Check: IsAdmin
-Root: HKLM32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.0.0"; ValueType: string; ValueName: "CodeBase"; ValueData: "{code:CodeBase}"; Check: IsAdmin
+Root: HKLM32; Subkey: "Software\Classes\CLSID\{#PaneClsid}\InprocServer32\1.0.1.0"; ValueType: string; ValueName: "CodeBase"; ValueData: "{code:CodeBase}"; Check: IsAdmin
 
 ; ---- معرفی افزونه به ورد (همهٔ نسخه‌های ۲۰۱۰ تا ۳۶۵)
 Root: HKCU; Subkey: "Software\Microsoft\Office\Word\Addins\Matnyaab.Word.Connect"; ValueType: string; ValueName: "FriendlyName"; ValueData: "متن‌یاب"; Flags: uninsdeletekey

@@ -164,16 +164,16 @@
 <section class="section" id="whats-new">
     <div class="container">
         <div class="whats-new">
-            <span class="new-badge">تازه: نسخهٔ ۲٫۳ + افزونهٔ ورد</span>
+            <span class="new-badge">تازه: نسخهٔ ۲٫۴ + افزونهٔ ورد</span>
             <h2>جست‌وجوی دقیق‌تر از همیشه؛ و حالا درون ورد</h2>
-            <p class="lead">متن‌یاب ۲٫۳ با پیشنهادهای پژوهشگران ساخته شد: عبارت دقیق، چند عبارت در یک اجرا، جست‌وجوی منطقی و فاصله‌دار، و کنترل کامل روی فاصله، نیم‌فاصله و علائم نگارشی. در کنارش «متن‌یاب برای ورد» آمده تا نتیجه‌ها را با منبع، مستقیم در نوشته‌تان بنشانید.</p>
+            <p class="lead">متن‌یاب ۲٫۴ با پیشنهادهای پژوهشگران ساخته شد: عبارت دقیق، چند عبارت در یک اجرا، جست‌وجوی منطقی و فاصله‌دار، و کنترل کامل روی فاصله، نیم‌فاصله و علائم نگارشی. در کنارش «متن‌یاب برای ورد» آمده تا نتیجه‌ها را با منبع، مستقیم در نوشته‌تان بنشانید.</p>
 
             <div class="new-grid">
                 <div class="new-item"><h3>واژه و عبارت، با شمارش دقیق</h3><p>«نفس» یا «تهذیب نفس» را جست‌وجو کنید و ببینید هر فایل چند بار آن را دارد؛ «جهاد، نفس» و «جهاد (نفس)» هم پیدا می‌شوند.</p></div>
                 <div class="new-item"><h3>چند عبارت در یک اجرا</h3><p>هر سطر یک عبارت؛ برای هر فایل می‌بینید «۳ از ۵ عبارت» و تعداد هر کدام. خروجی اکسل هم ستون جدا برای هر عبارت دارد.</p></div>
                 <div class="new-item"><h3>جست‌وجوی منطقی و فاصله‌دار</h3><p><code dir="ltr">(جهاد OR مبارزه) AND نفس NOT نظامی</code> و <code dir="ltr">جهاد NEAR/5 نفس</code> برای واژه‌هایی که تا ۵ واژه از هم فاصله دارند.</p></div>
                 <div class="new-item"><h3>فاصله و نیم‌فاصله به انتخاب شما</h3><p>فاصله‌گذاری دقیق، نادیده‌گرفتن فاصلهٔ اضافه، یا یکسان‌سازی فاصله و نیم‌فاصله؛ به‌همراه یکسان‌سازی ی/ک عربی و اِعراب.</p></div>
-                <div class="new-item"><h3>جست‌وجوی دقیق و بخشی از واژه</h3><p>«مبارزه با نفس» فقط به همان شکل؛ یا «مجاهد» که مجاهدت و مجاهدین را هم بیابد.</p></div>
+                <div class="new-item"><h3>بهترین نتیجه‌ها، اول</h3><p>رتبه‌بندی ترکیبی تطابق، تکرار، تراکم، پوشش عبارت‌ها و نام فایل؛ یا مرتب‌سازی بر پایهٔ تکرار، تراکم و تاریخ. هم‌خانواده، مترادف و املای متفاوت هم پیدا می‌شوند.</p></div>
                 <div class="new-item"><h3>متن‌یاب برای ورد</h3><p>جست‌وجو، درج با ارجاع APA و کامنت منبع، پانویس، سرفصل، قالب پایان‌نامه و دستیار هوشمند؛ <a href="#word">بیشتر ببینید</a>.</p></div>
             </div>
 
@@ -249,14 +249,14 @@
 
             <div class="download-main">
                 <article class="release-card">
-                    <div><span class="new-badge">نسخهٔ ۲٫۳</span><h3 style="margin-top:10px">متن‌یاب ۲ برای ویندوز</h3></div>
+                    <div><span class="new-badge">نسخهٔ ۲٫۴</span><h3 style="margin-top:10px">متن‌یاب ۲ برای ویندوز</h3></div>
                     <p data-release-content="kotlin">نصب‌کننده را اجرا کنید؛ میان‌بر متن‌یاب روی میز کار و منوی شروع ساخته می‌شود.</p>
                     <div class="release-meta">
                         <span><strong>نوع فایل:</strong> <span data-release-delivery="kotlin">نصب‌کنندهٔ ویندوز ۱۰ و ۱۱ (۶۴ بیتی)</span></span>
                         <span><strong>اندازه:</strong> <span data-release-size="kotlin">در حال دریافت اطلاعات…</span></span>
                     </div>
-                    <a class="btn btn-primary" data-release-link="kotlin" href="/downloadFiles/Matnyaab-Setup-2.3.exe">دانلود نصب‌کنندهٔ متن‌یاب ۲ <span aria-hidden="true">↓</span></a>
-                    <small class="muted" style="color:var(--muted-2)">نسخهٔ بدون نصب: <a data-release-portable href="/downloadFiles/Matnyaab-2.3-win-x64-portable.zip" style="color:var(--accent-soft)">فایل ZIP</a></small>
+                    <a class="btn btn-primary" data-release-link="kotlin" href="/downloadFiles/Matnyaab-Setup-2.4.exe">دانلود نصب‌کنندهٔ متن‌یاب ۲ <span aria-hidden="true">↓</span></a>
+                    <small class="muted" style="color:var(--muted-2)">نسخهٔ بدون نصب: <a data-release-portable href="/downloadFiles/Matnyaab-2.4-win-x64-portable.zip" style="color:var(--accent-soft)">فایل ZIP</a></small>
                 </article>
                 <div style="display:grid;gap:14px">
                     <ul class="req-list">
@@ -268,7 +268,7 @@
                     <div class="classic-card">
                         <div>
                             <strong style="color:var(--text)">متن‌یاب برای ورد</strong><br>
-                            جست‌وجو و درج با منبع، پانویس، سرفصل و قالب‌ها درون ورد: <a data-release-link="word" href="/downloadFiles/Matnyaab-Word-Setup-1.0.0.exe">دریافت افزونه</a> · <a href="#word">معرفی</a>
+                            جست‌وجو و درج با منبع، پانویس، سرفصل و قالب‌ها درون ورد: <a data-release-link="word" href="/downloadFiles/Matnyaab-Word-Setup-1.0.1.exe">دریافت افزونه</a> · <a href="#word">معرفی</a>
                         </div>
                     </div>
                     <div class="classic-card">

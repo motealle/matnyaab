@@ -36,6 +36,12 @@ class MainWindow(
     private val table = TableView<SearchHit>()
     private lateinit var cCount: TableColumn<SearchHit, Int>
     private lateinit var cCover: TableColumn<SearchHit, Int>
+    private lateinit var cDate: TableColumn<SearchHit, Any>
+    private var sortMode = ir.matnyaab.core.search.SortMode.RELEVANCE
+    private val sortBox = ComboBox<String>().apply {
+        items.addAll(ir.matnyaab.core.search.SortMode.values().map { it.title })
+        tooltip = Tooltip("مرتب‌سازی نتایج؛ «مرتبط‌ترین» تطابق متنی، تکرار، تراکم، پوشش عبارت‌ها و نام فایل را با هم می‌سنجد")
+    }
     private var specMode: SearchMode? = null
     private val phraseSummary = Label().apply { styleClass.add("summary-bar"); isWrapText = true; maxWidth = Double.MAX_VALUE; isVisible = false; isManaged = false }
     private val lblResultCount = Label().apply { style = Theme.FONT }
@@ -218,6 +224,7 @@ class MainWindow(
             Label("نتایج جست‌وجو").apply { styleClass.add("section-title") },
             Region().also { HBox.setHgrow(it, Priority.ALWAYS) },
             lblResultCount,
+            sortBox,
             Button("⭳ خروجی").apply {
                 style = Theme.addButton(); tooltip = Tooltip("ذخیرهٔ فهرست نتایج در فایل CSV (قابل بازکردن در اکسل)")
                 setOnAction { exportResults() }
@@ -261,7 +268,23 @@ class MainWindow(
         stage.scene.accelerators[javafx.scene.input.KeyCombination.keyCombination("Shortcut+O")] = Runnable { selectDirectory() }
     }
 
+    private fun applySort(i: Int) {
+        sortMode = ir.matnyaab.core.search.SortMode.values()[i.coerceIn(0, ir.matnyaab.core.search.SortMode.values().size - 1)]
+        settings.setValue("RESULT_SORT", sortMode.name)
+        cDate.isVisible = sortMode == ir.matnyaab.core.search.SortMode.NEWEST || sortMode == ir.matnyaab.core.search.SortMode.OLDEST
+        table.sortOrder.clear()
+        if (table.items.isNotEmpty()) {
+            val sel = table.selectionModel.selectedItem
+            table.items = FXCollections.observableArrayList(ir.matnyaab.core.search.Ranking.sort(table.items.toList(), sortMode))
+            if (sel != null) table.selectionModel.select(sel)
+        }
+    }
+
     private fun buildTable() {
+        sortMode = runCatching { ir.matnyaab.core.search.SortMode.valueOf(settings.get("RESULT_SORT")) }.getOrDefault(ir.matnyaab.core.search.SortMode.RELEVANCE)
+        sortBox.selectionModel.select(sortMode.ordinal)
+        sortBox.style = Theme.FONT
+        sortBox.selectionModel.selectedIndexProperty().addListener { _, _, i -> if (i.toInt() >= 0) applySort(i.toInt()) }
         table.nodeOrientation = NodeOrientation.RIGHT_TO_LEFT
         table.style = Theme.FONT
         table.selectionModel.selectionMode = SelectionMode.SINGLE
@@ -276,7 +299,22 @@ class MainWindow(
         // ستون‌ها مطابق نسخه اصلی: فایل / اندازه / امتیاز / عنوان / دامنه
         val cFile = col("فایل", 180.0) { File(it.path).name }
         val cSize = col("اندازه", 80.0) { PersianUtil.toPersianNumbers(PersianUtil.properSize(it.size)) }
-        val cScore = col("امتیاز", 70.0) { PersianUtil.toPersianNumbers(it.score) }
+        // ستون «ارتباط»: رتبهٔ ترکیبی ۰ تا ۱۰۰ با نوار کوچک (برای جست‌وجوی قدیمی همان امتیاز)
+        val cScore = TableColumn<SearchHit, Int>("ارتباط").apply {
+            prefWidth = 78.0
+            setCellValueFactory { SimpleObjectProperty(if (it.value.relevance >= 0) it.value.relevance else it.value.score) }
+            setCellFactory { object : TableCell<SearchHit, Int>() {
+                private val bar = ProgressBar().apply { prefWidth = 52.0; prefHeight = 9.0; styleClass.add("rel-bar") }
+                override fun updateItem(v: Int?, empty: Boolean) {
+                    super.updateItem(v, empty)
+                    val h = tableRow?.item
+                    if (empty || v == null || h == null) { graphic = null; text = null; return }
+                    if (h.relevance >= 0) { bar.progress = v / 100.0; graphic = bar; text = null; tooltip = Tooltip("ارتباط " + PersianUtil.toPersianNumbers(v) + " از ۱۰۰") }
+                    else { graphic = null; text = PersianUtil.toPersianNumbers(v) }
+                }
+            } }
+        }
+        cDate = col("تاریخ", 90.0) { if (it.time > 0) PersianUtil.toJalali(java.time.LocalDateTime.ofEpochSecond(it.time.toLong(), 0, java.time.ZoneOffset.UTC)) else "" }.apply { isVisible = sortMode == ir.matnyaab.core.search.SortMode.NEWEST || sortMode == ir.matnyaab.core.search.SortMode.OLDEST }
         val cTitle = col("عنوان", 160.0) { File(it.path).nameWithoutExtension }
         val cDomain = col("دامنه", 100.0) { it.indexName }
         // ستون‌های جست‌وجوی نسل دوم: تعداد موارد و پوشش عبارت‌ها (با مرتب‌سازی عددی)
@@ -298,13 +336,18 @@ class MainWindow(
                 }
             } }
         }
-        table.columns.addAll(cFile, cCount, cCover, cSize, cScore, cTitle, cDomain)
+        table.columns.addAll(cFile, cScore, cCount, cCover, cDate, cSize, cTitle, cDomain)
 
         table.setRowFactory {
             val row = TableRow<SearchHit>()
             row.setOnMouseEntered { if (!row.isEmpty) row.style = "-fx-background-color: ${Constants.TABLE_HOVER_COLOR};" }
             row.setOnMouseExited { row.style = "" }
             row.setOnMouseClicked { e -> if (e.clickCount == 2 && !row.isEmpty) openResultDoc(row.item) }
+            row.itemProperty().addListener { _, _, h ->
+                row.tooltip = if (h != null && h.relevance >= 0) Tooltip(
+                    "ارتباط " + PersianUtil.toPersianNumbers(h.relevance) + " · " + PersianUtil.toPersianNumbers(h.matches) + " مورد · تراکم " +
+                        PersianUtil.toPersianNumbers(String.format(java.util.Locale.US, "%.1f", h.density)) + " در هر هزار واژه") else null
+            }
             row
         }
         table.selectionModel.selectedItemProperty().addListener { _, _, hit -> if (hit != null) showPreview(hit) }
@@ -425,7 +468,7 @@ class MainWindow(
                 Platform.runLater {
                     setSpecMode(mode, if (mode != SearchMode.PHRASE && phrases.size > 1)
                         phrases.indices.joinToString("   ·   ") { i -> "«${phrases[i]}» ${PersianUtil.toPersianNumbers(totals[i])}" } else null)
-                    table.items = FXCollections.observableArrayList(hits)
+                    table.items = FXCollections.observableArrayList(ir.matnyaab.core.search.Ranking.sort(hits, sortMode))
                     lblResultCount.text = PersianUtil.toPersianNumbers(hits.size) + " فایل — " +
                         PersianUtil.toPersianNumbers(hits.sumOf { it.matches }) + " مورد"
                     preview.clear(); preview.setSummary(null)
@@ -463,7 +506,7 @@ class MainWindow(
                 // مجموع کل موارد یافت‌شده در همه فایل‌ها (روی ترد پس‌زمینه محاسبه می‌شود)
                 val totalMatches = hits.sumOf { indexer.countMatches(it.content) }
                 Platform.runLater {
-                    table.items = FXCollections.observableArrayList(hits.sortedByDescending { it.score })
+                    table.items = FXCollections.observableArrayList(ir.matnyaab.core.search.Ranking.sort(hits, sortMode))
                     lblResultCount.text = PersianUtil.toPersianNumbers(hits.size) + " فایل — " +
                         PersianUtil.toPersianNumbers(totalMatches) + " مورد"
                     preview.clear()
@@ -486,8 +529,9 @@ class MainWindow(
         }.showSaveDialog(stage) ?: return
         fun q(v: Any) = "\"" + v.toString().replace("\"", "\"\"") + "\""
         val phrases = indexer.lastEngine?.takeIf { specMode != null }?.let { e -> (0 until e.phraseCount).map { e.phrase(it) } } ?: emptyList()
-        val lines = listOf((listOf("فایل", "مسیر", "اندازه (بایت)", "امتیاز", "مجموعه", "تعداد موارد") + phrases).joinToString(",") { q(it) }) +
-            table.items.map { h -> (listOf(File(h.path).name, h.path, h.size, h.score, h.indexName, h.matches.coerceAtLeast(0)) + h.perPhrase).joinToString(",") { q(it) } }
+        val lines = listOf((listOf("فایل", "مسیر", "اندازه (بایت)", "امتیاز", "مجموعه", "تعداد موارد", "ارتباط (۰ تا ۱۰۰)", "تراکم در هزار واژه", "تاریخ فایل") + phrases).joinToString(",") { q(it) }) +
+            table.items.map { h -> (listOf(File(h.path).name, h.path, h.size, h.score, h.indexName, h.matches.coerceAtLeast(0), h.relevance.coerceAtLeast(0), String.format(java.util.Locale.US, "%.2f", h.density),
+                if (h.time > 0) PersianUtil.toJalali(java.time.LocalDateTime.ofEpochSecond(h.time.toLong(), 0, java.time.ZoneOffset.UTC)) else "") + h.perPhrase).joinToString(",") { q(it) } }
         f.writeText("\uFEFF" + lines.joinToString("\r\n"), Charsets.UTF_8)
         CustomMessageBox.show(stage, "خروجی نتایج", "${PersianUtil.toPersianNumbers(table.items.size)} نتیجه ذخیره شد.")
     }

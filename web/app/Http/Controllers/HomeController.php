@@ -41,8 +41,8 @@ class HomeController extends Controller
                     'inLanguage' => 'fa',
                     'description' => 'جست‌وجوی سریع درون متن فایل‌های Word، PDF، پاورپوینت، اکسل و OneNote روی رایانهٔ خودتان؛ با اشتراک اعتمادمحور.',
                     'url' => $site,
-                    'downloadUrl' => $site.'/downloadFiles/Matnyaab-Setup-2.3.exe',
-                    'softwareVersion' => '2.3',
+                    'downloadUrl' => $site.'/downloadFiles/Matnyaab-Setup-2.4.exe',
+                    'softwareVersion' => '2.4',
                     'image' => $site.'/assets/matnyaab-v2/icon-256.png',
                     'screenshot' => [
                         $site.'/assets/matnyaab-v2/shot-main-blue.webp',

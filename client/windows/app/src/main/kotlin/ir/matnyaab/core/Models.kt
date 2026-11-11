@@ -20,6 +20,11 @@ data class SearchHit(
     val matches: Int = -1,
     /** تعداد موارد هر عبارت در جست‌وجوی چند عبارتی */
     val perPhrase: List<Int> = emptyList(),
+    /** ارتباط ترکیبی ۰ تا ۱۰۰ (‎-1 = جست‌وجوی قدیمی) */
+    val relevance: Int = -1,
+    /** تراکم: تعداد موارد در هر هزار واژه */
+    val density: Double = 0.0,
+    val words: Int = 0,
 )
 
 /** اطلاعات فایل در file_list.txt */

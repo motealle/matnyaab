@@ -21,6 +21,8 @@ namespace Matnyaab.Word.UI
         private readonly ComboBox _spacing = Kit.Combo(new[] { "یکسان‌سازی فاصله و نیم‌فاصله", "نادیده‌گرفتن فاصله‌های اضافه", "فاصله‌گذاری دقیق" });
         private readonly Card _opts = new Card { Soft = true };
         private readonly Label _summary = Kit.Hint("");
+        private static readonly string[] SortIds = { "relevance", "count", "density", "newest", "oldest", "name" };
+        private readonly ComboBox _sort = Kit.Combo(new[] { "مرتبط‌ترین", "بیشترین تکرار", "بیشترین تراکم", "جدیدترین فایل", "قدیمی‌ترین فایل", "نام فایل" });
         private readonly Stack _results = new Stack { Gap = 10 };
         private readonly Card _offline = new Card("متن‌یاب روی این رایانه نصب نیست",
             "برای جست‌وجو در هزاران سند خودتان، متن‌یاب را نصب کنید. ابزارهای نگارش، قالب‌ها و استناد بدون آن هم کار می‌کنند.");
@@ -49,6 +51,8 @@ namespace Matnyaab.Word.UI
                 Kit.Button("بازکردن در برنامهٔ متن‌یاب", () => Bridge.ShowApp(CurrentQuery()), BtnKind.Ghost),
                 Kit.Button("جست‌وجوی متن انتخاب‌شده", () => Run(WordOps.SelectionText()), BtnKind.Ghost)));
             Add(_summary);
+            _sort.SelectedIndexChanged += (s, e) => { if (_results.Controls.Count > 0) Run(null); };
+            Add(_sort);
 
             _offline.Add(Kit.Row(Kit.Button("دریافت متن‌یاب", () => System.Diagnostics.Process.Start(Updater.Site + "/#download"), BtnKind.Primary)));
             _offline.Visible = !Bridge.Installed;
@@ -96,7 +100,7 @@ namespace Matnyaab.Word.UI
             {
                 ["strict"] = _strict.Checked, ["match"] = _match.SelectedIndex == 1 ? "partial" : _match.SelectedIndex == 2 ? "family" : "whole", ["synonyms"] = _syn.Checked,
                 ["spacing"] = _spacing.SelectedIndex == 1 ? "collapse" : _spacing.SelectedIndex == 2 ? "exact" : "unify",
-                ["ignorePunct"] = _punct.Checked, ["limit"] = 60, ["snippets"] = 5,
+                ["ignorePunct"] = _punct.Checked, ["sort"] = SortIds[Math.Max(0, _sort.SelectedIndex)], ["limit"] = 60, ["snippets"] = 5,
             };
             if (_mode == "bool") body["expression"] = q;
             else if (_mode == "phrases") { body["phrases"] = q.Split('\n').Select(x => x.Trim()).Where(x => x.Length > 0).ToArray(); body["combine"] = "any"; }
@@ -176,7 +180,7 @@ namespace Matnyaab.Word.UI
             var name = r.Str("name");
             Add(new ThemedLabel { Text = System.IO.Path.GetFileNameWithoutExtension(name), Role = "title" });
             var ext = System.IO.Path.GetExtension(name).TrimStart('.').ToUpperInvariant();
-            var meta = (ext.Length > 0 ? ext + " · " : "") + r.Str("collection") + " · " + Fa.Num(r.Int("matches")) + " مورد";
+            var meta = (ext.Length > 0 ? ext + " · " : "") + r.Str("collection") + " · " + Fa.Num(r.Int("matches")) + " مورد" + (r.Int("relevance", -1) >= 0 ? " · ارتباط " + Fa.Num(r.Int("relevance")) + "٪" : "");
             if (phrases.Count > 1 && r.TryGetValue("perPhrase", out var pp) && pp is System.Collections.IEnumerable e)
             {
                 var counts = e.Cast<object>().Select(x => Convert.ToInt32(x)).ToList();
