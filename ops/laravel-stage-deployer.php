@@ -173,6 +173,7 @@ try {
     $assetSets = [
         'matnyaab-hero-v1' => ['required' => true, 'ext' => ['webp', 'css', 'js']],
         'matnyaab-v2' => ['required' => false, 'ext' => ['webp', 'png', 'svg', 'css', 'js']],
+        'matnyaab-word' => ['required' => false, 'ext' => ['webp', 'png']],
     ];
     foreach ($assetSets as $set => $rule) {
         $assetSource = $releaseDir . '/public/assets/' . $set;
