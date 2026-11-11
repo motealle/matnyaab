@@ -11,7 +11,7 @@ import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 /** واژهٔ کامل یا بخشی از واژه */
-enum class MatchType { WHOLE, PARTIAL }
+enum class MatchType { WHOLE, PARTIAL, FAMILY }
 
 /** شیوهٔ برخورد با فاصلهٔ میان واژه‌های یک عبارت */
 enum class Spacing { EXACT, COLLAPSE, UNIFY }
@@ -33,6 +33,8 @@ data class SearchSpec(
     val normalizeLetters: Boolean = true,
     /** «جست‌وجوی دقیق»: همان شکل، همان ترتیب و همان فاصله‌گذاری */
     val strict: Boolean = false,
+    /** هر عبارت همراه با مترادف‌هایش (از فهرست مترادف‌ها) جست‌وجو شود */
+    val synonyms: Boolean = false,
     /** پرس‌وجوی منطقی (AND/OR/NOT/NEAR)؛ در این حالت phrases نادیده گرفته می‌شود */
     val expression: String? = null,
 ) {
@@ -60,11 +62,19 @@ class MatchEngine(val spec: SearchSpec) {
         private const val PUNCT = "\\p{P}\\p{S}\\u0640"                      // علائم نگارشی و نمادها
         private const val WORD_CH = "\\p{L}\\p{M}\\p{N}_"
         private val TOKEN = Regex("[@#a-zA-Z0-9؀-ۿ]+")
+        /**
+         * یکسان‌سازی املایی: ی/ي/ى، ک/ك، ه/ة/ۀ، الف‌های همزه‌دار و آ، و/ؤ، ئ (مسئولیت ↔ مسوولیت)،
+         * و ارقام فارسی، عربی و لاتین. برای هر نویسهٔ پرس‌وجو، دستهٔ نویسه‌های هم‌ارز در متن.
+         */
         private val VARIANTS: Map<Char, String> = buildMap {
             fun group(s: String) { s.forEach { c -> put(c, s) } }
-            group("یيى"); group("کك"); group("هة"); group("اأإٱ"); group("وؤ")
+            group("یيى"); group("کك"); group("هةۀ"); group("اأإٱآ"); group("وؤ")
+            put('ی', "یيىئ"); put('ي', "یيىئ"); put('ى', "یيىئ")
+            put('ئ', "ئیيىوؤأا"); put('و', "وؤئ"); put('ؤ', "ؤوئ")
+            put('آ', "آا"); put('ا', "اأإٱآئ")
             for (i in 0..9) group("" + ('0' + i) + ('۰' + i) + ('٠' + i))
         }
+        private const val WEAK = "اویآ"
         private val QUERY_MARKS = Regex("[ً-ٰٟـ]")
 
         /** جداکردن واژه‌ها برای حالت «چند واژه» (فاصله، ویرگول فارسی و لاتین) */
@@ -80,8 +90,15 @@ class MatchEngine(val spec: SearchSpec) {
     val ast: BoolNode? = spec.expression?.takeIf { it.isNotBlank() }?.let { BoolQuery.parse(it) }
     private val phrases: List<String> = ast?.leaves()?.map { it.trim() }?.distinct() ?: spec.cleanPhrases
     private val positive: Set<Int> = ast?.positiveLeaves()?.map { phrases.indexOf(it.trim()) }?.toSet() ?: phrases.indices.toSet()
-    val patterns: List<Pattern> = phrases.map { compile(it) }
-    private val excludes: List<Pattern> = spec.exclude.map { it.trim() }.filter { it.isNotEmpty() }.map { compile(it, forceWhole = true) }
+    /** گزینه‌های هر عبارت (خودش + مترادف‌ها در صورت فعال بودن) */
+    private val alts: List<List<String>> = phrases.map { p -> if (spec.synonyms && !spec.strict) Thesaurus.expand(p) else listOf(p) }
+    val patterns: List<Pattern> = alts.map { a -> Pattern.compile(a.joinToString("|") { "(?:" + body(it) + ")" }, Pattern.CASE_INSENSITIVE or Pattern.UNICODE_CASE) }
+
+    /** گزینه‌های جست‌وجوشدهٔ عبارت i (برای نمایش مترادف‌ها) */
+    fun alternatives(i: Int): List<String> = alts[i]
+    private val excludes: List<Pattern> = spec.exclude.map { it.trim() }.filter { it.isNotEmpty() }.map {
+        Pattern.compile(body(it, forceWhole = true), Pattern.CASE_INSENSITIVE or Pattern.UNICODE_CASE)
+    }
 
     val phraseCount get() = phrases.size
     fun phrase(i: Int) = phrases[i]
@@ -93,12 +110,25 @@ class MatchEngine(val spec: SearchSpec) {
         return "[" + v.map(q).joinToString("") + "]"
     }
 
+    private fun charRx(c: Char): String =
+        if (c == 'ء' && spec.effNormalize) "ء?" else charClass(c)
+
+    /** هم‌خانواده: حروف ریشه به همان ترتیب، با حروف عله/پیشوند/پسوند محدود میان و پیرامونشان */
+    private fun familyRegex(word: String): String? {
+        val root = Morph.root(word)
+        if (root.length < 3) return null
+        val m = if (spec.effNormalize) "[$MARKS]*" else ""
+        val inner = root.map { charRx(it) + m }.joinToString("[$WEAK]{0,2}$m")
+        return "[\\p{L}]{0,3}$inner[\\p{L}\\u200C]{0,7}"
+    }
+
     private fun wordRegex(word: String): String {
+        if (spec.effMatch == MatchType.FAMILY) familyRegex(word)?.let { return it }
         val w = if (spec.effNormalize) word.replace(QUERY_MARKS, "") else word
         val sb = StringBuilder()
         w.forEachIndexed { i, c ->
             if (c.isWhitespace()) return@forEachIndexed
-            sb.append(charClass(c))
+            sb.append(charRx(c))
             if (spec.effNormalize && i < w.length - 1) sb.append("[").append(MARKS).append("]*")
         }
         if (spec.effNormalize) sb.append("[").append("\\u064B-\\u065F\\u0670").append("]*")
@@ -119,7 +149,7 @@ class MatchEngine(val spec: SearchSpec) {
         }
     }
 
-    private fun compile(phrase: String, forceWhole: Boolean = false): Pattern {
+    private fun body(phrase: String, forceWhole: Boolean = false): String {
         val words = phrase.trim().split(Regex("[\\s\\u200C]+")).filter { it.isNotEmpty() }
         val body = when (spec.effSpacing) {
             // در فاصله‌گذاری دقیق، خودِ نیم‌فاصله‌های عبارت هم باید عیناً در متن باشد
@@ -127,9 +157,8 @@ class MatchEngine(val spec: SearchSpec) {
                 .joinToString(separator()) { part -> part.split('‌').joinToString("\\u200C") { wordRegex(it) } }
             else -> words.joinToString(separator()) { wordRegex(it) }
         }
-        val whole = forceWhole || spec.effMatch == MatchType.WHOLE
-        val src = if (whole) "(?<![$WORD_CH])$body(?![$WORD_CH])" else body
-        return Pattern.compile(src, Pattern.CASE_INSENSITIVE or Pattern.UNICODE_CASE)
+        val whole = forceWhole || spec.effMatch != MatchType.PARTIAL
+        return if (whole) "(?<![$WORD_CH])$body(?![$WORD_CH])" else body
     }
 
     /** شمارش موارد هر عبارت و داوری نهایی دربارهٔ سند */
@@ -220,18 +249,39 @@ class MatchEngine(val spec: SearchSpec) {
         val marks = "[ً-ٰٟـ]*"
         val sb = StringBuilder()
         val partial = spec.effMatch == MatchType.PARTIAL
-        if (partial) sb.append(".*") else sb.append("[،؛؟٪٫٬ـ]*")
-        for (c in w) {
+        fun ch(c: Char) {
             val v = VARIANTS[c]
-            if (v != null && spec.effNormalize) sb.append('[').append(v).append(']')
+            if (c == 'ء' && spec.effNormalize) sb.append("ء?")
+            else if (v != null && spec.effNormalize) sb.append('[').append(v).append(']')
             else if (c.isLetterOrDigit()) sb.append(c) else sb.append('\\').append(c)
             sb.append(marks)
         }
-        sb.append(if (partial) ".*" else "[،؛؟٪٫٬ـ]*")
+        val root = if (spec.effMatch == MatchType.FAMILY) Morph.root(w) else ""
+        if (root.length >= 3) {
+            sb.append(".{0,4}")
+            root.forEachIndexed { i, c -> if (i > 0) sb.append("[$WEAK]{0,2}"); ch(c) }
+            sb.append(".{0,9}")
+            return sb.toString()
+        }
+        if (partial) sb.append(".*") else sb.append("[،؛؟٪٫٬\u0640]*")
+        for (c in w) ch(c)
+        sb.append(if (partial) ".*" else "[،؛؟٪٫٬\u0640]*")
         return sb.toString()
     }
 
     private fun phraseQuery(phrase: String): Query? {
+        val list = if (spec.synonyms && !spec.strict) Thesaurus.expand(phrase) else listOf(phrase)
+        if (list.size > 1) {
+            val qs = list.map { singlePhraseQuery(it) }
+            if (qs.any { it == null }) return null
+            val b = BooleanQuery.Builder()
+            qs.forEach { b.add(it!!, BooleanClause.Occur.SHOULD) }
+            return b.setMinimumNumberShouldMatch(1).build()
+        }
+        return singlePhraseQuery(phrase)
+    }
+
+    private fun singlePhraseQuery(phrase: String): Query? {
         val pieces = TOKEN.findAll(phrase.lowercase()).map { it.value }.toList()
         if (pieces.isEmpty()) return null
         val b = BooleanQuery.Builder()

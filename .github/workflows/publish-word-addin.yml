@@ -100,9 +100,18 @@ jobs:
           WScript.Echo "COM_OK"
           '@
           Set-Content -Path probe.vbs -Value $vbs -Encoding ASCII
+          # ورد معمولاً بدون دسترسی مدیر اجرا می‌شود؛ ویندوز ثبت‌های COM کاربر (HKCU) را در فرایندهای Elevated نادیده می‌گیرد.
+          # پس آزمون با توکن «کاربر عادی» (runas /trustlevel) اجرا می‌شود — دقیقاً مثل ورد.
+          $i = 0
           foreach ($cs in @("$env:WINDIR\System32\cscript.exe", "$env:WINDIR\SysWOW64\cscript.exe")) {
-            $out = & $cs //nologo probe.vbs 2>&1 | Out-String
-            Write-Host "$cs -> $out"
+            $i++
+            $outFile = Join-Path $PWD "com-$i.txt"
+            if (Test-Path $outFile) { Remove-Item $outFile }
+            $cmd = "cmd /c `"`"$cs`" //nologo `"$PWD\probe.vbs`" > `"$outFile`" 2>&1`""
+            & runas /trustlevel:0x20000 $cmd | Out-Null
+            for ($t = 0; $t -lt 60 -and -not ((Test-Path $outFile) -and ((Get-Content $outFile -Raw) -match "COM_OK|rror|\(")); $t++) { Start-Sleep -Milliseconds 500 }
+            $out = if (Test-Path $outFile) { Get-Content $outFile -Raw } else { "(no output)" }
+            Write-Host "$cs (standard user) -> $out"
             if ($out -notmatch "COM_OK") { $fail = $true }
           }
           if ($fail) {

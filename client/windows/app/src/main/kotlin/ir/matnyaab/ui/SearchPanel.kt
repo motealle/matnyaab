@@ -65,12 +65,14 @@ class SearchPanel(
     private val strict = CheckBox("جست‌وجوی دقیق (همان شکل، ترتیب و فاصله)")
     private val whole = RadioButton("واژهٔ کامل")
     private val partial = RadioButton("بخشی از واژه")
+    private val family = RadioButton("هم‌خانواده").apply { tooltip = Tooltip("واژه‌های هم‌ریشه: علم ← عالم، علوم، تعلیم، معلم…") }
+    private val synonyms = CheckBox("مترادف‌ها هم جست‌وجو شوند (خودسازی ← تزکیه نفس…)")
     private val spacing = ComboBox<String>().apply {
         items.addAll("یکسان‌سازی فاصله و نیم‌فاصله", "نادیده‌گرفتن فاصله‌های اضافه", "فاصله‌گذاری دقیق")
         maxWidth = Double.MAX_VALUE
     }
     private val punct = CheckBox("بی‌اعتنا به علائم نگارشی میان واژه‌ها")
-    private val letters = CheckBox("یکسان‌سازی ی/ي، ک/ك و اِعراب")
+    private val letters = CheckBox("یکسان‌سازی املا: ی/ک عربی، همزه، آ، ۀ، اِعراب و اعداد")
     private val optSummary = Label().apply { styleClass.addAll("opt-summary"); isWrapText = true }
 
     // ----- حالت پیشرفته (همان پنل پیشین)
@@ -108,7 +110,7 @@ class SearchPanel(
     private fun buildV2() {
         ToggleGroup().also { wordsAll.toggleGroup = it; wordsAny.toggleGroup = it }
         ToggleGroup().also { phrasesAny.toggleGroup = it; phrasesAll.toggleGroup = it }
-        ToggleGroup().also { whole.toggleGroup = it; partial.toggleGroup = it }
+        ToggleGroup().also { whole.toggleGroup = it; partial.toggleGroup = it; family.toggleGroup = it }
         restore()
 
         // نوار تکه‌ای حالت‌ها
@@ -133,8 +135,15 @@ class SearchPanel(
         // کارت شیوهٔ تطبیق (تاشو)
         val optBody = VBox(7.0,
             strict,
-            HBox(14.0, whole, partial).apply { alignment = Pos.CENTER_RIGHT },
+            HBox(12.0, whole, partial, family).apply { alignment = Pos.CENTER_RIGHT },
             label("فاصله‌ها:"), spacing, punct, letters,
+            HBox(6.0, synonyms, Hyperlink("فهرست…").apply {
+                tooltip = Tooltip("ویرایش فهرست مترادف‌های شخصی (هر سطر یک گروه)")
+                setOnAction {
+                    runCatching { java.awt.Desktop.getDesktop().open(ir.matnyaab.core.search.Thesaurus.ensureUserFile()) }
+                    ir.matnyaab.core.search.Thesaurus.reload()
+                }
+            }).apply { alignment = Pos.CENTER_RIGHT },
         ).apply { padding = Insets(4.0, 0.0, 0.0, 0.0) }
         val open = settings?.get("SEARCH_OPTS_OPEN") == "1"
         optBody.isVisible = open; optBody.isManaged = open
@@ -149,13 +158,13 @@ class SearchPanel(
             }
         }
         optSummary.style = "${Theme.FONT} -fx-font-size: ${Constants.FONT_SIZE_SMALL}px;"
-        listOf(strict, whole, partial, punct, letters, wordsAll, wordsAny, phrasesAll, phrasesAny).forEach {
+        listOf(strict, whole, partial, family, synonyms, punct, letters, wordsAll, wordsAny, phrasesAll, phrasesAny).forEach {
             it.style = "${Theme.FONT} -fx-font-size: ${Constants.FONT_SIZE_SMALL}px;"
         }
         spacing.style = Theme.FONT
         optCard.styleClass.add("opt-card")
         optCard.children.setAll(head, optSummary, optBody)
-        listOf(strict.selectedProperty(), whole.selectedProperty(), punct.selectedProperty(), letters.selectedProperty())
+        listOf(strict.selectedProperty(), whole.selectedProperty(), family.selectedProperty(), synonyms.selectedProperty(), punct.selectedProperty(), letters.selectedProperty())
             .forEach { it.addListener { _ -> syncOptions() } }
         spacing.selectionModel.selectedIndexProperty().addListener { _ -> syncOptions() }
         syncOptions()
@@ -235,9 +244,10 @@ class SearchPanel(
 
     private fun syncOptions() {
         val s = strict.isSelected
-        listOf(whole, partial, spacing, punct, letters).forEach { it.isDisable = s }
+        listOf(whole, partial, family, synonyms, spacing, punct, letters).forEach { it.isDisable = s }
         val parts = if (s) listOf("دقیق: همان شکل، ترتیب و فاصله") else listOfNotNull(
-            if (partial.isSelected) "بخشی از واژه" else "واژهٔ کامل",
+            if (partial.isSelected) "بخشی از واژه" else if (family.isSelected) "هم‌خانواده" else "واژهٔ کامل",
+            if (synonyms.isSelected) "با مترادف‌ها" else null,
             listOf("یکسان‌سازی فاصله و نیم‌فاصله", "بی‌اعتنا به فاصلهٔ اضافه", "فاصلهٔ دقیق")[spacing.selectionModel.selectedIndex.coerceAtLeast(0)],
             if (punct.isSelected) "بی‌اعتنا به علائم" else null,
         )
@@ -247,7 +257,8 @@ class SearchPanel(
 
     private fun spec(phrases: List<String>, combine: Combine, exclude: List<String> = emptyList()) = SearchSpec(
         phrases = phrases, combine = combine, exclude = exclude,
-        match = if (partial.isSelected) MatchType.PARTIAL else MatchType.WHOLE,
+        match = if (partial.isSelected) MatchType.PARTIAL else if (family.isSelected) MatchType.FAMILY else MatchType.WHOLE,
+        synonyms = synonyms.isSelected,
         spacing = when (spacing.selectionModel.selectedIndex) { 1 -> Spacing.COLLAPSE; 2 -> Spacing.EXACT; else -> Spacing.UNIFY },
         ignorePunct = punct.isSelected, normalizeLetters = letters.isSelected, strict = strict.isSelected,
     )
@@ -313,9 +324,9 @@ class SearchPanel(
     private fun save() {
         val s = settings ?: return
         s.setValue("SEARCH_OPTS", listOf(
-            if (strict.isSelected) 1 else 0, if (partial.isSelected) 1 else 0, spacing.selectionModel.selectedIndex.coerceAtLeast(0),
+            if (strict.isSelected) 1 else 0, if (partial.isSelected) 1 else if (family.isSelected) 2 else 0, spacing.selectionModel.selectedIndex.coerceAtLeast(0),
             if (punct.isSelected) 1 else 0, if (letters.isSelected) 1 else 0,
-            if (wordsAny.isSelected) 1 else 0, if (phrasesAll.isSelected) 1 else 0,
+            if (wordsAny.isSelected) 1 else 0, if (phrasesAll.isSelected) 1 else 0, if (synonyms.isSelected) 1 else 0,
         ).joinToString(","))
     }
 
@@ -323,7 +334,8 @@ class SearchPanel(
         val o = (settings?.get("SEARCH_OPTS") ?: "").split(',').mapNotNull { it.toIntOrNull() }
         fun f(i: Int, d: Int) = o.getOrElse(i) { d }
         strict.isSelected = f(0, 0) == 1
-        (if (f(1, 0) == 1) partial else whole).isSelected = true
+        (when (f(1, 0)) { 1 -> partial; 2 -> family; else -> whole }).isSelected = true
+        synonyms.isSelected = f(7, 0) == 1
         spacing.selectionModel.select(f(2, 0).coerceIn(0, 2))
         punct.isSelected = f(3, 1) == 1
         letters.isSelected = f(4, 1) == 1

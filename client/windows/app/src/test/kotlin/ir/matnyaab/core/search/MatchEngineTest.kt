@@ -102,6 +102,30 @@ class MatchEngineTest {
         }
     }
 
+    @Test fun spellingVariants() {
+        val s = SearchSpec(listOf("مسئولیت"))
+        assertEquals(3, n(s, "مسئولیت و مسوولیت و مسؤولیت"))
+        assertEquals(2, n(SearchSpec(listOf("تأثیر")), "تأثیر و تاثیر"))
+        assertEquals(2, n(SearchSpec(listOf("تاثیر")), "تأثیر و تاثیر"))
+        assertEquals(2, n(SearchSpec(listOf("قرآن")), "قرآن و قران"))
+        assertEquals(1, n(SearchSpec(listOf("مسئولیت"), match = MatchType.PARTIAL), "مسئولیت‌پذیری"))
+        assertEquals(2, n(SearchSpec(listOf("۱۲۳")), "123 و ١٢٣"))
+        assertEquals(2, n(SearchSpec(listOf("خانهٔ دوست")), "خانه دوست و خانۀ دوست"))
+    }
+
+    @Test fun wordFamily() {
+        assertEquals("علم", Morph.root("معلم")); assertEquals("علم", Morph.root("تعلیم")); assertEquals("علم", Morph.root("عالمان"))
+        val t = "عالم عالمان علوم علمی تعلیم تعلم معلم؛ اما قلم و سلام نه"
+        assertEquals(7, n(SearchSpec(listOf("علم"), match = MatchType.FAMILY), t))
+    }
+
+    @Test fun synonyms() {
+        val e = MatchEngine(SearchSpec(listOf("خودسازی"), synonyms = true))
+        assertTrue(e.alternatives(0).contains("تزکیه نفس"))
+        assertEquals(2, e.evaluate("سخنرانی دربارهٔ تزکیه نفس و تهذیب‌نفس").total)
+        assertEquals(0, n(SearchSpec(listOf("خودسازی")), "سخنرانی دربارهٔ تزکیه نفس"))
+    }
+
     @Test fun luceneCandidatesFindPunctuationGluedTokens() {
         val home = Files.createTempDirectory("mx-test")
         System.setProperty("matnyaab.home", home.toString())
@@ -120,5 +144,7 @@ class MatchEngineTest {
         assertEquals(1, count); assertTrue(html.contains("<span"))
         val b = idx.searchSpec(SearchSpec(emptyList(), expression = "(جهاد OR مبارزه) AND نفس NOT تقوا"), idx.allObjects, emptySet())
         assertEquals(listOf("/b.txt"), b.map { it.path })
+        val syn = idx.searchSpec(SearchSpec(listOf("جهاد اکبر"), synonyms = true), idx.allObjects, emptySet())
+        assertEquals(setOf("/a.txt", "/b.txt"), syn.map { it.path }.toSet())
     }
 }

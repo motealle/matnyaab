@@ -16,7 +16,8 @@ namespace Matnyaab.Word.UI
         private readonly Btn _mPhrase, _mPhrases, _mBool;
         private readonly TextBox _input = Kit.Input("واژه یا عبارت؛ مثلاً: تهذیب نفس");
         private readonly TextBox _inputMulti = Kit.Input("", true, 4);
-        private readonly CheckBox _strict, _partial, _punct;
+        private readonly CheckBox _strict, _punct, _syn;
+        private readonly ComboBox _match = Kit.Combo(new[] { "واژهٔ کامل", "بخشی از واژه (مجاهد ← مجاهدت)", "هم‌خانواده (علم ← عالم، تعلیم، معلم)" });
         private readonly ComboBox _spacing = Kit.Combo(new[] { "یکسان‌سازی فاصله و نیم‌فاصله", "نادیده‌گرفتن فاصله‌های اضافه", "فاصله‌گذاری دقیق" });
         private readonly Card _opts = new Card { Soft = true };
         private readonly Label _summary = Kit.Hint("");
@@ -35,10 +36,10 @@ namespace Matnyaab.Word.UI
             Add(_input); Add(_inputMulti);
 
             _strict = Kit.Check("جست‌وجوی دقیق (همان شکل، ترتیب و فاصله)", false, v => SyncOpts());
-            _partial = Kit.Check("بخشی از واژه هم پیدا شود (مجاهد ← مجاهدت)");
+            _syn = Kit.Check("مترادف‌ها هم جست‌وجو شوند (خودسازی ← تزکیه نفس…)");
             _punct = Kit.Check("بی‌اعتنا به علائم نگارشی میان واژه‌ها", true);
             _opts.Add(Kit.Hint("شیوهٔ تطبیق"));
-            _opts.Add(_strict); _opts.Add(_partial); _opts.Add(_spacing); _opts.Add(_punct);
+            _opts.Add(_strict); _opts.Add(_match); _opts.Add(_spacing); _opts.Add(_punct); _opts.Add(_syn);
             Add(_opts);
 
             var go = Kit.Button("جست‌وجو در متن‌یاب", () => Run(null), BtnKind.Primary);
@@ -76,7 +77,7 @@ namespace Matnyaab.Word.UI
             Relayout();
         }
 
-        private void SyncOpts() { _partial.Enabled = _spacing.Enabled = _punct.Enabled = !_strict.Checked; }
+        private void SyncOpts() { _match.Enabled = _spacing.Enabled = _punct.Enabled = _syn.Enabled = !_strict.Checked; }
 
         private string CurrentQuery() => _mode == "phrases" ? _inputMulti.Text.Trim() : _input.Text.Trim();
 
@@ -93,7 +94,7 @@ namespace Matnyaab.Word.UI
             AddinSettings.Current.Remember(q); AddinSettings.Save(false);
             var body = new Dictionary<string, object>
             {
-                ["strict"] = _strict.Checked, ["match"] = _partial.Checked ? "partial" : "whole",
+                ["strict"] = _strict.Checked, ["match"] = _match.SelectedIndex == 1 ? "partial" : _match.SelectedIndex == 2 ? "family" : "whole", ["synonyms"] = _syn.Checked,
                 ["spacing"] = _spacing.SelectedIndex == 1 ? "collapse" : _spacing.SelectedIndex == 2 ? "exact" : "unify",
                 ["ignorePunct"] = _punct.Checked, ["limit"] = 60, ["snippets"] = 5,
             };
