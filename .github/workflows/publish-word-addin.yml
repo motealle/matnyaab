@@ -115,6 +115,16 @@ jobs:
             if ($out -notmatch "COM_OK") { $fail = $true }
           }
           if ($fail) {
+            Write-Host "---- diagnostics ----"
+            & reg query "HKCR\CLSID\{3B1E5F7A-8C2D-4E6B-A9F0-5D7C1B2E4A61}\InprocServer32" 2>&1 | Write-Host
+            & reg query "HKCU\Software\Classes\Matnyaab.Word.Connect\CLSID" 2>&1 | Write-Host
+            try { $t = [Type]::GetTypeFromCLSID([Guid]"3B1E5F7A-8C2D-4E6B-A9F0-5D7C1B2E4A61"); $o = [Activator]::CreateInstance($t); Write-Host "PS_ACT_OK" } catch { Write-Host ("PS_ACT: " + $_.Exception.ToString()) }
+            try { $a = [Reflection.Assembly]::LoadFrom($dll); Write-Host ("LOADFROM_OK " + $a.FullName); $c = $a.CreateInstance("Matnyaab.Word.Com.Connect"); Write-Host ("CREATE_OK " + ($c -ne $null)) } catch { Write-Host ("LOADFROM: " + $_.Exception.ToString()) }
+            & "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\RegAsm.exe" $dll /codebase /regfile:"$PWD\regasm.reg" 2>&1 | Write-Host
+            if (Test-Path regasm.reg) { Get-Content regasm.reg | Select-Object -First 40 | Write-Host }
+            & "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\RegAsm.exe" $dll /codebase 2>&1 | Write-Host
+            $o2 = & "$env:WINDIR\System32\cscript.exe" //nologo probe.vbs 2>&1 | Out-String
+            Write-Host "after regasm (HKLM, elevated) -> $o2"
             Get-ChildItem (Join-Path $env:LOCALAPPDATA "Matnyaab") -Recurse -ErrorAction SilentlyContinue | Select-Object -First 20 | Format-Table FullName | Out-String | Write-Host
             if (Test-Path (Join-Path $env:LOCALAPPDATA "Matnyaab\word-addin.log")) { Get-Content (Join-Path $env:LOCALAPPDATA "Matnyaab\word-addin.log") | Write-Host }
             Get-ChildItem C:\fuslog -Recurse -Filter *.htm | Select-Object -First 6 | ForEach-Object { Write-Host "== $($_.FullName)"; (Get-Content $_.FullName -Raw) -replace '<[^>]+>','' | Write-Host }
