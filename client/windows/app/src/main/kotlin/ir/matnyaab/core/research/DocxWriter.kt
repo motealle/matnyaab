@@ -188,7 +188,7 @@ ${h("Heading3", "heading 3", 2, layout.size + 1)}
             "word/_rels/document.xml.rels" to """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdStyles" Type="$R/styles" Target="styles.xml"/><Relationship Id="rIdSettings" Type="$R/settings" Target="settings.xml"/><Relationship Id="rIdFn" Type="$R/footnotes" Target="footnotes.xml"/><Relationship Id="rIdFtr" Type="$R/footer" Target="footer1.xml"/></Relationships>""",
             "word/settings.xml" to """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:settings xmlns:w="$W"><w:footnotePr><w:footnote w:id="-1"/><w:footnote w:id="0"/></w:footnotePr><w:compat><w:compatSetting w:name="compatibilityMode" w:uri="http://schemas.microsoft.com/office/word" w:val="15"/></w:compat></w:settings>""",
+<w:settings xmlns:w="$W"><w:footnotePr><w:footnote w:id="-1"/><w:footnote w:id="0"/></w:footnotePr><w:compat><w:compatSetting w:name="compatibilityMode" w:uri="http://schemas.microsoft.com/office/word" w:val="15"/></w:compat><w:themeFontLang w:val="en-US" w:bidi="fa-IR"/></w:settings>""",
             "word/styles.xml" to styles(),
             "word/document.xml" to doc,
             "word/footnotes.xml" to footnotes(),

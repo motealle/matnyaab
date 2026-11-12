@@ -452,7 +452,7 @@ class ResearchWindow(private val owner: Stage, private val settings: AppSettings
                 label("خروجی یک فایل Word صفحه‌آرایی‌شده است: صفحهٔ عنوان، فهرست مطالب خودکار، فصل‌ها با سبک «عنوان ۱»، نقل‌قول‌ها با پانویس منبع، شمارهٔ صفحه و فهرست منابع. " +
                     "در ورد با افزونهٔ متن‌یاب می‌توانید قالب ناشر یا دانشگاه را هم یک‌جا اعمال کنید.", "muted"),
                 HBox(8.0, primary("ساخت فایل Word کتاب") { build() },
-                    secondary("نگارش پیوستهٔ فصل‌ها با دستیار…") { select("ai") }).apply { alignment = Pos.CENTER_RIGHT })
+                    secondary("کتاب با هوش مصنوعی (متن روان از فیش‌ها)…") { BookWizard.show(stage, settings, indexer, project.value) }.apply { isVisible = settings.get("FF_AI") != "0"; isManaged = isVisible }).apply { alignment = Pos.CENTER_RIGHT })
             root = HBox(14.0, left.apply { prefWidth = 420.0 }, right.apply { HBox.setHgrow(this, Priority.ALWAYS) }).apply { padding = Insets(14.0) }
             load()
         }

@@ -292,30 +292,53 @@ class MainWindow(
 
     private fun research(tab: String) = ResearchWindow.show(stage, settings, indexer, tab)
 
-    /** نوار ابزار بالای برنامه: کارهای اصلی پژوهشی در یک نگاه */
+    /**
+     * نوار ابزار بالای برنامه: کارهای اصلی پژوهشی در یک نگاه، با برچسب‌های کوتاه.
+     * اگر پنجره باریک باشد، فقط نشانه‌ها می‌مانند (راهنمای هر دکمه با نگه‌داشتن نشانگر).
+     */
     private fun buildToolbar(): javafx.scene.layout.HBox {
+        val labeled = mutableListOf<Labeled>()
         fun tool(glyph: String, text: String, tip: String, a: () -> Unit) = Button(text).apply {
             styleClass.add("tool-btn"); style = Theme.FONT
             graphic = Label(glyph).apply { styleClass.add("tool-glyph") }
             tooltip = Tooltip(tip).apply { style = Theme.FONT }
             setOnAction { a() }
-        }
+        }.also { labeled.add(it) }
+        fun menu(glyph: String, text: String, tip: String, vararg entries: Pair<String, () -> Unit>) = MenuButton(text).apply {
+            styleClass.add("tool-btn"); style = Theme.FONT
+            graphic = Label(glyph).apply { styleClass.add("tool-glyph") }
+            tooltip = Tooltip(tip).apply { style = Theme.FONT }
+            entries.forEach { (t, a) -> items.add(MenuItem(t).apply { setOnAction { a() } }) }
+        }.also { labeled.add(it) }
         fun sep() = Region().apply { styleClass.add("tool-sep") }
         val items = mutableListOf<javafx.scene.Node>(
             tool("⌕", "جست‌وجو", "جست‌وجو در کتابخانهٔ شما (Ctrl+F)") { accordions.getOrNull(0)?.let { if (!it.isOpen) it.expand() }; searchPanel.searchOrFocus() },
-            tool("＋", "افزودن پوشه", "افزودن پوشهٔ اسناد به کتابخانه (Ctrl+O)") { selectDirectory() },
+            tool("＋", "پوشه", "افزودن پوشهٔ اسناد به کتابخانه (Ctrl+O)") { selectDirectory() },
         )
-        if (flag("FF_RESEARCH")) items += listOf(sep(),
-            tool("🗂", "فیش‌ها", "فیش‌ها و پروژه‌های پژوهشی؛ در پیش‌نمایش متن را انتخاب و Ctrl+D بزنید") { research("fish") },
-            tool("📘", "ساخت کتاب", "از فیش‌ها یک فایل Word صفحه‌آرایی‌شده با فهرست و پانویس بسازید") { research("book") })
+        if (flag("FF_RESEARCH")) {
+            items += listOf(sep(), tool("🗂", "فیش‌ها", "فیش‌ها و پروژه‌های پژوهشی؛ در پیش‌نمایش متن را انتخاب و Ctrl+D بزنید") { research("fish") })
+            val book = mutableListOf<Pair<String, () -> Unit>>("ساخت کتاب از فیش‌ها (بدون هوش مصنوعی)" to { research("book") })
+            if (flag("FF_AI")) book += "کتاب با هوش مصنوعی: از عنوان و کلیدواژه تا Word صفحه‌آرایی‌شده" to { BookWizard.show(stage, settings, indexer) }
+            items += menu("📘", "کتاب", "ساخت کتاب از فیش‌ها یا پیش‌نویس کامل کتاب با هوش مصنوعی", *book.toTypedArray())
+        }
         if (flag("FF_SOURCE")) items += tool("⧉", "منبع‌یاب", "منبع یک نقل‌قول و همانندجویی متن با کتابخانهٔ شما") { research("source") }
-        if (flag("FF_AI")) items += listOf(sep(), tool("✦", "دستیار هوشمند", "مأموریت‌های پژوهشی چندمرحله‌ای با هوش مصنوعیِ دلخواه شما و خروجی Word/Markdown") { research("ai") })
         if (flag("FF_QURAN")) items += tool("۞", "کشف‌الآیات", "آیات قرآن در اسناد شما: نقل کامل و بخشی، ارجاع شماره‌ای و ترجمه") { openQuran(null) }
-        if (flag("FF_SEMANTIC")) items += tool("≈", "جست‌وجوی مفهومی", "جست‌وجو بر پایهٔ معنا (بستهٔ اختیاری آفلاین)") { openSemantic() }
+        if (flag("FF_AI")) items += listOf(sep(), tool("✦", "دستیار هوشمند", "مأموریت‌های پژوهشی چندمرحله‌ای با هوش مصنوعیِ دلخواه شما و خروجی Word/Markdown") { research("ai") })
+        if (flag("FF_SEMANTIC")) items += tool("≈", "مفهومی", "جست‌وجو بر پایهٔ معنا (بستهٔ اختیاری آفلاین)") { openSemantic() }
+        if (flag("FF_WHISPER")) items += tool("🎙", "گفتار به متن", "صدا و فیلم را به متن قابل جست‌وجو تبدیل کنید (بستهٔ اختیاری Whisper)") { WhisperDialog.show(stage, settings) { addFolder(it) } }
         items += listOf(Region().also { HBox.setHgrow(it, Priority.ALWAYS) },
             tool("W", "افزونهٔ ورد", "متن‌یاب درون Microsoft Word: فیش، استناد، قالب پایان‌نامه، نامهٔ اداری") { runCatching { Desktop.getDesktop().browse(java.net.URI(Constants.BASE_URL + "/#word")) } },
-            tool("?", "چه کارهایی می‌توانم بکنم؟", "سناریوهای کاربردی متن‌یاب") { ScenariosDialog.show(stage) { research(it) } })
-        return HBox(4.0, *items.toTypedArray()).apply { styleClass.add("app-toolbar"); alignment = Pos.CENTER_RIGHT; nodeOrientation = NodeOrientation.RIGHT_TO_LEFT }
+            tool("?", "راهنما", "چه کارهایی می‌توانم بکنم؟ سناریوهای کاربردی متن‌یاب") { ScenariosDialog.show(stage) { research(it) } },
+            tool("💡", "پیشنهاد", "پیشنهاد قابلیت تازه یا گزارش مشکل به سازندگان متن‌یاب") { FeedbackDialog.show(stage) })
+        val bar = HBox(4.0, *items.toTypedArray()).apply { styleClass.add("app-toolbar"); alignment = Pos.CENTER_RIGHT; nodeOrientation = NodeOrientation.RIGHT_TO_LEFT; minWidth = 0.0 }
+        // حالت فشرده در پنجره‌های باریک
+        var full = -1.0
+        bar.widthProperty().addListener { _, _, w ->
+            if (full < 0 && labeled.all { it.contentDisplay != ContentDisplay.GRAPHIC_ONLY }) full = bar.prefWidth(-1.0)
+            val compact = full > 0 && w.toDouble() < full
+            labeled.forEach { it.contentDisplay = if (compact) ContentDisplay.GRAPHIC_ONLY else ContentDisplay.LEFT }
+        }
+        return bar
     }
 
     /** فیش سریع از متن انتخاب‌شده در پیش‌نمایش؛ منبع و جای دقیق خودکار ثبت می‌شود */
@@ -736,6 +759,12 @@ class MainWindow(
     /** معادل selectDirectory + scanDirectoryDialog */
     private fun selectDirectory() {
         val dir = DirectoryChooser().apply { title = "انتخاب پوشه" }.showDialog(stage) ?: return
+        addFolder(dir)
+    }
+
+    /** افزودن یک پوشهٔ مشخص به کتابخانه (برای رونویسی‌ها و…) */
+    fun addFolder(dir: File) {
+        indexer.allObjects.firstOrNull { File(it.rootPath).canonicalPath == dir.canonicalPath }?.let { showIncrementalDialog(it); return }
         ScanDirectoryDialog(stage, dir.absolutePath, indexer, license) {
             loadExistingIndexers()
         }.show()

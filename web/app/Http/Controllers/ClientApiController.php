@@ -63,6 +63,35 @@ class ClientApiController extends Controller
         return $this->ping($request);
     }
 
+    /** پیشنهاد قابلیت یا گزارش مشکل از درون برنامه */
+    public function feedback(Request $request): JsonResponse
+    {
+        $type = $request->input('type') === 'bug' ? 'support' : 'feature';
+        if (! $this->settings->flag($type === 'feature' ? 'feature_requests_enabled' : 'contact_enabled')) {
+            return response()->json(['ok' => false, 'error' => 'disabled']);
+        }
+        $message = trim((string) $request->input('message', ''));
+        if (mb_strlen($message) < 10 || mb_strlen($message) > 3000) {
+            return response()->json(['ok' => false, 'error' => 'پیام باید دست‌کم چند کلمه و حداکثر ۳۰۰۰ نویسه باشد.']);
+        }
+        $contact = mb_substr(trim((string) $request->input('contact', '')), 0, 120);
+        $hash = sha1(mb_strtolower($contact).'|'.$message);
+        if (! $this->messages->isDuplicate($hash)) {
+            $this->messages->addInbox([
+                'type' => $type,
+                'name' => 'کاربر برنامه',
+                'contact' => $contact !== '' ? $contact : '—',
+                'message' => $message,
+                'code' => \App\Services\SubscriptionStore::normalizeCode((string) $request->input('code', '')) ?: null,
+                'hash' => $hash,
+                'source' => 'app',
+                'app_version' => mb_substr((string) $request->input('app_version', ''), 0, 20),
+            ]);
+        }
+
+        return response()->json(['ok' => true]);
+    }
+
     public function ping(Request $request): JsonResponse
     {
         $code = \App\Services\SubscriptionStore::normalizeCode((string) $request->input('code'));

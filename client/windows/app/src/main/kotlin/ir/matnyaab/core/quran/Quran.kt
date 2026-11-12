@@ -132,7 +132,7 @@ object Quran {
 
     // ------------------------------------------------------------------ ترجمه‌های افزوده‌شده (قالب Tanzil: سوره|آیه|متن)
 
-    fun translationsDir(): File = File(ir.matnyaab.core.Constants.APP_SETTINGS_DIR, "quran").also { it.mkdirs() }
+    fun translationsDir(): File = ir.matnyaab.core.Constants.APP_SETTINGS_DIR.resolve("quran").toFile().also { it.mkdirs() }
     fun translationFiles(): List<File> = translationsDir().listFiles { f -> f.isFile && f.extension.lowercase() == "txt" }?.sortedBy { it.name } ?: emptyList()
 
     /** ترجمهٔ کاربر را بررسی و کپی می‌کند؛ پیام خطا یا null */

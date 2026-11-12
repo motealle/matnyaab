@@ -1,0 +1,190 @@
+name: Publish Whisper Pack
+
+# بستهٔ اختیاری «گفتار به متن»: whisper.cpp (MIT) + ffmpeg (LGPL) برای ویندوز، به‌علاوهٔ مدل‌های ggml (MIT).
+# جدا از برنامهٔ پایه ساخته، با برنامهٔ واقعی آزموده و فقط از شاخهٔ اصلی منتشر می‌شود.
+# انتشار فقط با اجرای دستی (پس از انتشار برنامه) تا با به‌روزرسانی releases.json دیگر گردش‌کارها هم‌زمان نشود.
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "client/windows/app/src/main/kotlin/ir/matnyaab/core/whisper/**"
+      - ".github/workflows/publish-whisper-pack.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: matnyaab-whisper-pack
+  cancel-in-progress: false
+
+env:
+  PACK_VERSION: "1"
+  PACK_FILE: "Matnyaab-Whisper-Pack-1.zip"
+  MODEL_REPO: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main"
+  FFMPEG_URL: "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-lgpl.zip"
+  SITE_URL: "https://www.matnyaab.ir"
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: client/windows
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
+
+      - name: Download whisper.cpp and ffmpeg
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $rel = gh api repos/ggml-org/whisper.cpp/releases/latest | ConvertFrom-Json
+          Write-Host "whisper.cpp $($rel.tag_name): $($rel.assets.name -join ', ')"
+          $asset = $rel.assets | Where-Object { $_.name -eq "whisper-bin-x64.zip" } | Select-Object -First 1
+          if (-not $asset) { $asset = $rel.assets | Where-Object { $_.name -like "*bin-x64*.zip" -and $_.name -notlike "*cublas*" -and $_.name -notlike "*blas*" } | Select-Object -First 1 }
+          if (-not $asset) { throw "whisper bin asset not found" }
+          Invoke-WebRequest $asset.browser_download_url -OutFile w.zip
+          Expand-Archive w.zip -DestinationPath w
+          Invoke-WebRequest $env:FFMPEG_URL -OutFile ff.zip
+          Expand-Archive ff.zip -DestinationPath ff
+          $pack = Join-Path $PWD "pack"; New-Item -ItemType Directory -Force -Path $pack | Out-Null
+          $cli = Get-ChildItem w -Recurse -Filter "whisper-cli.exe" | Select-Object -First 1
+          if (-not $cli) { $cli = Get-ChildItem w -Recurse -Filter "main.exe" | Select-Object -First 1 }
+          if (-not $cli) { throw "whisper-cli.exe not found" }
+          Copy-Item $cli.FullName $pack
+          Get-ChildItem $cli.DirectoryName -Filter *.dll | Copy-Item -Destination $pack
+          $ffexe = Get-ChildItem ff -Recurse -Filter "ffmpeg.exe" | Select-Object -First 1
+          Copy-Item $ffexe.FullName $pack
+          Get-ChildItem $ffexe.DirectoryName -Filter *.dll | Copy-Item -Destination $pack
+          foreach ($d in @("vcruntime140.dll", "vcruntime140_1.dll", "msvcp140.dll")) { $s = Join-Path "$env:WINDIR\System32" $d; if (Test-Path $s) { Copy-Item $s $pack } }
+          @"
+          Matnyaab speech-to-text pack $($env:PACK_VERSION)
+          whisper.cpp $($rel.tag_name) — MIT License — https://github.com/ggml-org/whisper.cpp
+          FFmpeg (LGPL build by BtbN) — https://ffmpeg.org — source: https://github.com/BtbN/FFmpeg-Builds
+          "@ | Set-Content "$pack\NOTICE.txt" -Encoding UTF8
+          Get-ChildItem $pack | Format-Table Name, Length
+
+      - name: Download models
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          New-Item -ItemType Directory -Force -Path models | Out-Null
+          foreach ($m in @("ggml-base.bin", "ggml-large-v3-turbo-q5_0.bin")) {
+            Invoke-WebRequest "$env:MODEL_REPO/$m" -OutFile "models\$m"
+            if ((Get-Item "models\$m").Length -lt 50MB) { throw "$m too small" }
+          }
+          Get-ChildItem models | Format-Table Name, Length
+
+      - name: Build app and assemble pack
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          gradle --no-daemon :app:shadowJar
+          if ($LASTEXITCODE -ne 0) { throw "build failed" }
+          $zip = Join-Path $PWD $env:PACK_FILE
+          Compress-Archive -Path "pack\*" -DestinationPath $zip -CompressionLevel Optimal
+          Write-Host "$env:PACK_FILE $((Get-Item $zip).Length) bytes"
+
+      - name: End-to-end self-test (speech → mp3 → ffmpeg → whisper → text)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          Add-Type -AssemblyName System.Speech
+          $s = New-Object System.Speech.Synthesis.SpeechSynthesizer
+          $s.SetOutputToWaveFile((Join-Path $PWD "speech.wav"))
+          $s.Speak("Hello. This is a short test of the Matnyaab speech to text pack. Research becomes searchable.")
+          $s.Dispose()
+          & "pack\ffmpeg.exe" -hide_banner -y -i speech.wav -codec:a libmp3lame speech.mp3 2>&1 | Out-Null
+          if (-not (Test-Path speech.mp3)) { & "pack\ffmpeg.exe" -hide_banner -y -i speech.wav speech.m4a 2>&1 | Out-Null; $in = "speech.m4a" } else { $in = "speech.mp3" }
+          $out = Join-Path $PWD "selftest.json"
+          & java -cp "app\build\libs\matnyaab-all.jar" ir.matnyaab.MainKt --whisper-selftest (Join-Path $PWD $env:PACK_FILE) (Join-Path $PWD "models\ggml-base.bin") (Join-Path $PWD $in) $out
+          $code = $LASTEXITCODE
+          $r = Get-Content $out -Raw; Write-Host $r
+          if ($code -ne 0) { throw "whisper self-test failed ($code)" }
+          if ($r -notmatch "(?i)test") { throw "transcript does not contain expected words" }
+
+      - name: Checksums
+        shell: pwsh
+        run: |
+          $files = @((Join-Path $PWD $env:PACK_FILE)) + (Get-ChildItem models -File | ForEach-Object { $_.FullName })
+          foreach ($f in $files) {
+            $h = (Get-FileHash $f -Algorithm SHA256).Hash.ToLowerInvariant()
+            Set-Content "$f.sha256" "$h  $(Split-Path $f -Leaf)" -Encoding ascii
+          }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: matnyaab-whisper-${{ github.sha }}
+          path: |
+            client/windows/${{ env.PACK_FILE }}
+            client/windows/${{ env.PACK_FILE }}.sha256
+            client/windows/models/*
+          retention-days: 3
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USER: ${{ secrets.FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD_MATNYAAB_IR }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: matnyaab-whisper-${{ github.sha }}
+          path: release
+
+      - name: Upload pack and models, merge release manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          ls -la release release/models
+          server="${FTP_SERVER%/}"; case "$server" in ftp://*|ftps://*) url="$server" ;; *) url="ftp://$server" ;; esac
+          curl --silent --show-error --fail --location "$SITE_URL/downloadFiles/releases.json?ts=$(date +%s)" -o releases.json || echo '{"schema":1}' > releases.json
+          up() { curl --silent --show-error --fail --retry 3 --connect-timeout 20 --max-time 3600 --user "$FTP_USER:$FTP_PASSWORD" --ftp-method nocwd --ftp-create-dirs --upload-file "$1" "$url/downloadFiles/$2"; }
+          up "release/$PACK_FILE" "$PACK_FILE"
+          # مدل‌ها فقط اگر تغییر کرده‌اند دوباره بارگذاری می‌شوند
+          for m in release/models/*.bin; do
+            name="$(basename "$m")"; h="$(sha256sum "$m" | cut -d' ' -f1)"
+            old="$(python3 -c "import json,sys; m=json.load(open('releases.json')).get('whisper',{}).get('models',[]); print(next((x.get('sha256','') for x in m if x.get('file')=='$name'),''))")"
+            if [ "$old" != "$h" ]; then echo "upload $name"; up "$m" "whisper/$name"; else echo "skip $name (unchanged)"; fi
+          done
+          python3 - <<'PY'
+          import json, os, hashlib
+          def sha(p):
+              h = hashlib.sha256()
+              with open(p, "rb") as f:
+                  for b in iter(lambda: f.read(1 << 20), b""): h.update(b)
+              return h.hexdigest()
+          m = json.load(open("releases.json", encoding="utf-8"))
+          pf = "release/" + os.environ["PACK_FILE"]
+          info = {
+              "base": ("سریع", "مناسب صدای واضح؛ سبک و سریع"),
+              "large-v3-turbo-q5_0": ("دقیق (پیشنهادی برای فارسی)", "کیفیت بهتر برای فارسی؛ کندتر"),
+          }
+          models = []
+          for name in sorted(os.listdir("release/models")):
+              if not name.endswith(".bin"): continue
+              key = name[len("ggml-"):-len(".bin")]
+              t, d = info.get(key, (key, ""))
+              p = "release/models/" + name
+              models.append({"id": key, "title": t, "desc": d, "file": name, "url": "/downloadFiles/whisper/" + name,
+                             "size_bytes": os.path.getsize(p), "sha256": sha(p)})
+          m["whisper"] = {"label": "بستهٔ گفتار به متن (اختیاری)", "version": os.environ["PACK_VERSION"],
+                          "url": "/downloadFiles/" + os.environ["PACK_FILE"], "size_bytes": os.path.getsize(pf), "sha256": sha(pf),
+                          "models": models}
+          json.dump(m, open("releases.json", "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+          PY
+          up releases.json releases.json
+          curl --silent --show-error --fail --location -o /dev/null -w "%{http_code} %{size_download}\n" "$SITE_URL/downloadFiles/$PACK_FILE"

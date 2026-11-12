@@ -63,9 +63,9 @@ class MissionRunner(
 
     private fun check() { if (cancelled()) throw InterruptedException("مأموریت لغو شد") }
 
-    private fun ask(system: String, user: String, max: Int = 3000): String { check(); return AiClient.complete(provider, system, user, max) }
+    internal fun ask(system: String, user: String, max: Int = 3000): String { check(); return AiClient.complete(provider, system, user, max) }
 
-    private val SYS = "شما دستیار پژوهشی دقیق و امین هستید که فقط بر پایهٔ متن‌های داده‌شده کار می‌کنید. " +
+    internal val SYS = "شما دستیار پژوهشی دقیق و امین هستید که فقط بر پایهٔ متن‌های داده‌شده کار می‌کنید. " +
         "هرگز اطلاعات یا نقل‌قول از خودتان نسازید. پاسخ را دقیقاً در قالب JSON خواسته‌شده و به فارسی بدهید."
 
     fun estimate(spec: MissionSpec): Int = when {
@@ -121,7 +121,7 @@ class MissionRunner(
 
     // ---------------------------------------------------------------- مراحل
 
-    private fun expand(spec: MissionSpec): List<String> {
+    internal fun expand(spec: MissionSpec): List<String> {
         val r = ask(SYS, "موضوع پژوهش: «${spec.topic}»${if (spec.goal.isNotBlank()) "\nهدف: ${spec.goal}" else ""}\n" +
             "تا ۱۰ واژه یا عبارت کوتاه فارسی (و در صورت لزوم عربی) بنویس که در متون همین موضوع را با تعبیرهای دیگر بیان می‌کنند " +
             "(مترادف، اصطلاح تخصصی، تعبیر رایج در متون دینی و علمی). هر عبارت حداکثر ۴ واژه.\nقالب: {\"terms\":[\"...\"]}", 600)
@@ -129,7 +129,7 @@ class MissionRunner(
             .filter { it.isNotBlank() && it.length < 60 }.distinct().take(10)
     }
 
-    private fun retrieve(spec: MissionSpec, terms: List<String>, all: List<IndexerInfo>): List<Passage> {
+    internal fun retrieve(spec: MissionSpec, terms: List<String>, all: List<IndexerInfo>): List<Passage> {
         val cols = if (spec.collections.isEmpty()) all else all.filter { it.indexName in spec.collections }
         val phrases = (listOf(spec.topic) + terms).distinct()
         val ss = SearchSpec(phrases, Combine.ANY, synonyms = true, semantic = ir.matnyaab.core.semantic.SemanticService.usable(settings))
@@ -151,7 +151,7 @@ class MissionRunner(
         return out
     }
 
-    private fun extract(spec: MissionSpec, passages: List<Passage>, project: String): List<Fish> {
+    internal fun extract(spec: MissionSpec, passages: List<Passage>, project: String): List<Fish> {
         val out = mutableListOf<Fish>()
         val batches = passages.chunked(6)
         batches.forEachIndexed { bi, batch ->
@@ -201,7 +201,7 @@ class MissionRunner(
 
     // ---------------------------------------------------------------- نوشتن
 
-    private fun cite(f: Fish) = f.sourceName + (if (f.collection.isNotBlank()) " — مجموعهٔ ${f.collection}" else "") + " — " + f.sourcePath
+    internal fun cite(f: Fish) = f.sourceName + (if (f.collection.isNotBlank()) " — مجموعهٔ ${f.collection}" else "") + " — " + f.sourcePath
 
     private fun writeHeader(w: ReportWriter, spec: MissionSpec, terms: List<String>, fishes: List<Fish>) {
         w.title(if (spec.scenario == Scenario.CHAPTER) spec.chapter.ifBlank { spec.project } else spec.topic)

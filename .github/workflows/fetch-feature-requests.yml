@@ -1,0 +1,74 @@
+name: Fetch Feature Requests
+
+# پیشنهادهای قابلیت کاربران (سایت و برنامه) را بدون نام و راه تماس دریافت می‌کند
+# و به‌صورت فایل JSON/Markdown در خروجی همین اجرا (artifact) و خلاصهٔ اجرا می‌گذارد.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 4 * * 6"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: matnyaab-feature-requests
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    env:
+      SITE_URL: https://matnyaab.ir
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USER: ${{ secrets.FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD_MATNYAAB_IR }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare one-time exporter
+        shell: bash
+        run: |
+          set -euo pipefail
+          token="$(openssl rand -hex 32)"
+          echo "::add-mask::$token"
+          echo "EXPORT_TOKEN=$token" >> "$GITHUB_ENV"
+          name=".matnyaab-feedback-$(openssl rand -hex 6).php"
+          echo "EXPORT_NAME=$name" >> "$GITHUB_ENV"
+          sed "s/__EXPORT_TOKEN__/$token/" ops/feedback-export.php > /tmp/export.php
+          server="${FTP_SERVER%/}"; case "$server" in ftp://*|ftps://*) ;; *) server="ftp://$server" ;; esac
+          echo "FTP_URL=$server" >> "$GITHUB_ENV"
+      - name: Upload, call and remove exporter
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --silent --show-error --fail --connect-timeout 15 --max-time 60 --user "$FTP_USER:$FTP_PASSWORD" --ftp-method nocwd \
+            --upload-file /tmp/export.php "$FTP_URL/$EXPORT_NAME"
+          status=0
+          curl --silent --show-error --fail --connect-timeout 15 --max-time 60 -H "X-Matnyaab-Export-Token: $EXPORT_TOKEN" \
+            "$SITE_URL/$EXPORT_NAME" -o feature-requests.json || status=$?
+          curl --silent --connect-timeout 15 --max-time 30 --user "$FTP_USER:$FTP_PASSWORD" -Q "DELE $EXPORT_NAME" "$FTP_URL/" -o /dev/null || true
+          exit $status
+      - name: Summarize
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os
+          d = json.load(open("feature-requests.json", encoding="utf-8"))
+          assert d.get("ok") is True
+          rows = sorted(d["requests"], key=lambda r: r["at"], reverse=True)
+          md = ["# پیشنهادهای قابلیت کاربران", "", f"شمار: {len(rows)}", ""]
+          for r in rows:
+              md.append(f"## {r['at']} · {r['source']} {r['app_version']} · {r['status']} · `{r['id']}`")
+              md.append(""); md.append(r["message"]); md.append("")
+          open("feature-requests.md", "w", encoding="utf-8").write("\n".join(md))
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as s:
+              s.write(f"### {len(rows)} feature request(s)\n")
+          print(len(rows), "requests")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: feature-requests
+          path: |
+            feature-requests.json
+            feature-requests.md
+          retention-days: 30
