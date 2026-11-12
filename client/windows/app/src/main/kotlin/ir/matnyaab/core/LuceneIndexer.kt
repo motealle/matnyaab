@@ -30,6 +30,7 @@ import kotlin.random.Random
  *  - content: TEXT stored با آنالایزر معادل RegexTokenizer(r'[@#ًٌٍَُِّْ\w+]*')
  */
 class LuceneIndexer(private val settings: AppSettingsManager) {
+    val settingsRef: AppSettingsManager get() = settings
 
     companion object {
         /** همان الگوی توکن‌ساز نسخه ووش: حروف کلمه + اعراب عربی + @ #  */

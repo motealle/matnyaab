@@ -15,6 +15,7 @@ namespace Matnyaab.Word.Core
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MATNYAAB");
 
         public static string SettingsFile => Path.Combine(MatnyaabDir, "word-addin.json");
+        public static string AiFile => Path.Combine(MatnyaabDir, "ai.json");
         public static string TemplatesFile => Path.Combine(MatnyaabDir, "word-templates.json");
         public static string BridgeFile => Path.Combine(MatnyaabDir, "bridge.json");
         public static string MatnyaabIni => Path.Combine(MatnyaabDir, "settings.ini");

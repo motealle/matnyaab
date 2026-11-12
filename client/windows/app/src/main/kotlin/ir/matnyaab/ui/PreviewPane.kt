@@ -31,6 +31,13 @@ class PreviewPane(private val settings: AppSettingsManager) : VBox() {
         maxWidth = Double.MAX_VALUE
         isVisible = false; isManaged = false
     }
+    /** فراخوانی هنگام «فیش بگیر» با متن انتخاب‌شده (رشتهٔ خالی = چیزی انتخاب نشده) */
+    var onFish: ((String) -> Unit)? = null
+    val btnFish = Button("＋ فیش")
+
+    /** متن انتخاب‌شده در پیش‌نمایش (یا خالی) */
+    fun selectedText(): String = runCatching { webView.engine.executeScript("window.getSelection().toString()") as? String }.getOrNull()?.trim().orEmpty()
+
     private val lblSummary = Label().apply {
         styleClass.add("summary-bar"); maxWidth = Double.MAX_VALUE; isWrapText = true
         isVisible = false; isManaged = false
@@ -73,7 +80,13 @@ class PreviewPane(private val settings: AppSettingsManager) : VBox() {
         val btnFind = glyphBtn(Theme.GLYPH_SEARCH, "جستجو در متن") { showLocalSearch() }
 
         val spacer = Region().also { HBox.setHgrow(it, Priority.ALWAYS) }
-        val toolbar = HBox(4.0, btnDown, btnUp, counter, spacer,
+        // «فیش بگیر»: متن انتخاب‌شده (یا مورد جاری) با منبع دقیق در فیش‌ها ذخیره می‌شود
+        btnFish.apply {
+            styleClass.add("fish-btn"); style = Theme.FONT
+            tooltip = Tooltip("فیش بگیر: متنِ انتخاب‌شده را با منبع دقیق در فیش‌های پژوهش ذخیره کن (Ctrl+D)")
+            setOnAction { onFish?.invoke(selectedText()) }
+        }
+        val toolbar = HBox(4.0, btnDown, btnUp, counter, btnFish, spacer,
             btnFind, btnZoomOut, btnZoomIn, btnFont, btnAlignLeft, btnAlignCenter, btnAlignRight).apply {
             alignment = Pos.CENTER_RIGHT
             style = "-fx-background-color: ${Constants.SURFACE_COLOR}; -fx-background-radius: 8 8 0 0; -fx-padding: 4; -fx-border-color: ${Constants.BORDER_COLOR}; -fx-border-width: 0 0 1 0;"

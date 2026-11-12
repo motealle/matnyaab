@@ -164,9 +164,9 @@
 <section class="section" id="whats-new">
     <div class="container">
         <div class="whats-new">
-            <span class="new-badge">تازه: نسخهٔ ۲٫۵ + افزونهٔ ورد</span>
-            <h2>جست‌وجوی دقیق‌تر از همیشه؛ و حالا درون ورد</h2>
-            <p class="lead">متن‌یاب ۲٫۵ با پیشنهادهای پژوهشگران ساخته شد: عبارت دقیق، چند عبارت در یک اجرا، جست‌وجوی منطقی و فاصله‌دار، و کنترل کامل روی فاصله، نیم‌فاصله و علائم نگارشی. در کنارش «متن‌یاب برای ورد» آمده تا نتیجه‌ها را با منبع، مستقیم در نوشته‌تان بنشانید.</p>
+            <span class="new-badge">تازه: نسخهٔ ۳ · متن‌یاب هوشمند</span>
+            <h2>جست‌وجوی دقیق، حالا با میز پژوهش و دستیار هوشمند</h2>
+            <p class="lead">متن‌یاب ۳ نوار ابزار تازه و «میز پژوهش» دارد: فیش‌برداری با منبع، ساخت کتاب در Word، منبع‌یاب و همانندجویی، و دستیار هوشمند با کلید خود شما (<a href="#ai">بیشتر</a>). پایهٔ آن همان موتور جست‌وجوی دقیق است: عبارت دقیق، چند عبارت در یک اجرا، جست‌وجوی منطقی و فاصله‌دار، و کنترل کامل روی فاصله، نیم‌فاصله و علائم نگارشی. در کنارش «متن‌یاب برای ورد» آمده تا نتیجه‌ها را با منبع، مستقیم در نوشته‌تان بنشانید.</p>
 
             <div class="new-grid">
                 <div class="new-item"><h3>واژه و عبارت، با شمارش دقیق</h3><p>«نفس» یا «تهذیب نفس» را جست‌وجو کنید و ببینید هر فایل چند بار آن را دارد؛ «جهاد، نفس» و «جهاد (نفس)» هم پیدا می‌شوند.</p></div>
@@ -204,6 +204,10 @@
         </div>
     </div>
 </section>
+
+@if ($settings['flags']['smart'] ?? true)
+@include('partials.smart')
+@endif
 
 @if ($settings['flags']['word_addin'] ?? true)
 @include('partials.word-addin')
@@ -255,8 +259,8 @@
                         <span><strong>نوع فایل:</strong> <span data-release-delivery="kotlin">نصب‌کنندهٔ ویندوز ۱۰ و ۱۱ (۶۴ بیتی)</span></span>
                         <span><strong>اندازه:</strong> <span data-release-size="kotlin">در حال دریافت اطلاعات…</span></span>
                     </div>
-                    <a class="btn btn-primary" data-release-link="kotlin" href="/downloadFiles/Matnyaab-Setup-2.5.exe">دانلود نصب‌کنندهٔ متن‌یاب ۲ <span aria-hidden="true">↓</span></a>
-                    <small class="muted" style="color:var(--muted-2)">نسخهٔ بدون نصب: <a data-release-portable href="/downloadFiles/Matnyaab-2.5-win-x64-portable.zip" style="color:var(--accent-soft)">فایل ZIP</a></small>
+                    <a class="btn btn-primary" data-release-link="kotlin" href="/downloadFiles/Matnyaab-Setup-3.0.exe">دانلود نصب‌کنندهٔ متن‌یاب ۲ <span aria-hidden="true">↓</span></a>
+                    <small class="muted" style="color:var(--muted-2)">نسخهٔ بدون نصب: <a data-release-portable href="/downloadFiles/Matnyaab-3.0-win-x64-portable.zip" style="color:var(--accent-soft)">فایل ZIP</a></small>
                 </article>
                 <div style="display:grid;gap:14px">
                     <ul class="req-list">
@@ -268,7 +272,7 @@
                     <div class="classic-card">
                         <div>
                             <strong style="color:var(--text)">متن‌یاب برای ورد</strong><br>
-                            جست‌وجو و درج با منبع، پانویس، سرفصل و قالب‌ها درون ورد: <a data-release-link="word" href="/downloadFiles/Matnyaab-Word-Setup-1.0.1.exe">دریافت افزونه</a> · <a href="#word">معرفی</a>
+                            جست‌وجو و درج با منبع، پانویس، سرفصل و قالب‌ها درون ورد: <a data-release-link="word" href="/downloadFiles/Matnyaab-Word-Setup-1.1.0.exe">دریافت افزونه</a> · <a href="#word">معرفی</a>
                         </div>
                     </div>
                     <div class="classic-card">

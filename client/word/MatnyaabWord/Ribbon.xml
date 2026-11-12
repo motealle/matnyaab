@@ -35,6 +35,24 @@
           <button id="btnTemplates" label="قالب‌ها" size="large" imageMso="PageMarginsGallery" onAction="OnAction"
                   screentip="قالب‌های صفحه‌آرایی" supertip="قالب پایان‌نامه، مقاله و گزارش را با یک کلیک اعمال کنید؛ قالب دلخواه بسازید، تکثیر یا ویرایش کنید." />
         </group>
+        <group id="grpResearch" label="پژوهش" getVisible="GetVisible">
+          <button id="btnFishSel" label="فیش‌ها" size="large" imageMso="NewNote" onAction="OnAction"
+                  screentip="فیش‌برداری و درج فیش" supertip="از متن انتخاب‌شده فیش بزنید یا فیش‌های پروژه‌تان را با منبع درج کنید؛ مشترک با «میز پژوهش» متن‌یاب." />
+          <button id="btnFindSource" label="این متن از کجاست؟" imageMso="ResearchPane" onAction="OnAction"
+                  screentip="منبع‌یاب" supertip="منبع نقل‌قول انتخاب‌شده را در کتابخانهٔ متن‌یاب، حتی با تغییرهای جزئی، پیدا می‌کند." />
+          <button id="btnCheckQuotes" label="بررسی نقل‌قول‌ها" imageMso="ReviewAcceptChange" onAction="OnAction"
+                  screentip="راستی‌آزمایی و پیش‌همانندجویی" supertip="نقل‌قول‌های سند را با منابع مقایسه می‌کند و جمله‌های همانند با کتابخانه را نشان می‌دهد." />
+        </group>
+        <group id="grpOffice" label="اداری" getVisible="GetVisible">
+          <button id="btnLetter" label="نامهٔ اداری" size="large" imageMso="EnvelopesAndLabelsDialog" onAction="OnAction"
+                  screentip="نامهٔ اداری" supertip="نامهٔ اداری استاندارد با شماره، تاریخ شمسی، پیوست، موضوع، امضا و رونوشت؛ پیش‌نویس متن با دستیار (اختیاری)." />
+          <menu id="mnuFormal" label="قالب‌های رسمی" imageMso="FileNew" size="large">
+            <button id="btnMinutes" label="صورتجلسه" imageMso="TableInsert" onAction="OnAction" />
+            <button id="btnReport" label="گزارش کار" imageMso="ReportView" onAction="OnAction" />
+            <button id="btnRequest" label="درخواست" imageMso="EditMessage" onAction="OnAction" />
+            <button id="btnCircular" label="بخشنامه" imageMso="AnnouncementNew" onAction="OnAction" />
+          </menu>
+        </group>
         <group id="grpAi" label="دستیار" getVisible="GetVisible">
           <button id="btnAi" label="بهبود بند" size="large" imageMso="ReviewThesaurus" onAction="OnAction"
                   screentip="دستیار هوشمند نگارش" supertip="بند انتخاب‌شده را با مدل دلخواه شما روان، علمی یا کوتاه کنید؛ پیش از جایگزینی پیش‌نمایش می‌بینید." />

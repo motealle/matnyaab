@@ -74,6 +74,8 @@ namespace Matnyaab.Word.Core
         public bool ShowTemplates { get; set; } = true;
         public bool ShowCleanup { get; set; } = true;
         public bool ShowAi { get; set; } = true;
+        public bool ShowResearch { get; set; } = true;
+        public bool ShowOffice { get; set; } = true;
 
         // ---- درج و استناد
         public bool InsertWithComment { get; set; } = true;
@@ -111,10 +113,28 @@ namespace Matnyaab.Word.Core
         private static AddinSettings _current;
         public static event Action Changed;
 
-        public static AddinSettings Current => _current ?? (_current = Json.Load(Paths.SettingsFile, () => new AddinSettings()));
+        public static AddinSettings Current => _current ?? (_current = MergeShared(Json.Load(Paths.SettingsFile, () => new AddinSettings())));
+
+        /// <summary>سرویس‌های هوش مصنوعی با برنامهٔ متن‌یاب در ai.json مشترک‌اند (کلید با همان DPAPI).</summary>
+        private class SharedAi { public List<AiProvider> providers { get; set; } = new List<AiProvider>(); public string activeId { get; set; } = ""; }
+
+        private static AddinSettings MergeShared(AddinSettings s)
+        {
+            try
+            {
+                if (!System.IO.File.Exists(Paths.AiFile)) return s;   // نخستین بار: ذخیرهٔ بعدی ai.json را می‌سازد
+                var shared = Json.Load(Paths.AiFile, () => new SharedAi());
+                s.AiProviders = shared.providers ?? new List<AiProvider>();   // ai.json مرجع مشترک است
+                if (!string.IsNullOrEmpty(shared.activeId)) s.AiProviderId = shared.activeId;
+            }
+            catch (Exception e) { Log.Error("Settings.MergeShared", e); }
+            return s;
+        }
 
         public static void Save(bool notify = true)
         {
+            try { Json.Save(Paths.AiFile, new SharedAi { providers = Current.AiProviders, activeId = Current.AiProviderId ?? "" }); }
+            catch (Exception e) { Log.Error("Settings.SaveAi", e); }
             try { Json.Save(Paths.SettingsFile, Current); }
             catch (Exception e) { Log.Error("Settings.Save", e); }
             if (notify) try { Changed?.Invoke(); } catch (Exception e) { Log.Error("Settings.Changed", e); }

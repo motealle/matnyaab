@@ -27,13 +27,19 @@ final class SiteSettings
                 'announcement_enabled' => false,
                 'org_enabled' => true,
                 'word_addin' => true,
+                'smart' => true,
             ],
             // کاتالوگ پیشنهادی سرویس‌های هوش مصنوعی برای افزونهٔ ورد (کلیدها نزد خود کاربران است)
             'ai_catalog' => [
                 ['id' => 'openai', 'title' => 'OpenAI', 'kind' => 'openai', 'base_url' => 'https://api.openai.com/v1', 'models' => 'gpt-4o-mini, gpt-4o', 'hint' => '', 'enabled' => true],
                 ['id' => 'anthropic', 'title' => 'Anthropic Claude', 'kind' => 'anthropic', 'base_url' => 'https://api.anthropic.com/v1', 'models' => 'claude-sonnet-4-5, claude-haiku-4-5', 'hint' => '', 'enabled' => true],
-                ['id' => 'gemini', 'title' => 'Google Gemini', 'kind' => 'gemini', 'base_url' => 'https://generativelanguage.googleapis.com/v1beta', 'models' => 'gemini-2.0-flash, gemini-1.5-pro', 'hint' => '', 'enabled' => true],
-                ['id' => 'openrouter', 'title' => 'OpenRouter', 'kind' => 'openai', 'base_url' => 'https://openrouter.ai/api/v1', 'models' => 'openai/gpt-4o-mini', 'hint' => '', 'enabled' => true],
+                ['id' => 'gemini', 'title' => 'Google Gemini', 'kind' => 'gemini', 'base_url' => 'https://generativelanguage.googleapis.com/v1beta', 'models' => 'gemini-2.5-flash, gemini-2.5-pro', 'hint' => '', 'enabled' => true],
+                ['id' => 'avalai', 'title' => 'AvalAI (درگاه ایرانی)', 'kind' => 'openai', 'base_url' => 'https://api.avalai.ir/v1', 'models' => 'gpt-4o-mini, gpt-4o, claude-sonnet-4-5, gemini-2.5-flash', 'hint' => 'پرداخت ریالی', 'enabled' => true],
+                ['id' => 'gapgpt', 'title' => 'GapGPT (درگاه ایرانی)', 'kind' => 'openai', 'base_url' => 'https://api.gapgpt.app/v1', 'models' => 'gpt-4o-mini, gpt-4o', 'hint' => 'پرداخت ریالی', 'enabled' => true],
+                ['id' => 'deepseek', 'title' => 'DeepSeek', 'kind' => 'openai', 'base_url' => 'https://api.deepseek.com/v1', 'models' => 'deepseek-chat', 'hint' => 'کم‌هزینه', 'enabled' => true],
+                ['id' => 'groq', 'title' => 'Groq', 'kind' => 'openai', 'base_url' => 'https://api.groq.com/openai/v1', 'models' => 'llama-3.3-70b-versatile', 'hint' => 'سطح رایگان محدود', 'enabled' => true],
+                ['id' => 'ollama', 'title' => 'Ollama (محلی و آفلاین)', 'kind' => 'openai', 'base_url' => 'http://localhost:11434/v1', 'models' => 'qwen2.5:7b, llama3.1:8b', 'hint' => 'رایگان؛ بدون کلید', 'enabled' => true],
+                ['id' => 'openrouter', 'title' => 'OpenRouter', 'kind' => 'openai', 'base_url' => 'https://openrouter.ai/api/v1', 'models' => 'deepseek/deepseek-chat-v3-0324:free, openai/gpt-4o-mini', 'hint' => 'مدل‌های :free رایگان‌اند', 'enabled' => true],
                 ['id' => 'custom', 'title' => 'سرویس سازگار با OpenAI (دلخواه)', 'kind' => 'openai', 'base_url' => '', 'models' => '', 'hint' => 'نشانی پایهٔ API را وارد کنید؛ مثلاً درگاه‌های داخلی یا Ollama محلی (http://localhost:11434/v1)', 'enabled' => true],
             ],
             'numbers' => [

@@ -7,6 +7,7 @@ import javafx.geometry.Insets
 import javafx.geometry.NodeOrientation
 import javafx.scene.Scene
 import javafx.scene.control.Button
+import javafx.scene.control.CheckBox
 import javafx.scene.control.ComboBox
 import javafx.scene.control.Label
 import javafx.scene.control.Slider
@@ -48,12 +49,17 @@ class SettingsDialog(owner: Window?, private val settings: AppSettingsManager) {
             selectionModel.select(fonts.indexOfFirst { it.first == Theme.uiFont() }.coerceAtLeast(0))
             maxWidth = Double.MAX_VALUE
         }
+        val feats = listOf("FF_RESEARCH" to "فیش‌ها، پروژه‌ها و ساخت کتاب", "FF_SOURCE" to "منبع‌یاب و همانندجویی", "FF_AI" to "دستیار هوشمند (با کلید هوش مصنوعی خودتان)")
+            .map { (k, t) -> k to CheckBox(t).apply { isSelected = settings.get(k) != "0"; style = Theme.FONT } }
         val btnSave = Button("ذخیره").apply {
             style = Theme.primaryButton(); prefWidth = 120.0; prefHeight = Constants.OPTION_BUTTONS_HEIGHT
             setOnMouseEntered { style = Theme.primaryButtonHover() }
             setOnMouseExited { style = Theme.primaryButton() }
             setOnAction {
                 saved = true
+                val featChanged = feats.any { (k, c) -> (settings.get(k) != "0") != c.isSelected }
+                feats.forEach { (k, c) -> settings.setValue(k, if (c.isSelected) "1" else "0") }
+                if (featChanged) CustomMessageBox.show(stage, "تنظیمات", "نوار ابزار از اجرای بعدی برنامه با قابلیت‌های انتخابی شما نمایش داده می‌شود.")
                 settings.setValue("TIKA_MEM", cmbMem.value)
                 val oldFont = settings.get("UI_FONT")
                 fonts.getOrNull(cmbFont.selectionModel.selectedIndex)?.let { settings.setValue("UI_FONT", it.first) }
@@ -71,6 +77,7 @@ class SettingsDialog(owner: Window?, private val settings: AppSettingsManager) {
             add(Label("قلم برنامه:").styled(), 0, 1); add(cmbFont, 1, 1)
             add(Label("اندازهٔ قلم برنامه (درصد):").styled(), 0, 2); add(slider, 1, 2)
             add(Label("حافظهٔ موتور استخراج متن:").styled(), 0, 3); add(cmbMem, 1, 3)
+            add(Label("قابلیت‌ها:").styled(), 0, 4); add(VBox(6.0, *feats.map { it.second }.toTypedArray()), 1, 4)
         }
         val content = VBox(20.0, grid, btnSave).apply {
             padding = Insets(20.0); style = "-fx-background-color: ${Constants.OPTION_BACKGROUND_COLOR};"
@@ -81,7 +88,7 @@ class SettingsDialog(owner: Window?, private val settings: AppSettingsManager) {
             center = content
             style = "-fx-border-color: ${Constants.BORDER_COLOR};"
         }
-        stage.scene = Scene(root, 500.0, 400.0)
+        stage.scene = Scene(root, 540.0, 500.0)
         Theme.install(stage.scene, stage)
         // بستن بدون ذخیره، پوستهٔ قبلی را برمی‌گرداند
         stage.setOnHidden { if (!saved) Theme.setPalette(original) }
