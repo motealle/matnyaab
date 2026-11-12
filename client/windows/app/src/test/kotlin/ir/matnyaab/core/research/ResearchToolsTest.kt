@@ -24,7 +24,7 @@ class ResearchToolsTest {
     }
 
     @Test fun docxIsValid() {
-        val f = File.createTempFile("mx", ".docx")
+        val f = File.createTempFile("mxt", ".docx")
         DocxWriter(DocxWriter.Layout.paper("وزیری")).title("کتاب آزمایشی").toc().heading(1, "فصل ۱").quote("متن نقل‌قول <با> & علائم", "منبع ۱")
             .para("بند با پانویس", "پانویس").table(listOf("الف", "ب"), listOf(listOf("۱", "۲"))).save(f)
         ZipFile(f).use { z ->
@@ -33,7 +33,7 @@ class ResearchToolsTest {
             assertTrue(doc.contains("&lt;با&gt; &amp;"))
             javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(z.getInputStream(z.getEntry("word/document.xml")))
         }
-        val md = File.createTempFile("mx", ".md")
+        val md = File.createTempFile("mxt", ".md")
         ReportWriter(md).title("عنوان").quote("نقل", "منبع").save()
         assertTrue(md.readText().contains("> نقل"))
     }
