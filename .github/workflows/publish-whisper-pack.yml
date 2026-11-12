@@ -170,10 +170,14 @@ jobs:
           up() { curl --silent --show-error --fail --retry 3 --connect-timeout 20 --max-time 3600 --user "$FTP_USER:$FTP_PASSWORD" --ftp-method nocwd --ftp-create-dirs --upload-file "$1" "$url/downloadFiles/$2"; }
           up "release/$PACK_FILE" "$PACK_FILE"
           # مدل‌ها فقط اگر تغییر کرده‌اند دوباره بارگذاری می‌شوند
+          # اگر بارگذاری مدلی روی میزبان ممکن نبود (محدودیت حجم)، نشانی مستقیم Hugging Face در فهرست می‌آید
+          : > hosted.txt
           for m in release/models/*.bin; do
             name="$(basename "$m")"; h="$(sha256sum "$m" | cut -d' ' -f1)"
-            old="$(python3 -c "import json,sys; m=json.load(open('releases.json')).get('whisper',{}).get('models',[]); print(next((x.get('sha256','') for x in m if x.get('file')=='$name'),''))")"
-            if [ "$old" != "$h" ]; then echo "upload $name"; up "$m" "whisper/$name"; else echo "skip $name (unchanged)"; fi
+            old="$(python3 -c "import json,sys; m=json.load(open('releases.json')).get('whisper',{}).get('models',[]); print(next((x.get('sha256','') for x in m if x.get('file')=='$name' and x.get('url','').startswith('/')),''))")"
+            if [ "$old" = "$h" ]; then echo "skip $name (unchanged)"; echo "$name" >> hosted.txt
+            elif up "$m" "whisper-$name"; then echo "uploaded $name"; echo "$name" >> hosted.txt
+            else echo "::warning::$name could not be hosted; using Hugging Face URL"; fi
           done
           python3 - <<'PY'
           import json, os, hashlib
@@ -194,7 +198,9 @@ jobs:
               key = name[len("ggml-"):-len(".bin")]
               t, d = info.get(key, (key, ""))
               p = "release/models/" + name
-              models.append({"id": key, "title": t, "desc": d, "file": name, "url": "/downloadFiles/whisper/" + name,
+              hosted = name in open("hosted.txt").read().split()
+              url = "/downloadFiles/whisper-" + name if hosted else os.environ["MODEL_REPO"] + "/" + name
+              models.append({"id": key, "title": t, "desc": d, "file": name, "url": url,
                              "size_bytes": os.path.getsize(p), "sha256": sha(p)})
           m["whisper"] = {"label": "بستهٔ گفتار به متن (اختیاری)", "version": os.environ["PACK_VERSION"],
                           "url": "/downloadFiles/" + os.environ["PACK_FILE"], "size_bytes": os.path.getsize(pf), "sha256": sha(pf),
