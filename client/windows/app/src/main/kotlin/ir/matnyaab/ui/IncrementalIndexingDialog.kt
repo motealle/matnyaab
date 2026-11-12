@@ -54,7 +54,11 @@ class IncrementalIndexingDialog(
         btnCancel.maxWidth = Double.MAX_VALUE
         btnCancel.setOnAction { service.cancelled = true }
 
-        val content = VBox(10.0, tblLog, btnCancel).apply {
+        val btnPark = Button("⤓ ادامه در پس‌زمینه (کنار ساعت)").apply {
+            style = Theme.addButton(); maxWidth = Double.MAX_VALUE; isVisible = TrayProgress.supported; isManaged = isVisible
+            setOnAction { TrayProgress.park(listOfNotNull(owner as? Stage, stage), "به‌روزرسانی فهرست‌ها") }
+        }
+        val content = VBox(10.0, tblLog, btnPark, btnCancel).apply {
             padding = Insets(14.0); style = "-fx-background-color: ${Constants.OPTION_BACKGROUND_COLOR};"
         }
         val root = BorderPane().apply {
@@ -72,7 +76,7 @@ class IncrementalIndexingDialog(
             var idx = 0
             fun runNext() {
                 if (idx >= targets.size) {
-                    Platform.runLater { onFinished(); stage.close() }
+                    Platform.runLater { TrayProgress.finish("به‌روزرسانی فهرست‌ها تمام شد."); onFinished(); stage.close() }
                     return
                 }
                 val info = targets[idx]; idx++
@@ -80,18 +84,19 @@ class IncrementalIndexingDialog(
                     override fun onLog(message: String) {
                         Platform.runLater {
                             val parts = message.split(": ", limit = 2)
+                            TrayProgress.update(if (targets.isEmpty()) -1.0 else (idx - 1).toDouble() / targets.size, info.indexName + " · " + (parts.getOrNull(1)?.let { File(it).name } ?: ""))
                             if (parts.size == 2) tblLog.items.add(0, LogRow(File(parts[1]).name, parts[1], parts[0]))
                             else tblLog.items.add(0, LogRow("", info.rootPath, message))
                         }
                     }
                     override fun onFinish(err: Int) {
-                        if (err == 2) { Platform.runLater { onFinished(); stage.close() }; return }
+                        if (err == 2) { Platform.runLater { TrayProgress.finish(); onFinished(); stage.close() }; return }
                         runNext()
                     }
                 })
             }
             runNext()
         }.apply { isDaemon = true }.start()
-        stage.showAndWait()
+        ParkableModal.showAndWait(stage)
     }
 }

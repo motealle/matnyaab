@@ -43,3 +43,22 @@ class ResearchToolsTest {
         assertEquals("توکل", j!!.asJsonObject.get("topic").asString)
     }
 }
+
+class ExportTest {
+    @Test fun contextWindowsAndXlsx() {
+        val content = "بند اول دربارهٔ موضوعی دیگر است.\nدر این بند از تهذیب نفس سخن رفته و پیرامونش چند واژهٔ دیگر هست.\n\u000Cبند سوم در صفحهٔ دوم تهذیب نفس را دوباره می‌آورد."
+        val hit = ir.matnyaab.core.SearchHit("col", "/x/a.pdf", "a.pdf", 1, 10L, 0.0, content, matches = 2)
+        val eng = ir.matnyaab.core.search.MatchEngine(ir.matnyaab.core.search.SearchSpec(listOf("تهذیب نفس")))
+        val ex = ResultExporter.excerpts(listOf(hit), eng, ResultExporter.Options(ResultExporter.Unit.PARAGRAPH))
+        assertEquals(2, ex.size)
+        assertTrue(ex[0].text.startsWith("در این بند"))
+        assertEquals("تهذیب نفس", ex[0].text.substring(ex[0].marks[0].first, ex[0].marks[0].last + 1))
+        assertEquals(1, ex[0].page); assertEquals(2, ex[1].page); assertEquals(2, ex[0].paragraph)
+        val w = ResultExporter.excerpts(listOf(hit), eng, ResultExporter.Options(ResultExporter.Unit.WORDS, 2, 2))
+        assertTrue(w[0].text.split(' ').size <= 7, w[0].text)
+        val f = File.createTempFile("mxt", ".xlsx"); ResultExporter.saveXlsx(f, listOf("تهذیب نفس"), ex, ResultExporter.Options())
+        ZipFile(f).use { z -> javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(z.getInputStream(z.getEntry("xl/worksheets/sheet1.xml"))) }
+        val d = File.createTempFile("mxt", ".docx"); ResultExporter.saveDocx(d, "t", listOf("تهذیب نفس"), ex, ResultExporter.Options())
+        ZipFile(d).use { z -> javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(z.getInputStream(z.getEntry("word/document.xml"))) }
+    }
+}

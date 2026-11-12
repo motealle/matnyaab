@@ -260,7 +260,7 @@ class LuceneIndexer(private val settings: AppSettingsManager) {
                 .getOrElse { System.err.println("semantic search: $it"); emptyList() }
                 .filter { it.path !in maskedPaths }
             val byPath = HashMap<String, IndexerInfo>()
-            out = ir.matnyaab.core.search.Ranking.hybrid(out, sem) { p -> docByPath(selectedObjects, p, byPath) }
+            out = ir.matnyaab.core.search.Ranking.hybrid(out, sem, spec.semanticLevel) { p -> docByPath(selectedObjects, p, byPath) }
         }
         searchResult.clear(); searchResult.addAll(out)
         lastEngine = engine

@@ -226,8 +226,8 @@ class MainWindow(
             Region().also { HBox.setHgrow(it, Priority.ALWAYS) },
             lblResultCount,
             sortBox,
-            Button("⭳ خروجی").apply {
-                style = Theme.addButton(); tooltip = Tooltip("ذخیرهٔ فهرست نتایج در فایل CSV (قابل بازکردن در اکسل)")
+            Button("⭳ خروجی Word/Excel").apply {
+                style = Theme.addButton(); tooltip = Tooltip("خروجی Word یا Excel همراه با متن و بافت هر نتیجه")
                 setOnAction { exportResults() }
             },
         ).apply {
@@ -278,6 +278,16 @@ class MainWindow(
         javafx.animation.PauseTransition(javafx.util.Duration.seconds(3.0)).apply { setOnFinished { if (lblIndexSize.text == msg) lblIndexSize.text = old } }.play()
     }
 
+    private fun openQuran(file: File?) = QuranWindow.show(stage, settings, indexer, { p, a, b, note -> showAt(p, a, b, note) }, file)
+
+    /** پیش‌نمایش یک سند با برجسته‌کردن یک بازه (برای کشف‌الآیات و پیوندهای دیگر) */
+    fun showAt(path: String, start: Int, end: Int, note: String) {
+        val hit = indexer.docByPath(indexer.allObjects.toList(), path, HashMap()) ?: run { CustomMessageBox.show(stage, "پیش‌نمایش", "این سند در فهرست‌های متن‌یاب نیست."); return }
+        showPreview(hit.copy(matches = 0, chunkStart = start, chunkEnd = maxOf(end, start + 1), semantic = 0.0))
+        preview.setSummary(note)
+        stage.toFront()
+    }
+
     private fun flag(k: String) = settings.get(k) != "0"
 
     private fun research(tab: String) = ResearchWindow.show(stage, settings, indexer, tab)
@@ -292,7 +302,7 @@ class MainWindow(
         }
         fun sep() = Region().apply { styleClass.add("tool-sep") }
         val items = mutableListOf<javafx.scene.Node>(
-            tool("⌕", "جست‌وجو", "جست‌وجو در کتابخانهٔ شما (Ctrl+F)") { accordions.getOrNull(0)?.let { if (!it.isOpen) it.expand() }; searchPanel.focusQuick() },
+            tool("⌕", "جست‌وجو", "جست‌وجو در کتابخانهٔ شما (Ctrl+F)") { accordions.getOrNull(0)?.let { if (!it.isOpen) it.expand() }; searchPanel.searchOrFocus() },
             tool("＋", "افزودن پوشه", "افزودن پوشهٔ اسناد به کتابخانه (Ctrl+O)") { selectDirectory() },
         )
         if (flag("FF_RESEARCH")) items += listOf(sep(),
@@ -300,6 +310,7 @@ class MainWindow(
             tool("📘", "ساخت کتاب", "از فیش‌ها یک فایل Word صفحه‌آرایی‌شده با فهرست و پانویس بسازید") { research("book") })
         if (flag("FF_SOURCE")) items += tool("⧉", "منبع‌یاب", "منبع یک نقل‌قول و همانندجویی متن با کتابخانهٔ شما") { research("source") }
         if (flag("FF_AI")) items += listOf(sep(), tool("✦", "دستیار هوشمند", "مأموریت‌های پژوهشی چندمرحله‌ای با هوش مصنوعیِ دلخواه شما و خروجی Word/Markdown") { research("ai") })
+        if (flag("FF_QURAN")) items += tool("۞", "کشف‌الآیات", "آیات قرآن در اسناد شما: نقل کامل و بخشی، ارجاع شماره‌ای و ترجمه") { openQuran(null) }
         if (flag("FF_SEMANTIC")) items += tool("≈", "جست‌وجوی مفهومی", "جست‌وجو بر پایهٔ معنا (بستهٔ اختیاری آفلاین)") { openSemantic() }
         items += listOf(Region().also { HBox.setHgrow(it, Priority.ALWAYS) },
             tool("W", "افزونهٔ ورد", "متن‌یاب درون Microsoft Word: فیش، استناد، قالب پایان‌نامه، نامهٔ اداری") { runCatching { Desktop.getDesktop().browse(java.net.URI(Constants.BASE_URL + "/#word")) } },
@@ -422,7 +433,19 @@ class MainWindow(
                 }
             } }
         }
-        table.columns.addAll(cFile, cScore, cCount, cCover, cDate, cSize, cTitle, cDomain)
+        // امتیاز تطابق معنایی هر نتیجه (فقط وقتی جست‌وجوی مفهومی نتیجه داده است)
+        cSem = TableColumn<SearchHit, Int>("معنایی").apply {
+            prefWidth = 64.0; isVisible = false
+            setCellValueFactory { SimpleObjectProperty(if (it.value.semantic >= 0) ir.matnyaab.core.search.Ranking.semanticScore(it.value.semantic) else -1) }
+            setCellFactory { object : TableCell<SearchHit, Int>() {
+                override fun updateItem(v: Int?, empty: Boolean) {
+                    super.updateItem(v, empty)
+                    text = if (empty || v == null || v < 0) "" else PersianUtil.toPersianNumbers(v) + "٪"
+                    tooltip = if (text.isNullOrEmpty()) null else Tooltip("میزان تطابق معنایی با عبارت جست‌وجو (۰ تا ۱۰۰)")
+                }
+            } }
+        }
+        table.columns.addAll(cFile, cScore, cSem, cCount, cCover, cDate, cSize, cTitle, cDomain)
 
         table.setRowFactory {
             val row = TableRow<SearchHit>()
@@ -442,7 +465,8 @@ class MainWindow(
         val miOpen = MenuItem("باز کردن فایل").apply { setOnAction { table.selectionModel.selectedItem?.let { openResultDoc(it) } } }
         val miFolder = MenuItem("بازکردن پوشه").apply { setOnAction { table.selectionModel.selectedItem?.let { openFolder(it) } } }
         val miCopy = MenuItem("کپی فایل").apply { setOnAction { table.selectionModel.selectedItem?.let { copyFile(it) } } }
-        val menu = ContextMenu(miOpen, miFolder, miCopy)
+        val miQuran = MenuItem("کشف‌الآیات این سند").apply { isVisible = flag("FF_QURAN"); setOnAction { table.selectionModel.selectedItem?.let { openQuran(File(it.path)) } } }
+        val menu = ContextMenu(miOpen, miFolder, miCopy, miQuran)
         menu.setOnShowing {
             val exists = table.selectionModel.selectedItem?.let { File(it.path).exists() } ?: false
             miOpen.isDisable = !exists; miFolder.isDisable = !exists; miCopy.isDisable = !exists
@@ -556,6 +580,7 @@ class MainWindow(
                     setSpecMode(mode, if (mode != SearchMode.PHRASE && phrases.size > 1)
                         phrases.indices.joinToString("   ·   ") { i -> "«${phrases[i]}» ${PersianUtil.toPersianNumbers(totals[i])}" } else null)
                     table.items = FXCollections.observableArrayList(ir.matnyaab.core.search.Ranking.sort(hits, sortMode))
+                    cSem.isVisible = hits.any { it.semantic >= 0 }
                     lblResultCount.text = PersianUtil.toPersianNumbers(hits.size) + " فایل — " +
                         PersianUtil.toPersianNumbers(hits.sumOf { it.matches }) + " مورد"
                     preview.clear(); preview.setSummary(null)
@@ -608,14 +633,44 @@ class MainWindow(
         }.apply { isDaemon = true }.start()
     }
 
+    /** خروجی Word/Excel همراه با متن و بافت هر نتیجه */
+    private fun exportContext(choice: ExportDialog.Choice, phrases: List<String>) {
+        val engine = indexer.lastEngine?.takeIf { specMode != null }
+        if (engine == null && table.items.none { it.chunkStart >= 0 }) {
+            CustomMessageBox.show(stage, "خروجی نتایج", "خروجی با متن و بافت برای جست‌وجوهای نسل دوم (واژه، چند واژه، چند عبارت، منطقی) در دسترس است. یک بار دیگر با همین عبارت جست‌وجو کنید."); return
+        }
+        val name = ResearchWindow.safeName(phrases.firstOrNull() ?: "نتایج") + " - نتایج"
+        val f = javafx.stage.FileChooser().apply {
+            title = "ذخیرهٔ خروجی"; initialFileName = "$name.${choice.format}"; initialDirectory = ResearchWindow.docsDir()
+            extensionFilters.add(if (choice.format == "xlsx") javafx.stage.FileChooser.ExtensionFilter("Excel", "*.xlsx") else javafx.stage.FileChooser.ExtensionFilter("Word", "*.docx"))
+        }.showSaveDialog(stage) ?: return
+        val hits = table.items.toList()
+        waitOverlay.showOverlay()
+        Thread {
+            val r = runCatching {
+                val ex = ir.matnyaab.core.research.ResultExporter.excerpts(hits, engine, choice.options)
+                if (choice.format == "xlsx") ir.matnyaab.core.research.ResultExporter.saveXlsx(f, phrases, ex, choice.options)
+                else ir.matnyaab.core.research.ResultExporter.saveDocx(f, "نتایج جست‌وجوی " + phrases.joinToString("، ") { "«$it»" }.ifBlank { "متن‌یاب" }, phrases, ex, choice.options)
+                ex.size
+            }
+            Platform.runLater {
+                waitOverlay.hideOverlay()
+                r.onSuccess { n -> statusFlash("✓ ${PersianUtil.toPersianNumbers(n)} برش ذخیره شد"); runCatching { Desktop.getDesktop().open(f) } }
+                    .onFailure { e -> CustomMessageBox.show(stage, "خروجی نتایج", "ذخیره نشد: ${e.message}\nاگر فایل باز است، آن را ببندید.") }
+            }
+        }.apply { isDaemon = true }.start()
+    }
+
     private fun exportResults() {
         if (table.items.isEmpty()) { CustomMessageBox.show(stage, "خروجی نتایج", "ابتدا جست‌وجو کنید تا نتیجه‌ای برای ذخیره باشد."); return }
+        val phrases = indexer.lastEngine?.takeIf { specMode != null }?.let { e -> (0 until e.phraseCount).map { e.phrase(it) } } ?: emptyList()
+        val choice = ExportDialog.ask(stage, settings, phrases.size > 1) ?: return
+        if (choice.format != "csv") { exportContext(choice, phrases); return }
         val f = javafx.stage.FileChooser().apply {
             title = "ذخیرهٔ نتایج"; initialFileName = "matnyaab-results.csv"
             extensionFilters.add(javafx.stage.FileChooser.ExtensionFilter("CSV", "*.csv"))
         }.showSaveDialog(stage) ?: return
         fun q(v: Any) = "\"" + v.toString().replace("\"", "\"\"") + "\""
-        val phrases = indexer.lastEngine?.takeIf { specMode != null }?.let { e -> (0 until e.phraseCount).map { e.phrase(it) } } ?: emptyList()
         val lines = listOf((listOf("فایل", "مسیر", "اندازه (بایت)", "امتیاز", "مجموعه", "تعداد موارد", "ارتباط (۰ تا ۱۰۰)", "تراکم در هزار واژه", "تاریخ فایل") + phrases).joinToString(",") { q(it) }) +
             table.items.map { h -> (listOf(File(h.path).name, h.path, h.size, h.score, h.indexName, h.matches.coerceAtLeast(0), h.relevance.coerceAtLeast(0), String.format(java.util.Locale.US, "%.2f", h.density),
                 if (h.time > 0) PersianUtil.toJalali(java.time.LocalDateTime.ofEpochSecond(h.time.toLong(), 0, java.time.ZoneOffset.UTC)) else "") + h.perPhrase).joinToString(",") { q(it) } }
@@ -627,6 +682,7 @@ class MainWindow(
 
     /** معادل showPreview: هایلایت محتوا + بررسی حذف/تغییر فایل */
     private var previewHit: SearchHit? = null
+    private lateinit var cSem: TableColumn<SearchHit, Int>
 
     private fun showPreview(hit: SearchHit) {
         previewHit = hit

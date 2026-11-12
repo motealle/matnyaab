@@ -81,7 +81,13 @@ class ScanDirectoryDialog(
     private val errorsPane = TitledPane("فایل‌هایی که خوانده نشدند (۰)", tblErrors).apply {
         isExpanded = false; isVisible = false; isManaged = false
     }
-    private val progressBox = VBox(6.0, lblProgress, progress, lblEta, lblCurrent, errorsPane).apply {
+    private val ownerStage = owner as? Stage
+    private val btnPark = Button("⤓ ادامه در پس‌زمینه (کنار ساعت)").apply {
+        style = Theme.addButton(); isVisible = TrayProgress.supported; isManaged = isVisible
+        tooltip = javafx.scene.control.Tooltip("پنجره‌ها پنهان می‌شوند و پیشرفت را با نماد متن‌یاب کنار ساعت ویندوز می‌بینید؛ در پایان برنامه خودکار برمی‌گردد.")
+        setOnAction { TrayProgress.park(listOfNotNull(ownerStage, stage), "فهرست‌سازی «${txtCatName.text.trim()}»") }
+    }
+    private val progressBox = VBox(6.0, lblProgress, progress, lblEta, lblCurrent, btnPark, errorsPane).apply {
         padding = Insets(12.0)
         styleClass.add("card")
         isVisible = false; isManaged = false
@@ -203,6 +209,7 @@ class ScanDirectoryDialog(
                     Platform.runLater {
                         progress.progress = if (total == 0) 1.0 else done.toDouble() / total
                         val pct = if (total == 0) 100 else done * 100 / total
+                        TrayProgress.update(progress.progress, "${fa(done)} از ${fa(total)} فایل")
                         lblProgress.text = "${fa(done)} از ${fa(total)} فایل (${fa(pct)}٪)"
                         if (done > 3 && total > done) {
                             val elapsed = (System.currentTimeMillis() - startMs) / 1000.0
@@ -213,6 +220,7 @@ class ScanDirectoryDialog(
                 }
                 override fun onFinish(err: Int) {
                     Platform.runLater {
+                        TrayProgress.finish(if (err == 0) "فهرست‌سازی «$name» تمام شد و آمادهٔ جست‌وجو است." else null)
                         running = false; styleStart(false)
                         when (err) {
                             0 -> {
@@ -236,6 +244,6 @@ class ScanDirectoryDialog(
 
     private fun cancel() { service.cancelled = true }
 
-    fun show() = stage.showAndWait()
+    fun show() = ParkableModal.showAndWait(stage)
     internal fun showNonBlocking(): Stage { stage.show(); return stage }
 }
