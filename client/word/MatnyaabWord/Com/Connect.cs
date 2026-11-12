@@ -124,6 +124,8 @@ namespace Matnyaab.Word.Com
                 case "grpStructure": return s.ShowStructure || s.ShowCleanup;
                 case "grpTemplates": return s.ShowTemplates;
                 case "grpAi": return s.ShowAi;
+                case "grpResearch": return s.ShowResearch;
+                case "grpOffice": return s.ShowOffice;
                 case "btnSearchSel": return s.ShowSearch;
                 case "btnCleanup": return s.ShowCleanup;
                 case "btnHeadings": case "btnToc": return s.ShowStructure;
@@ -150,6 +152,13 @@ namespace Matnyaab.Word.Com
                     case "btnToc": WordOps.InsertToc(); break;
                     case "btnTemplates": ShowPane(p => p.OpenTab("templates")); break;
                     case "btnAi": ShowPane(p => p.OpenTab("ai")); break;
+                    case "btnFishSel": case "btnFishes": case "btnFindSource": case "btnCheckQuotes": ShowPane(p => p.OpenTab("research")); break;
+                    case "btnLetter": ShowPane(p => p.OpenOffice("letter")); break;
+                    case "btnMinutes": ShowPane(p => p.OpenOffice("minutes")); break;
+                    case "btnReport": ShowPane(p => p.OpenOffice("report")); break;
+                    case "btnRequest": ShowPane(p => p.OpenOffice("request")); break;
+                    case "btnCircular": ShowPane(p => p.OpenOffice("circular")); break;
+                    case "btnDesk": Bridge.ShowApp(""); break;
                     case "btnSettings": ShowPane(p => p.OpenTab("settings")); break;
                     case "btnHelp": System.Diagnostics.Process.Start(Updater.Site + "/#word"); break;
                 }
@@ -239,6 +248,7 @@ namespace Matnyaab.Word.Com
         }
 
         public void OpenTab(string id) => _view.Open(id);
+        public void OpenOffice(string id) => _view.OpenOffice(id);
         public void OpenSearch(string query) => _view.OpenSearch(query);
         public void OpenWriting(string section) => _view.OpenWriting(section);
     }

@@ -151,7 +151,7 @@ class ResearchWindow(private val owner: Stage, private val settings: AppSettings
                 label("در پیش‌نمایش نتایج، متن را انتخاب و «＋ فیش» (یا Ctrl+D) را بزنید؛ منبع و جای دقیق خودکار ثبت می‌شود. " +
                     "یا از «دستیار هوشمند» بخواهید از منابع شما فیش‌برداری موضوعی کند."))
             val body = SplitPane(left, center, ScrollPane(editor).apply { isFitToWidth = true }).apply { setDividerPositions(0.2, 0.62) }
-            root = BorderPane(StackPane(body, emptyHint.apply { maxWidth = 460.0; maxHeight = 140.0; isVisible = false })).apply { top = top }
+            root = BorderPane(StackPane(body, emptyHint.apply { maxWidth = 460.0; maxHeight = 140.0; isVisible = false })).apply { this.top = top }
             ResearchStore.listener = { Platform.runLater { refreshTopics(); refreshList(); emptyHint.isVisible = ResearchStore.fishes().isEmpty() } }
             refreshTopics(); refreshList()
             emptyHint.isVisible = ResearchStore.fishes().isEmpty()

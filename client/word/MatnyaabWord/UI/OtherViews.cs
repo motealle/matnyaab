@@ -331,6 +331,8 @@ namespace Matnyaab.Word.UI
             feat.Add(Kit.Check("یکدست‌سازی متن فارسی", s.ShowCleanup, v => { s.ShowCleanup = v; Save(); }));
             feat.Add(Kit.Check("قالب‌های صفحه‌آرایی", s.ShowTemplates, v => { s.ShowTemplates = v; Save(); }));
             feat.Add(Kit.Check("دستیار هوشمند", s.ShowAi, v => { s.ShowAi = v; Save(); }));
+            feat.Add(Kit.Check("پژوهش: فیش، منبع‌یاب و بررسی نقل‌قول‌ها", s.ShowResearch, v => { s.ShowResearch = v; Save(); }));
+            feat.Add(Kit.Check("اداری: نامه و قالب‌های رسمی", s.ShowOffice, v => { s.ShowOffice = v; Save(); }));
             Add(feat);
 
             var ins = new Card("درج نقل‌قول");

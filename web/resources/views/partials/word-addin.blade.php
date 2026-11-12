@@ -36,7 +36,7 @@
                 <h3>نصب در یک دقیقه، بی‌دردسر</h3>
                 <p>ورد ۲۰۱۰ تا ۳۶۵ (۳۲ و ۶۴ بیتی) · ویندوز ۱۰ و ۱۱ · بدون نیاز به دسترسی مدیر · پنل را کنار راست، چپ یا شناور بگذارید · به‌روزرسانی از درون خود ورد. بدون متن‌یاب هم ابزارهای نگارش و قالب‌ها کار می‌کنند و با متن‌یاب، پوسته، مجموعه‌ها و یادداشت‌ها مشترک می‌شوند.</p>
             </div>
-            <a class="btn btn-primary" data-release-link="word" href="/downloadFiles/Matnyaab-Word-Setup-1.0.1.exe">دانلود افزونهٔ ورد <span aria-hidden="true">↓</span></a>
+            <a class="btn btn-primary" data-release-link="word" href="/downloadFiles/Matnyaab-Word-Setup-1.1.0.exe">دانلود افزونهٔ ورد <span aria-hidden="true">↓</span></a>
         </div>
     </div>
 </section>

@@ -20,7 +20,7 @@ namespace Matnyaab.Word.Ops
     /// همهٔ کار با مدل شیء ورد (با پیوند دیرهنگام: بدون وابستگی به نسخهٔ آفیس).
     /// هر عملیات تغییردهنده در یک «واگرد سفارشی» پیچیده می‌شود تا با یک Ctrl+Z برگردد.
     /// </summary>
-    public static class WordOps
+    public static partial class WordOps
     {
         public static dynamic App;   // در Connect مقداردهی می‌شود
 

@@ -331,7 +331,7 @@ class MainWindow(
             add(Label("منبع: ${File(hit.path).name}").apply { styleClass.add("muted"); style = Theme.FONT }, 1, r)
         }
         val dlg = Dialog<ButtonType>().apply {
-            initOwner(stage); title = "فیش تازه"; headerText = null
+            initOwner(stage); this.title = "فیش تازه"; headerText = null
             dialogPane.content = grid.apply { prefWidth = 520.0 }; dialogPane.nodeOrientation = NodeOrientation.RIGHT_TO_LEFT; dialogPane.style = Theme.FONT
             dialogPane.buttonTypes.addAll(ButtonType("ذخیرهٔ فیش", ButtonBar.ButtonData.OK_DONE), ButtonType("انصراف", ButtonBar.ButtonData.CANCEL_CLOSE))
         }

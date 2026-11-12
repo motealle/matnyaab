@@ -53,8 +53,16 @@ object AiConfig {
 
     @Synchronized
     fun load(): Data = runCatching {
-        if (file.exists()) gson.fromJson(file.readText(Charsets.UTF_8), Data::class.java)?.also { if (it.providers == null) it.providers = mutableListOf() } else null
+        if (file.exists()) gson.fromJson(file.readText(Charsets.UTF_8), Data::class.java)?.also { if (it.providers == null) it.providers = mutableListOf() } else fromWordAddin()
     }.getOrNull() ?: Data()
+
+    /** اگر کاربر پیش‌تر در افزونهٔ ورد سرویس افزوده، همان را بردار (کلیدها با همان DPAPI رمزند). */
+    private fun fromWordAddin(): Data? = runCatching {
+        val w = File(file.parentFile, "word-addin.json").takeIf { it.exists() } ?: return null
+        val o = com.google.gson.JsonParser.parseString(w.readText(Charsets.UTF_8)).asJsonObject
+        val list = o.getAsJsonArray("AiProviders")?.map { gson.fromJson(it, AiProvider::class.java) }?.toMutableList() ?: return null
+        if (list.isEmpty()) null else Data(list, o.get("AiProviderId")?.asString ?: list.first().Id)
+    }.getOrNull()
 
     @Synchronized
     fun save(d: Data) {

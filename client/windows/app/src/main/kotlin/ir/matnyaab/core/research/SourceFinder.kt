@@ -43,7 +43,7 @@ object SourceFinder {
         if (t.size < 3) t.map { it.norm }.toSet() else (0..t.size - 3).map { t[it].norm + " " + t[it + 1].norm + " " + t[it + 2].norm }.toSet()
 
     /** بهترین پنجرهٔ هم‌طول نقل‌قول در متن سند: (شباهت، آغاز، پایان) */
-    fun align(content: String, q: List<Tok>, qsh: Set<String>): Triple<Double, Int, Int>? {
+    private fun align(content: String, q: List<Tok>, qsh: Set<String>): Triple<Double, Int, Int>? {
         val d = tokens(content)
         if (d.size < 3) return null
         val n = q.size

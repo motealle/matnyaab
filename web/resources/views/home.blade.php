@@ -268,7 +268,7 @@
                     <div class="classic-card">
                         <div>
                             <strong style="color:var(--text)">متن‌یاب برای ورد</strong><br>
-                            جست‌وجو و درج با منبع، پانویس، سرفصل و قالب‌ها درون ورد: <a data-release-link="word" href="/downloadFiles/Matnyaab-Word-Setup-1.0.1.exe">دریافت افزونه</a> · <a href="#word">معرفی</a>
+                            جست‌وجو و درج با منبع، پانویس، سرفصل و قالب‌ها درون ورد: <a data-release-link="word" href="/downloadFiles/Matnyaab-Word-Setup-1.1.0.exe">دریافت افزونه</a> · <a href="#word">معرفی</a>
                         </div>
                     </div>
                     <div class="classic-card">

@@ -27,6 +27,8 @@ namespace Matnyaab.Word.UI
 
         public SearchView Search { get; private set; }
         public WritingView Writing { get; private set; }
+        public OfficeView Office { get; private set; }
+        public void OpenOffice(string id) { Open("office"); Office?.Select(id); }
 
         public PaneView()
         {
@@ -39,6 +41,8 @@ namespace Matnyaab.Word.UI
                 new TabDef { Id = "writing", Title = "نگارش", Glyph = "✎", Visible = () => AddinSettings.Current.ShowFootnotes || AddinSettings.Current.ShowStructure || AddinSettings.Current.ShowCleanup, Make = () => Writing = new WritingView() },
                 new TabDef { Id = "templates", Title = "قالب", Glyph = "▤", Visible = () => AddinSettings.Current.ShowTemplates, Make = () => new TemplatesView() },
                 new TabDef { Id = "cite", Title = "استناد", Glyph = "❝", Visible = () => AddinSettings.Current.ShowCite, Make = () => new CiteView() },
+                new TabDef { Id = "research", Title = "پژوهش", Glyph = "🗂", Visible = () => AddinSettings.Current.ShowResearch, Make = () => new ResearchView() },
+                new TabDef { Id = "office", Title = "اداری", Glyph = "✉", Visible = () => AddinSettings.Current.ShowOffice, Make = () => Office = new OfficeView() },
                 new TabDef { Id = "ai", Title = "دستیار", Glyph = "✦", Visible = () => AddinSettings.Current.ShowAi, Make = () => new AiView(this) },
                 new TabDef { Id = "settings", Title = "تنظیمات", Glyph = "⚙", Visible = () => true, Make = () => new SettingsView(this) },
             };
