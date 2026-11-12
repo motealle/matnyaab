@@ -174,10 +174,13 @@ try {
         'matnyaab-hero-v1' => ['required' => true, 'ext' => ['webp', 'css', 'js']],
         'matnyaab-v2' => ['required' => false, 'ext' => ['webp', 'png', 'svg', 'css', 'js']],
         'matnyaab-word' => ['required' => false, 'ext' => ['webp', 'png']],
+        // راهنمای PDF در /docs
+        'docs' => ['required' => false, 'ext' => ['pdf'], 'path' => 'docs'],
     ];
     foreach ($assetSets as $set => $rule) {
-        $assetSource = $releaseDir . '/public/assets/' . $set;
-        $assetTarget = $docRoot . '/assets/' . $set;
+        $rel = $rule['path'] ?? ('assets/' . $set);
+        $assetSource = $releaseDir . '/public/' . $rel;
+        $assetTarget = $docRoot . '/' . $rel;
         if (!is_dir($assetSource)) {
             if ($rule['required']) {
                 throw new RuntimeException($set . ' assets are missing from release');
