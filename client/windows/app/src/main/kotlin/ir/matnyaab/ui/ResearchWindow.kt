@@ -288,7 +288,12 @@ class ResearchWindow(private val owner: Stage, private val settings: AppSettings
                 ).forEach { ex -> children.add(Button(ex).apply { styleClass.add("chip"); style = Theme.FONT + "-fx-font-size: 12px;"; setOnAction { instruction.text = ex } }) }
             }
             val plan = primary("برنامه‌ریزی از روی دستور") { plan() }
-            val freeCard = card(label("۱. بگویید چه می‌خواهید (یا مستقیم فرم زیر را پر کنید)", "card-title"), instruction, examples, HBox(8.0, plan).apply { alignment = Pos.CENTER_RIGHT })
+            val agent = secondary("اجرای مستقیم با عامل (آزمایشی)") { agent() }.apply {
+                tooltip = Tooltip("دستیار خودش با ابزارهای درونی متن‌یاب (جست‌وجو، خواندن، فیش، نوشتن فایل) کار را گام‌به‌گام انجام می‌دهد؛ برای کارهایی که در سناریوهای آماده نمی‌گنجد.")
+            }
+            val freeCard = card(label("۱. بگویید چه می‌خواهید (یا مستقیم فرم زیر را پر کنید)", "card-title"), instruction, examples,
+                HBox(8.0, plan, agent).apply { alignment = Pos.CENTER_RIGHT },
+                label("«برنامه‌ریزی» دستور شما را به یکی از سناریوهای آزموده تبدیل می‌کند تا پیش از اجرا ببینید؛ «عامل» برای کارهای آزادتر است.", "muted"))
             val browse = secondary("انتخاب…") {
                 val fc = FileChooser().apply { initialDirectory = docsDir(); initialFileName = File(output.text).name
                     extensionFilters.addAll(FileChooser.ExtensionFilter("Word", "*.docx"), FileChooser.ExtensionFilter("Markdown", "*.md")) }
@@ -380,6 +385,26 @@ class ResearchWindow(private val owner: Stage, private val settings: AppSettings
             }
         }
 
+        /** عامل آزاد: هوش مصنوعی خودش ابزارهای متن‌یاب را به کار می‌گیرد */
+        fun agent() {
+            val p = AiConfig.active() ?: run { AiSettingsDialog(stage).show(); refreshProviders(); return }
+            val text = instruction.text.trim().ifEmpty { log.text = "ابتدا در کادر بالا بنویسید چه می‌خواهید.\n"; return }
+            stop.set(false); run.isDisable = true; cancel.isDisable = false; openOut.isDisable = true
+            log.text = "عامل شروع کرد (حداکثر ۲۴ گام)…\n"; bar.progress = 0.0
+            bg {
+                val r = runCatching {
+                    ir.matnyaab.core.ai.AgentRunner(indexer, settings, p, { m -> Platform.runLater { log.appendText(m + "\n") } },
+                        { v -> Platform.runLater { bar.progress = v } }, { stop.get() }, docsDir()).run(text, indexer.allObjects.toList())
+                }
+                Platform.runLater {
+                    run.isDisable = false; cancel.isDisable = true
+                    r.onSuccess { res -> output.text = res.file.absolutePath; openOut.isDisable = false
+                        log.appendText("\n✓ ${res.file.absolutePath}\n   ${PersianUtil.toPersianNumbers(res.fishes)} فیش · ${PersianUtil.toPersianNumbers(res.calls)} درخواست\n"); openFile(res.file) }
+                        .onFailure { e -> log.appendText("\n✗ ${e.message ?: e.javaClass.simpleName}\n") }
+                }
+            }
+        }
+
         fun start() {
             val p = AiConfig.active() ?: return
             val spec = spec()
@@ -452,7 +477,7 @@ class ResearchWindow(private val owner: Stage, private val settings: AppSettings
                 label("خروجی یک فایل Word صفحه‌آرایی‌شده است: صفحهٔ عنوان، فهرست مطالب خودکار، فصل‌ها با سبک «عنوان ۱»، نقل‌قول‌ها با پانویس منبع، شمارهٔ صفحه و فهرست منابع. " +
                     "در ورد با افزونهٔ متن‌یاب می‌توانید قالب ناشر یا دانشگاه را هم یک‌جا اعمال کنید.", "muted"),
                 HBox(8.0, primary("ساخت فایل Word کتاب") { build() },
-                    secondary("نگارش پیوستهٔ فصل‌ها با دستیار…") { select("ai") }).apply { alignment = Pos.CENTER_RIGHT })
+                    secondary("کتاب با هوش مصنوعی (متن روان از فیش‌ها)…") { BookWizard.show(stage, settings, indexer, project.value) }.apply { isVisible = settings.get("FF_AI") != "0"; isManaged = isVisible }).apply { alignment = Pos.CENTER_RIGHT })
             root = HBox(14.0, left.apply { prefWidth = 420.0 }, right.apply { HBox.setHgrow(this, Priority.ALWAYS) }).apply { padding = Insets(14.0) }
             load()
         }

@@ -12,6 +12,7 @@
                 @if ($settings['flags']['contact_enabled'])<label class="type-pick"><input type="radio" name="type" value="support" @checked(old('type', 'support') === 'support')> 💬 پشتیبانی</label>@endif
                 @if ($settings['flags']['feature_requests_enabled'])<label class="type-pick"><input type="radio" name="type" value="feature" @checked(old('type') === 'feature' || ! $settings['flags']['contact_enabled'])> 💡 پیشنهاد قابلیت تازه</label>@endif
             </div>
+            @if ($settings['flags']['feature_requests_enabled'])<p class="muted" style="font-size:.85rem;margin:-6px 0 12px">پیشنهادهای قابلیت را می‌خوانیم و در برنامهٔ نسخه‌های بعد بررسی می‌کنیم؛ متن پیشنهاد بدون نام و راه تماس شما در فهرست پیشنهادها نگه داشته می‌شود.</p>@endif
             <div class="form-grid contact-grid">
                 <label class="field"><span class="field-label">نام</span><input class="input" name="name" value="{{ old('name') }}" maxlength="80" required>@error('name')<span class="field-error">{{ $message }}</span>@enderror</label>
                 <label class="field"><span class="field-label">موبایل یا ایمیل</span><input class="input" name="contact" dir="auto" value="{{ old('contact') }}" maxlength="120" required>@error('contact')<span class="field-error">{{ $message }}</span>@enderror</label>

@@ -68,11 +68,22 @@ object Ranking {
      * امتیاز = ۱/(۶۰+رتبهٔ متنی) + ۱/(۶۰+رتبهٔ معنایی). سندی که در هر دو فهرست بالاست، بالاتر می‌رود؛
      * سندی که واژه‌ها را ندارد ولی هم‌معناست هم (با علامت «مفهومی») پیدا می‌شود.
      */
-    fun hybrid(lexical: List<SearchHit>, semantic: List<ir.matnyaab.core.semantic.SemanticHit>, fetch: (String) -> SearchHit?): List<SearchHit> {
+    /** سطح‌های نام‌دار دامنهٔ معنایی (برای برچسب لغزنده) */
+    val SEMANTIC_LEVELS = listOf("بسیار دقیق", "دقیق", "متعادل", "گسترده", "حداکثری")
+    fun semanticLevelName(level: Int) = SEMANTIC_LEVELS[(level.coerceIn(0, 100) * 5 / 101)]
+
+    /**
+     * آستانهٔ شباهت کسینوسی برای دامنهٔ ۰..۱۰۰. سنجش روی جمله‌های فارسی در CI: هم‌معنا ≈ ۰٫۸۳–۰٫۸۶، نامرتبط ≈ ۰٫۷۷–۰٫۸۱.
+     * ۰ ← ۰٫۹۰ (فقط بسیار نزدیک)، ۵۰ ← ۰٫۸۳ (پیش‌فرض)، ۱۰۰ ← ۰٫۷۶ (ارتباط‌های دور هم).
+     */
+    fun semanticThreshold(level: Int) = 0.90 - level.coerceIn(0, 100) / 100.0 * 0.14
+
+    /** امتیاز تطابق معنایی قابل‌فهم برای کاربر (۰..۱۰۰) از شباهت کسینوسی */
+    fun semanticScore(sim: Double): Int = (((sim - 0.74) / (0.92 - 0.74)) * 100).toInt().coerceIn(0, 100)
+
+    fun hybrid(lexical: List<SearchHit>, semantic: List<ir.matnyaab.core.semantic.SemanticHit>, level: Int = 50, fetch: (String) -> SearchHit?): List<SearchHit> {
         if (semantic.isEmpty()) return lexical
-        val top = semantic.first().similarity
-        // آستانه بر پایهٔ سنجش واقعی روی جمله‌های فارسی در CI: هم‌معنا ≈ ۰٫۸۳–۰٫۸۶، نامرتبط ≈ ۰٫۷۷–۰٫۸۱
-        val sem = semantic.filter { it.similarity >= maxOf(0.80, top - 0.035) }.take(100)
+        val sem = semantic.filter { it.similarity >= semanticThreshold(level) }.take(150 + level * 2)
         val semRank = sem.withIndex().associate { it.value.path to it.index }
         val semBy = sem.associateBy { it.path }
         val lexRank = lexical.withIndex().associate { it.value.path to it.index }

@@ -37,6 +37,8 @@ data class SearchSpec(
     val synonyms: Boolean = false,
     /** افزودن نتایج «مفهومی» از جست‌وجوی معنایی (در صورت نصب بستهٔ معنایی) */
     val semantic: Boolean = false,
+    /** دامنهٔ تطابق معنایی ۰ (بسیار دقیق) تا ۱۰۰ (حداکثری) */
+    val semanticLevel: Int = 50,
     /** پرس‌وجوی منطقی (AND/OR/NOT/NEAR)؛ در این حالت phrases نادیده گرفته می‌شود */
     val expression: String? = null,
 ) {
@@ -228,6 +230,20 @@ class MatchEngine(val spec: SearchSpec) {
         val out = mutableListOf<IntRange>()
         for (r in all) if (out.isEmpty() || r.first > out.last().last) out.add(r)
         return out
+    }
+
+    /** جای همهٔ موارد یافت‌شده با شمارهٔ عبارت (برای خروجی با بافت) */
+    fun hits(content: String, max: Int = 500): List<Pair<IntRange, Int>> {
+        val all = mutableListOf<Pair<IntRange, Int>>()
+        patterns.forEachIndexed { pi, p ->
+            if (pi !in positive) return@forEachIndexed
+            val m = p.matcher(content)
+            while (m.find() && all.size < max * 4) if (m.end() > m.start()) all.add((m.start() until m.end()) to pi)
+        }
+        all.sortWith(compareBy({ it.first.first }, { -it.first.last }))
+        val out = mutableListOf<Pair<IntRange, Int>>()
+        for (r in all) if (out.isEmpty() || r.first.first > out.last().first.last) out.add(r)
+        return out.take(max)
     }
 
     /** چند تکه از متن پیرامون موارد یافت‌شده (برای افزونهٔ ورد و خروجی‌ها) */

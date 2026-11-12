@@ -45,7 +45,7 @@
                     <li>نوشتن فایل Word/Markdown و ثبت فیش‌ها</li>
                 </ol>
                 <p class="smart-note">جست‌وجو روی رایانهٔ شما انجام می‌شود و فقط بخش‌های لازم برای پردازش به سرویس انتخابی شما فرستاده می‌شود. پیش از اجرا، تعداد تقریبی درخواست‌ها را می‌بینید. برای محرمانگی کامل، Ollama را روی رایانهٔ خود نصب کنید.</p>
-                <p><a class="btn btn-primary" data-release-link="kotlin" href="/downloadFiles/Matnyaab-Setup-3.0.exe">دانلود متن‌یاب ۳ <span aria-hidden="true">↓</span></a></p>
+                <p><a class="btn btn-primary" data-release-link="kotlin" href="/downloadFiles/Matnyaab-Setup-3.1.exe">دانلود متن‌یاب ۳٫۱ <span aria-hidden="true">↓</span></a> <a class="btn" href="/docs/matnyaab-guide-3.1.pdf" target="_blank" rel="noopener">راهنمای کامل (PDF)</a></p>
             </div>
             <div>
                 <h3>کلید هوش مصنوعی را از کجا بگیرم؟</h3>

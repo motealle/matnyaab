@@ -14,6 +14,7 @@ import javafx.scene.control.*
 import javafx.scene.input.KeyCode
 import javafx.scene.layout.HBox
 import javafx.scene.layout.Priority
+import javafx.scene.layout.Region
 import javafx.scene.layout.StackPane
 import javafx.scene.layout.VBox
 
@@ -70,7 +71,17 @@ class SearchPanel(
         tooltip = Tooltip("متن‌های هم‌معنا را هم پیدا می‌کند، حتی اگر واژه‌ها فرق کنند؛ نتیجه‌های مفهومی با نشان «مفهومی» می‌آیند")
     }
     private val semanticHint = Label().apply { isWrapText = true; styleClass.add("hint") }
-    private val semanticRow = VBox(2.0, semantic, semanticHint)
+    private val semLevel = Slider(0.0, 100.0, 50.0).apply {
+        majorTickUnit = 25.0; minorTickCount = 4; isShowTickMarks = true; isSnapToTicks = false; maxWidth = Double.MAX_VALUE
+        tooltip = Tooltip("کم: فقط متن‌های بسیار نزدیک به معنای جست‌وجو · زیاد: ارتباط‌های دورتر هم")
+    }
+    private val semLevelLabel = Label().apply { styleClass.add("hint") }
+    private val semLevelBox = VBox(2.0,
+        HBox(6.0, Label("دامنهٔ معنایی:").apply { styleClass.add("hint") }, semLevelLabel).apply { alignment = Pos.CENTER_RIGHT },
+        semLevel,
+        HBox(Label("دقیق").apply { styleClass.add("hint") }, Region().also { HBox.setHgrow(it, Priority.ALWAYS) }, Label("گسترده").apply { styleClass.add("hint") }))
+        .apply { padding = Insets(0.0, 22.0, 0.0, 0.0) }
+    private val semanticRow = VBox(2.0, semantic, semLevelBox, semanticHint)
     private val synonyms = CheckBox("مترادف‌ها هم جست‌وجو شوند (خودسازی ← تزکیه نفس…)")
     private val spacing = ComboBox<String>().apply {
         items.addAll("یکسان‌سازی فاصله و نیم‌فاصله", "نادیده‌گرفتن فاصله‌های اضافه", "فاصله‌گذاری دقیق")
@@ -267,6 +278,7 @@ class SearchPanel(
         match = if (partial.isSelected) MatchType.PARTIAL else if (family.isSelected) MatchType.FAMILY else MatchType.WHOLE,
         synonyms = synonyms.isSelected,
         semantic = semantic.isSelected && semanticRow.isVisible,
+        semanticLevel = semLevel.value.toInt(),
         spacing = when (spacing.selectionModel.selectedIndex) { 1 -> Spacing.COLLAPSE; 2 -> Spacing.EXACT; else -> Spacing.UNIFY },
         ignorePunct = punct.isSelected, normalizeLetters = letters.isSelected, strict = strict.isSelected,
     )
@@ -352,7 +364,7 @@ class SearchPanel(
             if (strict.isSelected) 1 else 0, if (partial.isSelected) 1 else if (family.isSelected) 2 else 0, spacing.selectionModel.selectedIndex.coerceAtLeast(0),
             if (punct.isSelected) 1 else 0, if (letters.isSelected) 1 else 0,
             if (wordsAny.isSelected) 1 else 0, if (phrasesAll.isSelected) 1 else 0, if (synonyms.isSelected) 1 else 0,
-            if (semantic.isSelected) 1 else 0,
+            if (semantic.isSelected) 1 else 0, semLevel.value.toInt(),
         ).joinToString(","))
     }
 
@@ -363,6 +375,13 @@ class SearchPanel(
         (when (f(1, 0)) { 1 -> partial; 2 -> family; else -> whole }).isSelected = true
         synonyms.isSelected = f(7, 0) == 1
         semantic.isSelected = f(8, 1) == 1
+        semLevel.value = f(9, 50).toDouble()
+        syncLevel()
+        semLevel.valueProperty().addListener { _ -> syncLevel() }
+        semantic.selectedProperty().addListener { _ -> syncLevel() }
+        // پس از رهاکردن لغزنده، اگر جست‌وجوی مفهومی روشن و عبارتی نوشته شده، نتیجه‌ها با دامنهٔ تازه به‌روز شوند
+        semLevel.setOnMouseReleased { save(); if (semantic.isSelected) searchIfReady() }
+        semLevel.setOnKeyReleased { save() }
         spacing.selectionModel.select(f(2, 0).coerceIn(0, 2))
         punct.isSelected = f(3, 1) == 1
         letters.isSelected = f(4, 1) == 1
@@ -393,6 +412,27 @@ class SearchPanel(
     private fun buildLegacy() {
         quickInput.setOnAction { fireQuick() }
         children.addAll(quickRow(), Separator(), advancedBody())
+    }
+
+    private fun syncLevel() {
+        val v = semLevel.value.toInt()
+        semLevelLabel.text = ir.matnyaab.core.search.Ranking.semanticLevelName(v) + " (" + ir.matnyaab.util.PersianUtil.toPersianNumbers(v) + ")"
+        semLevelBox.isVisible = semantic.isSelected; semLevelBox.isManaged = semLevelBox.isVisible
+    }
+
+    private fun searchIfReady() { if (v2 && mode == SearchMode.PHRASE && quickInput.text.isNotBlank()) fire() }
+
+    /** دکمهٔ «جست‌وجو» در نوار ابزار: اگر عبارتی نوشته شده جست‌وجو کن، وگرنه مکان‌نما را به کادر ببر. */
+    fun searchOrFocus() {
+        val has = when {
+            !v2 -> quickInput.text.isNotBlank()
+            mode == SearchMode.PHRASE -> quickInput.text.isNotBlank()
+            mode == SearchMode.WORDS -> wordsInput.text.isNotBlank()
+            mode == SearchMode.PHRASES -> phrasesInput.text.isNotBlank()
+            else -> boolInput.text.isNotBlank()
+        }
+        if (!has) { focusQuick(); return }
+        if (v2) fire() else fireQuick()
     }
 
     fun focusQuick() {

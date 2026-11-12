@@ -5,6 +5,7 @@ import javafx.geometry.NodeOrientation
 import javafx.geometry.Pos
 import javafx.scene.Scene
 import javafx.scene.control.Button
+import javafx.scene.control.Hyperlink
 import javafx.scene.control.Label
 import javafx.scene.control.ScrollPane
 import javafx.scene.layout.*
@@ -24,6 +25,10 @@ object ScenariosDialog {
         Job("✦", "کدگذاری به روش گراندد تئوری", "سناریوی «گراندد تئوری»: کدهای باز، مقوله‌ها و مقولهٔ هسته با نقل‌قول‌های راستی‌آزمایی‌شده.", "ai", true),
         Job("✦", "پیشینهٔ پژوهش و مرور منابع بنویسم", "سناریوی «پیشینهٔ پژوهش»: متن پیوسته با پانویس دقیق از منابع خود شما.", "ai", true),
         Job("✦", "دیدگاه‌های مختلف دربارهٔ یک مسئله را مقایسه کنم", "سناریوی «دیدگاه‌ها»: دسته‌بندی آرا با استناد به گوینده و منبع.", "ai", true),
+        Job("📖", "از عنوان و کلیدواژه، پیش‌نویس کامل کتاب بگیرم", "«کتاب ← کتاب با هوش مصنوعی»: سبک نگارش، قطع و قلم را انتخاب کنید؛ Word صفحه‌آرایی‌شده با پانویس منابع تحویل بگیرید.", "bookai", true),
+        Job("۞", "بدانم یک آیه در کدام اسنادم آمده است", "«کشف‌الآیات»: نقل کامل و بخشی، ارجاع شماره‌ای و ترجمه، با اطمینان و متن شاهد؛ خروجی Word و Excel.", "quran"),
+        Job("⭳", "نتایج جست‌وجو را با متن پیرامون در Word یا Excel داشته باشم", "دکمهٔ «خروجی Word/Excel» بالای نتایج: بند کامل، چند بند یا شمار واژهٔ پیش و پس، با برجسته‌سازی و شمارهٔ صفحه.", null),
+        Job("🎙", "سخنرانی و درس صوتی را جست‌وجوپذیر کنم", "«گفتار به متن»: بستهٔ اختیاری آفلاین Whisper؛ متن با زمان هر جمله.", "whisper"),
         Job("W", "در ورد بنویسم و همان‌جا جست‌وجو و استناد کنم", "افزونهٔ ورد متن‌یاب: جست‌وجو، درج نقل‌قول با ارجاع، قالب پایان‌نامه، نامهٔ اداری و قالب‌های رسمی.", null),
     )
 
@@ -39,7 +44,9 @@ object ScenariosDialog {
             j.tab?.let { t -> card.children.add(Button("برو").apply { style = Theme.addButton(); setOnAction { st.close(); open(t) } }) }
             grid.children.add(card)
         }
-        val root = VBox(Label("کار شما چیست؟ همان را انتخاب کنید.").apply { styleClass.add("section-title"); style = Theme.FONT; padding = Insets(14.0, 14.0, 0.0, 14.0) },
+        val guide = Hyperlink("راهنمای کامل متن‌یاب (PDF)").apply { setOnAction { runCatching { java.awt.Desktop.getDesktop().browse(java.net.URI(ir.matnyaab.core.Constants.BASE_URL + "/docs/matnyaab-guide-3.1.pdf")) } } }
+        val root = VBox(HBox(10.0, Label("کار شما چیست؟ همان را انتخاب کنید.").apply { styleClass.add("section-title"); style = Theme.FONT }, Region().also { HBox.setHgrow(it, Priority.ALWAYS) }, guide)
+            .apply { padding = Insets(14.0, 14.0, 0.0, 14.0); alignment = Pos.CENTER_RIGHT },
             ScrollPane(grid).apply { isFitToWidth = true; VBox.setVgrow(this, Priority.ALWAYS) })
             .apply { nodeOrientation = NodeOrientation.RIGHT_TO_LEFT; style = Theme.FONT }
         st.scene = Scene(root, 880.0, 640.0)

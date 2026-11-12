@@ -16,6 +16,7 @@ use App\Http\Controllers\SupportController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
+Route::get('versions', fn () => view('versions', ['versions' => config('versions')]))->name('versions');
 Route::redirect('/index', '/#features');
 Route::redirect('/download', '/#download');
 Route::redirect('/screenshots', '/#whats-new');
@@ -35,6 +36,7 @@ Route::prefix('api/client')->middleware('throttle:30,1')->group(function () {
     Route::get('config', [ClientApiController::class, 'configEndpoint']);
     Route::post('activate', [ClientApiController::class, 'activate']);
     Route::post('ping', [ClientApiController::class, 'ping']);
+    Route::post('feedback', [ClientApiController::class, 'feedback'])->middleware('throttle:5,10');
 });
 Route::get('adminarea/login', [AdminPanelController::class, 'showLogin'])->name('admin.login');
 Route::post('adminarea/login', [AdminPanelController::class, 'login'])->middleware('throttle:6,15')->name('admin.login.submit');

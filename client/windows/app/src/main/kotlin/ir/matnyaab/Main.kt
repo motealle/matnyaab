@@ -79,6 +79,20 @@ fun main(args: Array<String>) {
         kotlin.system.exitProcess(code)
     }
 
+    // آزمون خودکار بستهٔ گفتار به متن در CI: --whisper-selftest <pack.zip> <model.bin> <audio> <out.json>
+    args.indexOf("--whisper-selftest").takeIf { it >= 0 && it + 4 < args.size }?.let { i ->
+        val out = File(args[i + 4])
+        val code = try {
+            val W = ir.matnyaab.core.whisper.Whisper
+            W.installPack(File(args[i + 1]))
+            val segs = W.transcribe(File(args[i + 3]), File(args[i + 2]), "en", {}, { false })
+            val text = segs.joinToString(" ") { it.text }
+            out.writeText(com.google.gson.Gson().toJson(mapOf("ok" to segs.isNotEmpty(), "segments" to segs.size, "text" to text, "ffmpeg" to (W.ffmpegExe() != null))))
+            if (segs.isNotEmpty()) 0 else 2
+        } catch (e: Throwable) { out.writeText("{\"ok\":false,\"error\":\"" + (e.toString().replace("\"", "'")) + "\"}"); 1 }
+        kotlin.system.exitProcess(code)
+    }
+
     if (args.contains("--bridge")) {
         // حالت پنهان برای افزونهٔ ورد: بدون پنجره، فقط پل محلی؛ پس از ۳۰ دقیقه بیکاری بسته می‌شود
         if (ir.matnyaab.core.bridge.LocalBridge.existing()?.let { (port, _) ->

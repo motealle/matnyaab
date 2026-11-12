@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'متن‌یاب | جستجوی حرفه‌ای در محتوای فایل‌ها؛ اشتراک اعتمادمحور برای ویندوز')
-@section('meta_description', 'متن‌یاب ۲ با اشتراک اعتمادمحور (از ماهی ۴۱ هزار تومان): جست‌وجوی سریع درون متن فایل‌های Word، PDF، پاورپوینت، اکسل و OneNote روی رایانهٔ خودتان؛ مناسب پژوهشگران، طلاب، دانشجویان و کتابخانه‌های شخصی.')
+@section('meta_description', 'متن‌یاب ۳ با اشتراک اعتمادمحور (از ماهی ۴۱ هزار تومان): جست‌وجوی سریع درون متن فایل‌های Word، PDF، پاورپوینت، اکسل و OneNote روی رایانهٔ خودتان؛ مناسب پژوهشگران، طلاب، دانشجویان و کتابخانه‌های شخصی.')
 
 @push('styles')
 <link rel="stylesheet" href="/assets/matnyaab-hero-v1/hero.css?v=20260928-mobile">
@@ -164,21 +164,21 @@
 <section class="section" id="whats-new">
     <div class="container">
         <div class="whats-new">
-            <span class="new-badge">تازه: نسخهٔ ۳ · متن‌یاب هوشمند</span>
-            <h2>جست‌وجوی دقیق، حالا با میز پژوهش و دستیار هوشمند</h2>
-            <p class="lead">متن‌یاب ۳ نوار ابزار تازه و «میز پژوهش» دارد: فیش‌برداری با منبع، ساخت کتاب در Word، منبع‌یاب و همانندجویی، و دستیار هوشمند با کلید خود شما (<a href="#ai">بیشتر</a>). پایهٔ آن همان موتور جست‌وجوی دقیق است: عبارت دقیق، چند عبارت در یک اجرا، جست‌وجوی منطقی و فاصله‌دار، و کنترل کامل روی فاصله، نیم‌فاصله و علائم نگارشی. در کنارش «متن‌یاب برای ورد» آمده تا نتیجه‌ها را با منبع، مستقیم در نوشته‌تان بنشانید.</p>
+            <span class="new-badge">تازه: نسخهٔ ۳٫۱</span>
+            <h2>از جست‌وجو تا کتاب؛ و حالا کشف‌الآیات و خروجی با بافت</h2>
+            <p class="lead">متن‌یاب ۳٫۱ با پیشنهادهای پژوهشگران ساخته شد: کشف آیات قرآن در اسناد، خروجی نتایج در Word و Excel همراه با متن پیرامون، کنترل دامنهٔ جست‌وجوی مفهومی، و «کتاب با هوش مصنوعی» که از عنوان و کلیدواژه، پیش‌نویس کامل و صفحه‌آرایی‌شدهٔ کتاب را تحویل می‌دهد (<a href="#ai">بیشتر</a> · <a href="/docs/matnyaab-guide-3.1.pdf" target="_blank" rel="noopener">راهنمای کامل PDF</a>).</p>
 
             <div class="new-grid">
-                <div class="new-item"><h3>واژه و عبارت، با شمارش دقیق</h3><p>«نفس» یا «تهذیب نفس» را جست‌وجو کنید و ببینید هر فایل چند بار آن را دارد؛ «جهاد، نفس» و «جهاد (نفس)» هم پیدا می‌شوند.</p></div>
-                <div class="new-item"><h3>چند عبارت در یک اجرا</h3><p>هر سطر یک عبارت؛ برای هر فایل می‌بینید «۳ از ۵ عبارت» و تعداد هر کدام. خروجی اکسل هم ستون جدا برای هر عبارت دارد.</p></div>
-                <div class="new-item"><h3>جست‌وجوی منطقی و فاصله‌دار</h3><p><code dir="ltr">(جهاد OR مبارزه) AND نفس NOT نظامی</code> و <code dir="ltr">جهاد NEAR/5 نفس</code> برای واژه‌هایی که تا ۵ واژه از هم فاصله دارند.</p></div>
-                <div class="new-item"><h3>فاصله و نیم‌فاصله به انتخاب شما</h3><p>فاصله‌گذاری دقیق، نادیده‌گرفتن فاصلهٔ اضافه، یا یکسان‌سازی فاصله و نیم‌فاصله؛ به‌همراه یکسان‌سازی ی/ک عربی و اِعراب.</p></div>
-                <div class="new-item"><h3>بهترین نتیجه‌ها، اول</h3><p>رتبه‌بندی ترکیبی تطابق، تکرار، تراکم، پوشش عبارت‌ها و نام فایل؛ یا مرتب‌سازی بر پایهٔ تکرار، تراکم و تاریخ. هم‌خانواده، مترادف و املای متفاوت هم پیدا می‌شوند.</p></div>
-                <div class="new-item"><h3>جست‌وجوی مفهومی (اختیاری)</h3><p>«خودسازی» را بجویید و متن‌های «تزکیه نفس» و «غلبه بر تمایلات نفسانی» را هم بیابید؛ با مدل آفلاین که فقط اگر بخواهید جداگانه نصب می‌شود و متن اسناد از رایانه‌تان بیرون نمی‌رود.</p></div>
+                <div class="new-item"><h3>۞ کشف‌الآیات</h3><p>هر آیه در کدام سند، چند بار و کجا؛ با تفکیک نقل کامل، نقل بخشی، ارجاع شماره‌ای («بقره، آیهٔ ۳»)، ترجمه و اشارهٔ مفهومی، و اطمینان و متن شاهد برای هر یافته. خروجی Word و Excel.</p></div>
+                <div class="new-item"><h3>⭳ خروجی با متن و بافت</h3><p>نتایج را در Word یا Excel بگیرید، همراه با بند کامل، چند بند، یا ۵۰ تا ۲۰۰ واژهٔ پیش و پس؛ با برجسته‌سازی، شمارهٔ صفحه و بند، و امتیاز ارتباط.</p></div>
+                <div class="new-item"><h3>≈ دامنهٔ معنایی ۰ تا ۱۰۰</h3><p>از «بسیار دقیق» تا «حداکثری»: تهذیب نفس ← تزکیه و خودسازی ← مبارزه با هوای نفس ← جهاد اکبر ← رشد معنوی؛ با امتیاز معنایی هر نتیجه.</p></div>
+                <div class="new-item"><h3>📖 کتاب با هوش مصنوعی</h3><p>عنوان و کلیدواژه بدهید؛ سبک (علمی، ترویجی، درسی، حوزوی، پیوند فیش‌ها) و قطع و قلم را انتخاب کنید و پیش‌نویس کامل Word با پانویس منابع بگیرید. قالب‌ها قابل ویرایش‌اند.</p></div>
+                <div class="new-item"><h3>⤓ کار طولانی، کنار ساعت</h3><p>فهرست‌سازی، کشف‌الآیات، ساخت کتاب و رونویسی را کنار ساعت ویندوز ببرید و پیشرفت را با یک حلقهٔ زیبا ببینید؛ در پایان، برنامه خودکار برمی‌گردد.</p></div>
+                <div class="new-item"><h3>🎙 گفتار به متن (اختیاری)</h3><p>سخنرانی و درس صوتی را با Whisper آفلاین به متن فارسی با زمان هر جمله تبدیل و به کتابخانه بیفزایید.</p></div>
             </div>
 
             <div class="gallery" data-gallery>
-                <div class="gallery-tabs" role="tablist" aria-label="نماهای متن‌یاب ۲">
+                <div class="gallery-tabs" role="tablist" aria-label="نماهای متن‌یاب">
                     <button type="button" role="tab" aria-selected="true" aria-controls="shot-1" id="tab-1">جست‌وجو و پیش‌نمایش</button>
                     <button type="button" role="tab" aria-selected="false" aria-controls="shot-2" id="tab-2" tabindex="-1">پوستهٔ شب</button>
                     <button type="button" role="tab" aria-selected="false" aria-controls="shot-3" id="tab-3" tabindex="-1">پوستهٔ کاغذی</button>
@@ -248,19 +248,19 @@
     <div class="container">
         <div class="download-panel">
             <span class="eyebrow">دانلود</span>
-            <h2>متن‌یاب ۲ را دریافت کنید</h2>
+            <h2>متن‌یاب ۳ را دریافت کنید</h2>
             <p>نصب‌کنندهٔ ویندوز را دریافت کنید، با چند کلیک نصب کنید و با کد اشتراک یا سه روز مهمانی شروع کنید.</p>
 
             <div class="download-main">
                 <article class="release-card">
-                    <div><span class="new-badge">نسخهٔ ۲٫۵</span><h3 style="margin-top:10px">متن‌یاب ۲ برای ویندوز</h3></div>
+                    <div><span class="new-badge">نسخهٔ ۳٫۱</span><h3 style="margin-top:10px">متن‌یاب ۳ برای ویندوز</h3></div>
                     <p data-release-content="kotlin">نصب‌کننده را اجرا کنید؛ میان‌بر متن‌یاب روی میز کار و منوی شروع ساخته می‌شود.</p>
                     <div class="release-meta">
                         <span><strong>نوع فایل:</strong> <span data-release-delivery="kotlin">نصب‌کنندهٔ ویندوز ۱۰ و ۱۱ (۶۴ بیتی)</span></span>
                         <span><strong>اندازه:</strong> <span data-release-size="kotlin">در حال دریافت اطلاعات…</span></span>
                     </div>
-                    <a class="btn btn-primary" data-release-link="kotlin" href="/downloadFiles/Matnyaab-Setup-3.0.exe">دانلود نصب‌کنندهٔ متن‌یاب ۲ <span aria-hidden="true">↓</span></a>
-                    <small class="muted" style="color:var(--muted-2)">نسخهٔ بدون نصب: <a data-release-portable href="/downloadFiles/Matnyaab-3.0-win-x64-portable.zip" style="color:var(--accent-soft)">فایل ZIP</a></small>
+                    <a class="btn btn-primary" data-release-link="kotlin" href="/downloadFiles/Matnyaab-Setup-3.1.exe">دانلود نصب‌کنندهٔ متن‌یاب ۳ <span aria-hidden="true">↓</span></a>
+                    <small class="muted" style="color:var(--muted-2)">نسخهٔ بدون نصب: <a data-release-portable href="/downloadFiles/Matnyaab-3.1-win-x64-portable.zip" style="color:var(--accent-soft)">فایل ZIP</a></small>
                 </article>
                 <div style="display:grid;gap:14px">
                     <ul class="req-list">
@@ -273,6 +273,12 @@
                         <div>
                             <strong style="color:var(--text)">متن‌یاب برای ورد</strong><br>
                             جست‌وجو و درج با منبع، پانویس، سرفصل و قالب‌ها درون ورد: <a data-release-link="word" href="/downloadFiles/Matnyaab-Word-Setup-1.1.0.exe">دریافت افزونه</a> · <a href="#word">معرفی</a>
+                        </div>
+                    </div>
+                    <div class="classic-card">
+                        <div>
+                            <strong style="color:var(--text)">نسخه‌های پیشین</strong><br>
+                            همهٔ نسخه‌های گذشته (۳٫۰، ۲٫x و نسخهٔ کاتلین ۱٫۲) با توضیح هر نسخه: <a href="{{ route('versions') }}">فهرست نسخه‌ها</a> · <a href="/docs/matnyaab-guide-3.1.pdf" target="_blank" rel="noopener">راهنمای کامل (PDF)</a>
                         </div>
                     </div>
                     <div class="classic-card">

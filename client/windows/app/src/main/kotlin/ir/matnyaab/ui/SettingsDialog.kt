@@ -49,7 +49,7 @@ class SettingsDialog(owner: Window?, private val settings: AppSettingsManager) {
             selectionModel.select(fonts.indexOfFirst { it.first == Theme.uiFont() }.coerceAtLeast(0))
             maxWidth = Double.MAX_VALUE
         }
-        val feats = listOf("FF_RESEARCH" to "فیش‌ها، پروژه‌ها و ساخت کتاب", "FF_SOURCE" to "منبع‌یاب و همانندجویی", "FF_AI" to "دستیار هوشمند (با کلید هوش مصنوعی خودتان)")
+        val feats = listOf("FF_RESEARCH" to "فیش‌ها، پروژه‌ها و ساخت کتاب", "FF_SOURCE" to "منبع‌یاب و همانندجویی", "FF_QURAN" to "کشف‌الآیات", "FF_AI" to "دستیار هوشمند (با کلید هوش مصنوعی خودتان)", "FF_WHISPER" to "تبدیل گفتار به متن (بستهٔ اختیاری Whisper)")
             .map { (k, t) -> k to CheckBox(t).apply { isSelected = settings.get(k) != "0"; style = Theme.FONT } }
         val btnSave = Button("ذخیره").apply {
             style = Theme.primaryButton(); prefWidth = 120.0; prefHeight = Constants.OPTION_BUTTONS_HEIGHT
@@ -88,7 +88,7 @@ class SettingsDialog(owner: Window?, private val settings: AppSettingsManager) {
             center = content
             style = "-fx-border-color: ${Constants.BORDER_COLOR};"
         }
-        stage.scene = Scene(root, 540.0, 500.0)
+        stage.scene = Scene(root, 560.0, 580.0)
         Theme.install(stage.scene, stage)
         // بستن بدون ذخیره، پوستهٔ قبلی را برمی‌گرداند
         stage.setOnHidden { if (!saved) Theme.setPalette(original) }

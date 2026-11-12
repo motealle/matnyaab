@@ -137,13 +137,17 @@ class LocalBridge(
                 "/v1/shutdown" -> { Thread { Thread.sleep(150); stop(); onShutdown?.invoke() }.start(); mapOf("ok" to true) }
                 else -> return send(ex, 404, err("not found"))
             }
-            send(ex, 200, gson.toJson(res))
+            send(ex, 200, noFormFeed(gson.toJson(res)))
         } catch (e: ir.matnyaab.core.search.BoolParseException) {
             send(ex, 400, err(e.message ?: "عبارت نامعتبر"))
         } catch (e: Exception) {
             send(ex, 500, err(e.message ?: e.javaClass.simpleName))
         }
     }
+
+    /** نشانهٔ صفحه (\\f) در ورد شکست صفحه می‌شود؛ در خروجی پل به شکست خط تبدیل می‌شود (فقط \\f واقعی، نه «\\\\f» در مسیرها). */
+    private val FF = Regex("(?<!\\\\)((?:\\\\\\\\)*)\\\\(f|u000[cC])")
+    private fun noFormFeed(json: String) = FF.replace(json) { it.groupValues[1] + "\\n" }
 
     private fun err(m: String) = gson.toJson(mapOf("ok" to false, "error" to m))
 

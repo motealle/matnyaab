@@ -8,6 +8,9 @@ import java.util.zip.ZipOutputStream
  * سازندهٔ سبک فایل Word (docx) بدون کتابخانهٔ سنگین: سبک‌های استاندارد (عنوان ۱ تا ۳، نقل‌قول، پانویس)،
  * راست‌به‌چپ، پانویس واقعی ورد، فهرست مطالب خودکار و شمارهٔ صفحه. خروجی با قالب‌های افزونهٔ ورد هم سازگار است.
  */
+/** نویسه‌هایی که در XML مجاز نیستند (مثل \\f جداکنندهٔ صفحه) */
+val BAD_XML = Regex("[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\uFFFE\\uFFFF]")
+
 class DocxWriter(private val layout: Layout = Layout()) {
 
     data class Layout(
@@ -35,7 +38,7 @@ class DocxWriter(private val layout: Layout = Layout()) {
     private val body = StringBuilder()
     private val notes = mutableListOf<String>()
 
-    private fun esc(s: String) = s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
+    private fun esc(s: String) = s.replace(BAD_XML, "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
         .replace(Regex("[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F]"), "")
 
     private fun twip(cm: Double) = (cm * 567).toInt()
@@ -80,6 +83,19 @@ class DocxWriter(private val layout: Layout = Layout()) {
     fun meta(label: String, value: String) = apply {
         body.append("<w:p>${ppr("Note")}${runs("$label: ", "<w:b/><w:bCs/>")}${runs(value)}</w:p>")
     }
+    /** بند با بخش‌های برجسته (عبارت‌های منطبق): زرد و پررنگ */
+    fun marked(t: String, marks: List<IntRange>, styleId: String? = "Quote", footnote: String? = null) = apply {
+        val sb = StringBuilder(); var pos = 0
+        for (r in marks.sortedBy { it.first }) {
+            val a = r.first.coerceIn(pos, t.length); val b = (r.last + 1).coerceIn(a, t.length)
+            if (a > pos) sb.append(runs(t.substring(pos, a)))
+            if (b > a) sb.append(runs(t.substring(a, b), "<w:b/><w:bCs/><w:highlight w:val=\"yellow\"/>"))
+            pos = b
+        }
+        if (pos < t.length) sb.append(runs(t.substring(pos)))
+        body.append("<w:p>${ppr(styleId, "both")}$sb${noteRef(footnote)}</w:p>")
+    }
+
     fun pageBreak() = apply { body.append("<w:p><w:r><w:br w:type=\"page\"/></w:r></w:p>") }
     fun spacer() = apply { body.append("<w:p/>") }
 
@@ -172,7 +188,7 @@ ${h("Heading3", "heading 3", 2, layout.size + 1)}
             "word/_rels/document.xml.rels" to """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdStyles" Type="$R/styles" Target="styles.xml"/><Relationship Id="rIdSettings" Type="$R/settings" Target="settings.xml"/><Relationship Id="rIdFn" Type="$R/footnotes" Target="footnotes.xml"/><Relationship Id="rIdFtr" Type="$R/footer" Target="footer1.xml"/></Relationships>""",
             "word/settings.xml" to """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:settings xmlns:w="$W"><w:footnotePr><w:footnote w:id="-1"/><w:footnote w:id="0"/></w:footnotePr><w:compat><w:compatSetting w:name="compatibilityMode" w:uri="http://schemas.microsoft.com/office/word" w:val="15"/></w:compat></w:settings>""",
+<w:settings xmlns:w="$W"><w:footnotePr><w:footnote w:id="-1"/><w:footnote w:id="0"/></w:footnotePr><w:compat><w:compatSetting w:name="compatibilityMode" w:uri="http://schemas.microsoft.com/office/word" w:val="15"/></w:compat><w:themeFontLang w:val="en-US" w:bidi="fa-IR"/></w:settings>""",
             "word/styles.xml" to styles(),
             "word/document.xml" to doc,
             "word/footnotes.xml" to footnotes(),
@@ -199,6 +215,11 @@ class MarkdownWriter {
     fun quote(t: String, footnote: String? = null) = apply { sb.append("> ").append(t.replace("\n", "\n> ")).append(ref(footnote)).append("\n\n") }
     fun note(t: String) = apply { sb.append("_").append(t).append("_\n\n") }
     fun bullet(t: String, footnote: String? = null) = apply { sb.append("- ").append(t).append(ref(footnote)).append("\n") }
+    fun marked(t: String, marks: List<IntRange>, footnote: String? = null) = apply {
+        val o = StringBuilder(); var pos = 0
+        for (r in marks.sortedBy { it.first }) { val a = r.first.coerceIn(pos, t.length); val b = (r.last + 1).coerceIn(a, t.length); o.append(t, pos, a).append("**").append(t, a, b).append("**"); pos = b }
+        o.append(t.substring(pos)); quote(o.toString(), footnote)
+    }
     fun meta(label: String, value: String) = apply { sb.append("**").append(label).append(":** ").append(value).append("  \n") }
     fun table(header: List<String>, rows: List<List<String>>) = apply {
         fun c(s: String) = s.replace("|", "\\|").replace("\n", " ")
@@ -224,6 +245,7 @@ class ReportWriter(file: File, layout: DocxWriter.Layout = DocxWriter.Layout()) 
     fun subtitle(t: String) = apply { d?.subtitle(t); m?.subtitle(t) }
     fun heading(l: Int, t: String) = apply { d?.heading(l, t); m?.heading(l, t) }
     fun para(t: String, fn: String? = null) = apply { d?.para(t, fn); m?.para(t, fn) }
+    fun marked(t: String, marks: List<IntRange>, fn: String? = null) = apply { d?.marked(t, marks, "Quote", fn); m?.marked(t, marks, fn) }
     fun quote(t: String, fn: String? = null) = apply { d?.quote(t, fn); m?.quote(t, fn) }
     fun note(t: String) = apply { d?.note(t); m?.note(t) }
     fun bullet(t: String, fn: String? = null) = apply { d?.bullet(t, fn); m?.bullet(t, fn) }
