@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "ir.matnyaab"
-version = "2.5"
+version = "3.0"
 
 repositories { mavenCentral() }
 

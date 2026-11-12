@@ -129,6 +129,10 @@ class LocalBridge(
                 "/v1/excerpt" -> excerpt(req)
                 "/v1/note" -> note(req)
                 "/v1/add-folder" -> addFolder(req)
+                "/v1/fish/list" -> fishList(req)
+                "/v1/fish/add" -> fishAdd(req)
+                "/v1/find-source" -> findSource(req)
+                "/v1/check" -> checkText(req)
                 "/v1/show" -> { host?.show(req.str("query")); mapOf("ok" to (host != null)) }
                 "/v1/shutdown" -> { Thread { Thread.sleep(150); stop(); onShutdown?.invoke() }.start(); mapOf("ok" to true) }
                 else -> return send(ex, 404, err("not found"))
@@ -230,6 +234,48 @@ class LocalBridge(
             }
         }
     }.getOrNull()
+
+    // ---------------------------------------------------------------- فیش‌ها و اعتبارسنجی (افزونهٔ ورد)
+
+    private fun fishMap(f: ir.matnyaab.core.research.Fish) = mapOf("id" to f.id, "project" to f.project, "topic" to f.topic, "title" to f.title,
+        "text" to f.text, "note" to f.note, "tags" to f.tags, "codes" to f.codes, "sourcePath" to f.sourcePath, "sourceName" to f.sourceName, "created" to f.created)
+
+    private fun fishList(r: JsonObject): Map<String, Any?> {
+        ir.matnyaab.core.research.ResearchStore.reload()
+        val project = r.str("project")
+        return mapOf("ok" to true,
+            "projects" to ir.matnyaab.core.research.ResearchStore.projects().map { mapOf("name" to it.name, "topics" to it.topics, "goal" to it.goal) },
+            "fishes" to ir.matnyaab.core.research.ResearchStore.fishes(project).sortedBy { it.created }.map { fishMap(it) })
+    }
+
+    private fun fishAdd(r: JsonObject): Map<String, Any?> {
+        val text = r.str("text")?.trim().orEmpty()
+        if (text.isEmpty()) return mapOf("ok" to false, "error" to "متنی برای فیش نیست.")
+        ir.matnyaab.core.research.ResearchStore.reload()
+        val f = ir.matnyaab.core.research.ResearchStore.add(ir.matnyaab.core.research.Fish(
+            project = r.str("project") ?: ir.matnyaab.core.research.ResearchStore.DEFAULT_PROJECT, topic = r.str("topic") ?: "",
+            title = r.str("title") ?: text.take(40), text = text, note = r.str("note") ?: "",
+            sourcePath = r.str("sourcePath") ?: "", sourceName = r.str("sourceName") ?: "", origin = "word"))
+        host?.collectionsChanged()
+        return mapOf("ok" to true, "fish" to fishMap(f))
+    }
+
+    private fun srcMap(m: ir.matnyaab.core.research.SourceMatch) = mapOf("path" to m.path, "name" to m.name, "collection" to m.collection,
+        "similarity" to m.similarity, "start" to m.start, "end" to m.end, "excerpt" to m.excerpt)
+
+    private fun findSource(r: JsonObject): Map<String, Any?> {
+        val text = r.str("text") ?: return mapOf("ok" to false)
+        return mapOf("ok" to true, "matches" to ir.matnyaab.core.research.SourceFinder.find(indexer, indexer.allObjects.toList(), text, 3).map { srcMap(it) })
+    }
+
+    /** بررسی گروهی جمله‌ها/نقل‌قول‌ها (همانندجویی و راستی‌آزمایی نقل‌قول) */
+    private fun checkText(r: JsonObject): Map<String, Any?> {
+        val items = r.getAsJsonArray("items")?.map { it.asString } ?: emptyList()
+        val cols = indexer.allObjects.toList()
+        return mapOf("ok" to true, "results" to items.take(400).map { t ->
+            ir.matnyaab.core.research.SourceFinder.find(indexer, cols, t, 1).firstOrNull()?.let { srcMap(it) }
+        })
+    }
 
     /** ذخیرهٔ یادداشت از ورد در «یادداشت‌های پژوهشی» و افزودن فوری به فهرست متن‌یاب */
     @Synchronized

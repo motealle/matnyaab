@@ -255,8 +255,8 @@
                         <span><strong>نوع فایل:</strong> <span data-release-delivery="kotlin">نصب‌کنندهٔ ویندوز ۱۰ و ۱۱ (۶۴ بیتی)</span></span>
                         <span><strong>اندازه:</strong> <span data-release-size="kotlin">در حال دریافت اطلاعات…</span></span>
                     </div>
-                    <a class="btn btn-primary" data-release-link="kotlin" href="/downloadFiles/Matnyaab-Setup-2.5.exe">دانلود نصب‌کنندهٔ متن‌یاب ۲ <span aria-hidden="true">↓</span></a>
-                    <small class="muted" style="color:var(--muted-2)">نسخهٔ بدون نصب: <a data-release-portable href="/downloadFiles/Matnyaab-2.5-win-x64-portable.zip" style="color:var(--accent-soft)">فایل ZIP</a></small>
+                    <a class="btn btn-primary" data-release-link="kotlin" href="/downloadFiles/Matnyaab-Setup-3.0.exe">دانلود نصب‌کنندهٔ متن‌یاب ۲ <span aria-hidden="true">↓</span></a>
+                    <small class="muted" style="color:var(--muted-2)">نسخهٔ بدون نصب: <a data-release-portable href="/downloadFiles/Matnyaab-3.0-win-x64-portable.zip" style="color:var(--accent-soft)">فایل ZIP</a></small>
                 </article>
                 <div style="display:grid;gap:14px">
                     <ul class="req-list">

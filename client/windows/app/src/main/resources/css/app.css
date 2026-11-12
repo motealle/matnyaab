@@ -96,3 +96,23 @@
 .summary-bar { -fx-background-color: -mx-surface-2; -fx-border-color: -mx-border; -fx-border-width: 0 0 1 0; -fx-padding: 6 8 6 8; }
 .rel-bar > .bar { -fx-background-color: -mx-accent; -fx-background-insets: 0; -fx-background-radius: 5; -fx-padding: 0.25em; }
 .rel-bar > .track { -fx-background-color: -mx-accent-soft; -fx-background-insets: 0; -fx-background-radius: 5; }
+
+/* ---- متن‌یاب ۳: نوار ابزار، میز پژوهش ---- */
+.app-toolbar { -fx-background-color: -mx-surface; -fx-border-color: -mx-border; -fx-border-width: 0 0 1 0; -fx-padding: 6 10 6 10; -fx-spacing: 4; }
+.tool-btn { -fx-background-color: transparent; -fx-background-radius: 8; -fx-text-fill: -mx-text; -fx-padding: 5 12 5 12; -fx-cursor: hand; -fx-content-display: left; -fx-graphic-text-gap: 7; }
+.tool-btn:hover { -fx-background-color: -mx-hover; }
+.tool-btn:pressed, .tool-btn.active { -fx-background-color: -mx-accent-soft; -fx-text-fill: -mx-accent-text; }
+.tool-glyph { -fx-text-fill: -mx-accent; -fx-font-size: 15px; }
+.tool-sep { -fx-background-color: -mx-border; -fx-min-width: 1; -fx-pref-width: 1; -fx-max-width: 1; }
+.fish-btn { -fx-background-color: -mx-accent-soft; -fx-text-fill: -mx-accent-text; -fx-background-radius: 14; -fx-padding: 3 12 3 12; -fx-cursor: hand; -fx-font-weight: bold; }
+.fish-btn:hover { -fx-background-color: -mx-selected; }
+.card { -fx-background-color: -mx-surface; -fx-background-radius: 12; -fx-border-color: -mx-border; -fx-border-radius: 12; -fx-padding: 14; }
+.card:hover { -fx-border-color: -mx-accent; }
+.card-title { -fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: -mx-text; }
+.muted { -fx-text-fill: -mx-muted; }
+.section-title { -fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: -mx-text; }
+.log-area { -fx-control-inner-background: -mx-surface-2; -fx-font-family: 'Vazirmatn'; }
+.badge { -fx-background-color: -mx-accent-soft; -fx-text-fill: -mx-accent-text; -fx-background-radius: 10; -fx-padding: 1 8 1 8; -fx-font-size: 11px; }
+.research-tabs .tab { -fx-padding: 4 14 4 14; }
+.chip { -fx-background-color: -mx-selected; -fx-background-radius: 14; -fx-padding: 4 10; -fx-cursor: hand; }
+.chip:hover { -fx-opacity: 0.85; }

@@ -249,10 +249,10 @@ class MainWindow(
         split.setDividerPositions(2.0 / 7.0, 5.0 / 7.0)
 
         val statusBar = buildStatusBar()
-        val titleBar = CustomTitleBar(stage, "${Constants.APP_NAME_PERSIAN} ۲") { onClose() }
+        val titleBar = CustomTitleBar(stage, "${Constants.APP_NAME_PERSIAN} ۳") { onClose() }
 
         val root = BorderPane().apply {
-            top = titleBar
+            top = javafx.scene.layout.VBox(titleBar, buildToolbar())
             center = StackPane(split, waitOverlay)
             bottom = statusBar
             style = "-fx-background-color: ${Constants.CANVAS_COLOR}; -fx-border-color: ${Constants.BORDER_COLOR};"
@@ -267,6 +267,86 @@ class MainWindow(
             searchPanel.focusQuick()
         }
         stage.scene.accelerators[javafx.scene.input.KeyCombination.keyCombination("Shortcut+O")] = Runnable { selectDirectory() }
+        stage.scene.accelerators[javafx.scene.input.KeyCombination.keyCombination("Shortcut+D")] = Runnable { quickFish(preview.selectedText()) }
+        preview.onFish = { quickFish(it) }
+        preview.btnFish.isVisible = flag("FF_RESEARCH"); preview.btnFish.isManaged = preview.btnFish.isVisible
+    }
+
+    private fun statusFlash(msg: String) {
+        val old = lblIndexSize.text
+        lblIndexSize.text = msg
+        javafx.animation.PauseTransition(javafx.util.Duration.seconds(3.0)).apply { setOnFinished { if (lblIndexSize.text == msg) lblIndexSize.text = old } }.play()
+    }
+
+    private fun flag(k: String) = settings.get(k) != "0"
+
+    private fun research(tab: String) = ResearchWindow.show(stage, settings, indexer, tab)
+
+    /** نوار ابزار بالای برنامه: کارهای اصلی پژوهشی در یک نگاه */
+    private fun buildToolbar(): javafx.scene.layout.HBox {
+        fun tool(glyph: String, text: String, tip: String, a: () -> Unit) = Button(text).apply {
+            styleClass.add("tool-btn"); style = Theme.FONT
+            graphic = Label(glyph).apply { styleClass.add("tool-glyph") }
+            tooltip = Tooltip(tip).apply { style = Theme.FONT }
+            setOnAction { a() }
+        }
+        fun sep() = Region().apply { styleClass.add("tool-sep") }
+        val items = mutableListOf<javafx.scene.Node>(
+            tool("⌕", "جست‌وجو", "جست‌وجو در کتابخانهٔ شما (Ctrl+F)") { accordions.getOrNull(0)?.let { if (!it.isOpen) it.expand() }; searchPanel.focusQuick() },
+            tool("＋", "افزودن پوشه", "افزودن پوشهٔ اسناد به کتابخانه (Ctrl+O)") { selectDirectory() },
+        )
+        if (flag("FF_RESEARCH")) items += listOf(sep(),
+            tool("🗂", "فیش‌ها", "فیش‌ها و پروژه‌های پژوهشی؛ در پیش‌نمایش متن را انتخاب و Ctrl+D بزنید") { research("fish") },
+            tool("📘", "ساخت کتاب", "از فیش‌ها یک فایل Word صفحه‌آرایی‌شده با فهرست و پانویس بسازید") { research("book") })
+        if (flag("FF_SOURCE")) items += tool("⧉", "منبع‌یاب", "منبع یک نقل‌قول و همانندجویی متن با کتابخانهٔ شما") { research("source") }
+        if (flag("FF_AI")) items += listOf(sep(), tool("✦", "دستیار هوشمند", "مأموریت‌های پژوهشی چندمرحله‌ای با هوش مصنوعیِ دلخواه شما و خروجی Word/Markdown") { research("ai") })
+        if (flag("FF_SEMANTIC")) items += tool("≈", "جست‌وجوی مفهومی", "جست‌وجو بر پایهٔ معنا (بستهٔ اختیاری آفلاین)") { openSemantic() }
+        items += listOf(Region().also { HBox.setHgrow(it, Priority.ALWAYS) },
+            tool("W", "افزونهٔ ورد", "متن‌یاب درون Microsoft Word: فیش، استناد، قالب پایان‌نامه، نامهٔ اداری") { runCatching { Desktop.getDesktop().browse(java.net.URI(Constants.BASE_URL + "/#word")) } },
+            tool("?", "چه کارهایی می‌توانم بکنم؟", "سناریوهای کاربردی متن‌یاب") { ScenariosDialog.show(stage) { research(it) } })
+        return HBox(4.0, *items.toTypedArray()).apply { styleClass.add("app-toolbar"); alignment = Pos.CENTER_RIGHT; nodeOrientation = NodeOrientation.RIGHT_TO_LEFT }
+    }
+
+    /** فیش سریع از متن انتخاب‌شده در پیش‌نمایش؛ منبع و جای دقیق خودکار ثبت می‌شود */
+    private fun quickFish(selected: String) {
+        if (!flag("FF_RESEARCH")) return
+        val hit = previewHit
+        if (selected.isBlank() || hit == null) {
+            Alert(Alert.AlertType.INFORMATION, "ابتدا در پیش‌نمایش یک سند، بخشی از متن را انتخاب کنید؛ سپس «＋ فیش» یا Ctrl+D را بزنید.", ButtonType.OK)
+                .apply { initOwner(stage); headerText = null; dialogPane.nodeOrientation = NodeOrientation.RIGHT_TO_LEFT }.showAndWait(); return
+        }
+        val store = ir.matnyaab.core.research.ResearchStore
+        val project = ComboBox<String>().apply { isEditable = true; items.setAll(store.projects().map { it.name }); value = settings.get("LAST_PROJECT").takeIf { it.isNotBlank() } ?: items.firstOrNull(); maxWidth = Double.MAX_VALUE }
+        val topic = ComboBox<String>().apply { isEditable = true; maxWidth = Double.MAX_VALUE; value = settings.get("LAST_TOPIC") }
+        fun topics() { topic.items.setAll(store.project(project.editor.text ?: "")?.topics ?: emptyList()) }
+        project.setOnAction { topics() }; topics()
+        val title = TextField(selected.split(Regex("\\s+")).take(8).joinToString(" "))
+        val tags = TextField().apply { promptText = "برچسب‌ها با ویرگول (اختیاری)" }
+        val note = TextArea().apply { prefRowCount = 3; isWrapText = true; promptText = "برداشت یا یادداشت شما (اختیاری)" }
+        val text = TextArea(selected).apply { prefRowCount = 5; isWrapText = true }
+        val grid = javafx.scene.layout.GridPane().apply {
+            hgap = 8.0; vgap = 8.0; var r = 0
+            fun row(l: String, n: javafx.scene.Node) { add(Label(l).apply { style = Theme.FONT }, 0, r); add(n, 1, r); javafx.scene.layout.GridPane.setHgrow(n, Priority.ALWAYS); r++ }
+            row("پروژه:", project); row("سرفصل:", topic); row("عنوان:", title); row("متن:", text); row("یادداشت:", note); row("برچسب:", tags)
+            add(Label("منبع: ${File(hit.path).name}").apply { styleClass.add("muted"); style = Theme.FONT }, 1, r)
+        }
+        val dlg = Dialog<ButtonType>().apply {
+            initOwner(stage); title = "فیش تازه"; headerText = null
+            dialogPane.content = grid.apply { prefWidth = 520.0 }; dialogPane.nodeOrientation = NodeOrientation.RIGHT_TO_LEFT; dialogPane.style = Theme.FONT
+            dialogPane.buttonTypes.addAll(ButtonType("ذخیرهٔ فیش", ButtonBar.ButtonData.OK_DONE), ButtonType("انصراف", ButtonBar.ButtonData.CANCEL_CLOSE))
+        }
+        if (dlg.showAndWait().orElse(null)?.buttonData != ButtonBar.ButtonData.OK_DONE) return
+        val pName = (project.editor.text ?: "").trim().ifBlank { store.DEFAULT_PROJECT }
+        val tName = (topic.editor.text ?: "").trim()
+        val p = store.ensureProject(pName)
+        if (tName.isNotBlank() && tName !in p.topics) store.updateProject(p.copy(topics = p.topics + tName))
+        val start = hit.content.indexOf(text.text.trim().take(60))
+        store.add(ir.matnyaab.core.research.Fish(project = pName, topic = tName, title = title.text.trim(), text = text.text.trim(), note = note.text.trim(),
+            tags = tags.text.split(Regex("[،,]")).map { it.trim() }.filter { it.isNotEmpty() },
+            sourcePath = hit.path, sourceName = File(hit.path).nameWithoutExtension, collection = hit.indexName,
+            start = start, end = if (start >= 0) start + text.text.trim().length else -1))
+        settings.setValue("LAST_PROJECT", pName); settings.setValue("LAST_TOPIC", tName)
+        statusFlash("✓ فیش در «$pName» ذخیره شد")
     }
 
     private fun applySort(i: Int) {
@@ -546,7 +626,10 @@ class MainWindow(
     // ------------------------------------------------------------------ پیش‌نمایش و عملیات فایل
 
     /** معادل showPreview: هایلایت محتوا + بررسی حذف/تغییر فایل */
+    private var previewHit: SearchHit? = null
+
     private fun showPreview(hit: SearchHit) {
+        previewHit = hit
         val f = File(hit.path)
         val error = when {
             !f.exists() -> "فایل حذف شده است: ${hit.path}"
