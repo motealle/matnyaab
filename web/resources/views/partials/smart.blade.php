@@ -1,19 +1,19 @@
 {{-- بخش «متن‌یاب هوشمند» (نسخهٔ ۳) — با پرچم smart در پنل مدیریت روشن/خاموش می‌شود --}}
 <style>
-    .smart-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:18px 0 8px;counter-reset:st}
+    .smart-steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:18px 0 8px;counter-reset:st}
     .smart-steps li{list-style:none;padding:12px 14px;border-radius:14px;border:1px dashed var(--line);background:var(--soft-card);font-size:.95rem}
     .smart-steps li::before{counter-increment:st;content:counter(st, persian);display:inline-grid;place-items:center;width:24px;height:24px;margin-inline-end:6px;border-radius:50%;background:var(--accent);color:#fff;font-size:.8rem}
     .mission{padding:16px 18px;border-radius:16px;border:1px solid var(--line);background:var(--soft-card);margin-top:14px}
-    .mission q{display:block;font-size:1.05rem;line-height:2;quotes:"«" "»"}
-    .ai-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:.95rem}
-    .ai-table th,.ai-table td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:start;vertical-align:top}
+    .mission q{display:block;overflow-wrap:anywhere;font-size:1.05rem;line-height:2;quotes:"«" "»"}
+    .ai-table{width:100%;table-layout:fixed;border-collapse:collapse;margin-top:12px;font-size:.95rem}
+    .ai-table th:first-child,.ai-table td:first-child{width:32%}.ai-table th,.ai-table td{overflow-wrap:anywhere;padding:10px 12px;border-bottom:1px solid var(--line);text-align:start;vertical-align:top}
     .ai-table th{font-weight:700;color:var(--muted-2)}
-    .ai-tag{display:inline-block;padding:1px 9px;border-radius:999px;font-size:.78rem;border:1px solid var(--line);margin-inline-start:4px;white-space:nowrap}
+    .ai-tag{display:inline-block;padding:1px 9px;border-radius:999px;font-size:.78rem;border:1px solid var(--line);margin-inline-start:4px;white-space:nowrap;margin-top:3px}
     .ai-scroll{overflow-x:auto}
     .smart-note{font-size:.88rem;color:var(--muted-2);margin-top:10px}
     .smart-two{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:22px;align-items:start;margin-top:34px}
-    @media(max-width:999px){.smart-steps{grid-template-columns:repeat(2,minmax(0,1fr))}.smart-two{grid-template-columns:1fr}}
-    @media(max-width:560px){.smart-steps{grid-template-columns:1fr}}
+    @media(max-width:999px){.smart-steps{grid-template-columns:repeat(2,minmax(0,1fr))}.smart-two{grid-template-columns:minmax(0,1fr)}}
+    @media(max-width:560px){.smart-steps{grid-template-columns:minmax(0,1fr)}}
 </style>
 <section class="section" id="ai">
     <div class="container">

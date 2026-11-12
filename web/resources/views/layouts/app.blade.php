@@ -63,7 +63,7 @@
         *{box-sizing:border-box}
         html{scroll-behavior:smooth}
         body{
-            margin:0;min-height:100vh;font-family:"Vazirmatn",Tahoma,"Segoe UI",sans-serif;color:var(--text);
+            margin:0;min-height:100vh;overflow-x:clip;font-family:"Vazirmatn",Tahoma,"Segoe UI",sans-serif;color:var(--text);
             background:
                 radial-gradient(1000px 560px at 83% -8%,rgba(23,107,168,.14),transparent 65%),
                 radial-gradient(760px 500px at 5% 24%,rgba(59,130,246,.06),transparent 68%),
