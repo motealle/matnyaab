@@ -302,3 +302,16 @@ yearly 490,000 toman (editable in admin). Primary card 6037-9977-7025-9241 (مح
 - پل: fish/list، fish/add، find-source، check.
 - افزونهٔ ورد 1.1.0: زبانه‌های «پژوهش» (UI/SmartViews.cs ResearchView) و «اداری» (OfficeView؛ WordOps/OfficeOps.cs)، گروه‌های ریبون پژوهش/اداری، ShowResearch/ShowOffice. سرویس‌های AI در ai.json مشترک‌اند (ai.json مرجع است).
 - سایت: partials/smart.blade.php (#ai، پرچم smart)، فهرست سرویس‌ها با پیوند و سلب مسئولیت، FAQ.
+
+## 3.1 (۱۴۰۵/۰۸) — پیشنهادهای مشتری + کتاب با هوش مصنوعی
+- رفع: دکمهٔ «جست‌وجو» در نوار ابزار فقط فوکوس می‌کرد → `SearchPanel.searchOrFocus()`.
+- دامنهٔ معنایی: `SearchSpec.semanticLevel` (۰..۱۰۰) ← `Ranking.semanticThreshold` (۰٫۹۰→۰٫۷۶) و `Ranking.semanticScore` (ستون «معنایی»). لغزنده در SearchPanel (SEARCH_OPTS اندیس ۹).
+- خروجی با بافت: `core/research/ResultExporter` (بند/چند بند/واژه/نویسه، ادغام بافت‌های هم‌پوشان، صفحه با `\f`، شمارهٔ بند)، `XlsxWriter` (xlsx بی‌وابستگی، RTL، متن غنی)، `ui/ExportDialog` (EXPORT_OPTS). `DocxWriter.marked` و حذف نویسه‌های نامعتبر XML (`BAD_XML`).
+- صفحهٔ PDF: `TikaExtractor.pdfWithPages` پایان هر صفحه را `\f` می‌گذارد (فقط اسناد تازه‌فهرست‌شده). پل محلی `\f` را به `\n` تبدیل می‌کند (`noFormFeed`) تا در ورد شکست صفحه نشود.
+- کنار ساعت: `ui/TrayProgress` (TrayIcon با حلقهٔ پیشرفت، کارت کوچک، بازگشت خودکار) + `ParkableModal` (حلقهٔ رویداد تودرتو که با پنهان‌شدن پایان نمی‌یابد). در ScanDirectoryDialog، IncrementalIndexingDialog، کشف‌الآیات، کتاب و Whisper.
+- کشف‌الآیات (FF_QURAN): `core/quran` — Quran (متن Tanzil simple-plain در resources/quran با اعلان مجوز، نام‌ها و نام‌های دیگر سوره‌ها، ارجاع‌یابی regex)، Matcher (اسکلت بی‌الف/بی‌اعراب، «و» جدا، شاخص سه‌واژه‌ای، اجراها با تحمل یک واژه، نوع/اطمینان/ابهام، حذف بسم‌الله آغاز سند)، Scanner (پیمایش لوسین با حافظهٔ نهان `<savePath>.quran.json`). ترجمه‌ها: فایل Tanzil کاربر در `%APPDATA%\MATNYAAB\quran\*.txt` (شاخص چهارواژه‌ای). اشارهٔ مفهومی فقط در «آیه در کتابخانه» با SemanticService.
+- کتاب با هوش مصنوعی: `core/ai/Book.kt` (PromptTemplate/PromptTemplates در book-templates.json، Outline با قالب `#`/`-`، BookRunner با پیش‌نویس هر بخش در `books/<project>.draft.json` برای ادامه پس از توقف؛ حالت BRIDGE: `{{n}}` جای فیش عیناً)، `ui/BookWizard` (۵ گام) و `TemplateEditor`.
+- عامل آزمایشی: `core/ai/Agent.kt` (ابزارهای search/read/save_fish/list_fishes/write_file/finish؛ بی‌بازنویسی فایل؛ ۲۴ گام).
+- گفتار به متن (FF_WHISPER): `core/whisper/Whisper.kt` (دانلود با ادامه و SHA-256، ffmpeg→wav ۱۶k→whisper-cli -oj، مسیر ASCII در ProgramData اگر پوشهٔ کاربر فارسی باشد)، `ui/WhisperDialog` (تور سه‌گامی). بسته: `.github/workflows/publish-whisper-pack.yml` (فقط اجرای دستی؛ آزمون TTS→mp3→ffmpeg→whisper با `--whisper-selftest`)، کلید `whisper` در releases.json.
+- پیشنهاد کاربران: `ui/FeedbackDialog` → `POST /api/client/feedback` (MessageStore، type=feature/support، source=app). گردآوری در مخزن: `.github/workflows/fetch-feature-requests.yml` (هفتگی/دستی؛ اسکریپت یک‌بارمصرف `ops/feedback-export.php` با توکن تصادفی، بی‌نام و تماس، ایمیل/شماره پوشانده) ← artifact «feature-requests» (json + md). خواندن: `gh run download <id> -n feature-requests`.
+- سایت: `/versions` (config/versions.php، بررسی وجود فایل در مرورگر)، بخش تازه‌های ۳٫۱، پرسش‌های متداول، راهنمای PDF در `web/public/docs/matnyaab-guide-3.1.pdf` (منبع: `docs/guide/matnyaab-guide.md`، ساخت: `ops/docs/build-guide.mjs`).

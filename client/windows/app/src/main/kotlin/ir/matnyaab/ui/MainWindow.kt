@@ -328,7 +328,7 @@ class MainWindow(
         if (flag("FF_WHISPER")) items += tool("🎙", "گفتار به متن", "صدا و فیلم را به متن قابل جست‌وجو تبدیل کنید (بستهٔ اختیاری Whisper)") { WhisperDialog.show(stage, settings) { addFolder(it) } }
         items += listOf(Region().also { HBox.setHgrow(it, Priority.ALWAYS) },
             tool("W", "افزونهٔ ورد", "متن‌یاب درون Microsoft Word: فیش، استناد، قالب پایان‌نامه، نامهٔ اداری") { runCatching { Desktop.getDesktop().browse(java.net.URI(Constants.BASE_URL + "/#word")) } },
-            tool("?", "راهنما", "چه کارهایی می‌توانم بکنم؟ سناریوهای کاربردی متن‌یاب") { ScenariosDialog.show(stage) { research(it) } },
+            tool("?", "راهنما", "چه کارهایی می‌توانم بکنم؟ سناریوهای کاربردی متن‌یاب") { ScenariosDialog.show(stage) { when (it) { "bookai" -> BookWizard.show(stage, settings, indexer); "quran" -> openQuran(null); "whisper" -> WhisperDialog.show(stage, settings) { f -> addFolder(f) }; else -> research(it) } } },
             tool("💡", "پیشنهاد", "پیشنهاد قابلیت تازه یا گزارش مشکل به سازندگان متن‌یاب") { FeedbackDialog.show(stage) })
         val bar = HBox(4.0, *items.toTypedArray()).apply { styleClass.add("app-toolbar"); alignment = Pos.CENTER_RIGHT; nodeOrientation = NodeOrientation.RIGHT_TO_LEFT; minWidth = 0.0 }
         // حالت فشرده در پنجره‌های باریک
