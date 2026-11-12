@@ -16,6 +16,7 @@ use App\Http\Controllers\SupportController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
+Route::get('versions', fn () => view('versions', ['versions' => config('versions')]))->name('versions');
 Route::redirect('/index', '/#features');
 Route::redirect('/download', '/#download');
 Route::redirect('/screenshots', '/#whats-new');

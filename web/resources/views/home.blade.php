@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'متن‌یاب | جستجوی حرفه‌ای در محتوای فایل‌ها؛ اشتراک اعتمادمحور برای ویندوز')
-@section('meta_description', 'متن‌یاب ۲ با اشتراک اعتمادمحور (از ماهی ۴۱ هزار تومان): جست‌وجوی سریع درون متن فایل‌های Word، PDF، پاورپوینت، اکسل و OneNote روی رایانهٔ خودتان؛ مناسب پژوهشگران، طلاب، دانشجویان و کتابخانه‌های شخصی.')
+@section('meta_description', 'متن‌یاب ۳ با اشتراک اعتمادمحور (از ماهی ۴۱ هزار تومان): جست‌وجوی سریع درون متن فایل‌های Word، PDF، پاورپوینت، اکسل و OneNote روی رایانهٔ خودتان؛ مناسب پژوهشگران، طلاب، دانشجویان و کتابخانه‌های شخصی.')
 
 @push('styles')
 <link rel="stylesheet" href="/assets/matnyaab-hero-v1/hero.css?v=20260928-mobile">
@@ -178,7 +178,7 @@
             </div>
 
             <div class="gallery" data-gallery>
-                <div class="gallery-tabs" role="tablist" aria-label="نماهای متن‌یاب ۲">
+                <div class="gallery-tabs" role="tablist" aria-label="نماهای متن‌یاب">
                     <button type="button" role="tab" aria-selected="true" aria-controls="shot-1" id="tab-1">جست‌وجو و پیش‌نمایش</button>
                     <button type="button" role="tab" aria-selected="false" aria-controls="shot-2" id="tab-2" tabindex="-1">پوستهٔ شب</button>
                     <button type="button" role="tab" aria-selected="false" aria-controls="shot-3" id="tab-3" tabindex="-1">پوستهٔ کاغذی</button>
@@ -248,19 +248,19 @@
     <div class="container">
         <div class="download-panel">
             <span class="eyebrow">دانلود</span>
-            <h2>متن‌یاب ۲ را دریافت کنید</h2>
+            <h2>متن‌یاب ۳ را دریافت کنید</h2>
             <p>نصب‌کنندهٔ ویندوز را دریافت کنید، با چند کلیک نصب کنید و با کد اشتراک یا سه روز مهمانی شروع کنید.</p>
 
             <div class="download-main">
                 <article class="release-card">
-                    <div><span class="new-badge">نسخهٔ ۲٫۵</span><h3 style="margin-top:10px">متن‌یاب ۲ برای ویندوز</h3></div>
+                    <div><span class="new-badge">نسخهٔ ۳٫۱</span><h3 style="margin-top:10px">متن‌یاب ۳ برای ویندوز</h3></div>
                     <p data-release-content="kotlin">نصب‌کننده را اجرا کنید؛ میان‌بر متن‌یاب روی میز کار و منوی شروع ساخته می‌شود.</p>
                     <div class="release-meta">
                         <span><strong>نوع فایل:</strong> <span data-release-delivery="kotlin">نصب‌کنندهٔ ویندوز ۱۰ و ۱۱ (۶۴ بیتی)</span></span>
                         <span><strong>اندازه:</strong> <span data-release-size="kotlin">در حال دریافت اطلاعات…</span></span>
                     </div>
-                    <a class="btn btn-primary" data-release-link="kotlin" href="/downloadFiles/Matnyaab-Setup-3.0.exe">دانلود نصب‌کنندهٔ متن‌یاب ۲ <span aria-hidden="true">↓</span></a>
-                    <small class="muted" style="color:var(--muted-2)">نسخهٔ بدون نصب: <a data-release-portable href="/downloadFiles/Matnyaab-3.0-win-x64-portable.zip" style="color:var(--accent-soft)">فایل ZIP</a></small>
+                    <a class="btn btn-primary" data-release-link="kotlin" href="/downloadFiles/Matnyaab-Setup-3.1.exe">دانلود نصب‌کنندهٔ متن‌یاب ۳ <span aria-hidden="true">↓</span></a>
+                    <small class="muted" style="color:var(--muted-2)">نسخهٔ بدون نصب: <a data-release-portable href="/downloadFiles/Matnyaab-3.1-win-x64-portable.zip" style="color:var(--accent-soft)">فایل ZIP</a></small>
                 </article>
                 <div style="display:grid;gap:14px">
                     <ul class="req-list">
@@ -273,6 +273,12 @@
                         <div>
                             <strong style="color:var(--text)">متن‌یاب برای ورد</strong><br>
                             جست‌وجو و درج با منبع، پانویس، سرفصل و قالب‌ها درون ورد: <a data-release-link="word" href="/downloadFiles/Matnyaab-Word-Setup-1.1.0.exe">دریافت افزونه</a> · <a href="#word">معرفی</a>
+                        </div>
+                    </div>
+                    <div class="classic-card">
+                        <div>
+                            <strong style="color:var(--text)">نسخه‌های پیشین</strong><br>
+                            همهٔ نسخه‌های گذشته (۳٫۰، ۲٫x و نسخهٔ کاتلین ۱٫۲) با توضیح هر نسخه: <a href="{{ route('versions') }}">فهرست نسخه‌ها</a>
                         </div>
                     </div>
                     <div class="classic-card">

@@ -274,7 +274,7 @@ object TemplateEditor {
     fun show(owner: Stage, base: PromptTemplate, onChange: () -> Unit) {
         val st = Stage().apply { initOwner(owner); title = "قالب‌های نگارش" }
         val list = ListView<PromptTemplate>()
-        val name = TextField(); val desc = TextField(); val style = TextArea().apply { prefRowCount = 6; isWrapText = true }
+        val name = TextField(); val desc = TextField(); val styleText = TextArea().apply { prefRowCount = 6; isWrapText = true }
         val mode = ComboBox<String>().apply { items.setAll("متن پیوسته با پانویس", "پیوند فیش‌ها (متن فیش عیناً)") }
         val intro = CheckBox("پیشگفتار"); val sum = CheckBox("خلاصهٔ هر فصل"); val q = CheckBox("پرسش‌های پایان فصل"); val concl = CheckBox("سخن پایانی")
         var cur: PromptTemplate? = null
@@ -285,11 +285,11 @@ object TemplateEditor {
         list.setCellFactory { object : ListCell<PromptTemplate>() { override fun updateItem(t: PromptTemplate?, e: Boolean) { super.updateItem(t, e); text = t?.let { it.title + if (it.builtIn) "  (پیش‌فرض)" else "" } } } }
         list.selectionModel.selectedItemProperty().addListener { _, _, t ->
             cur = t ?: return@addListener
-            name.text = t.title; desc.text = t.desc; style.text = t.style; mode.selectionModel.select(if (t.mode == "BRIDGE") 1 else 0)
+            name.text = t.title; desc.text = t.desc; styleText.text = t.style; mode.selectionModel.select(if (t.mode == "BRIDGE") 1 else 0)
             intro.isSelected = t.intro; sum.isSelected = t.chapterSummary; q.isSelected = t.questions; concl.isSelected = t.conclusion
-            listOf(name, desc, style).forEach { it.isEditable = !t.builtIn }; listOf(mode, intro, sum, q, concl).forEach { it.isDisable = t.builtIn }
+            listOf(name, desc, styleText).forEach { it.isEditable = !t.builtIn }; listOf(mode, intro, sum, q, concl).forEach { it.isDisable = t.builtIn }
         }
-        fun edited(id: String) = PromptTemplate(id, name.text.trim().ifBlank { "قالب من" }, desc.text.trim(), style.text.trim(), if (mode.selectionModel.selectedIndex == 1) "BRIDGE" else "WOVEN",
+        fun edited(id: String) = PromptTemplate(id, name.text.trim().ifBlank { "قالب من" }, desc.text.trim(), styleText.text.trim(), if (mode.selectionModel.selectedIndex == 1) "BRIDGE" else "WOVEN",
             intro.isSelected, sum.isSelected, q.isSelected, concl.isSelected, false)
         val dup = Button("تکثیر برای ویرایش").apply { style = Theme.primaryButton(); setOnAction {
             val c = cur ?: return@setOnAction; val id = "u" + System.currentTimeMillis()
