@@ -47,13 +47,28 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $ErrorActionPreference = "Stop"
-          $rel = gh api repos/ggml-org/whisper.cpp/releases/latest | ConvertFrom-Json
-          Write-Host "whisper.cpp $($rel.tag_name): $($rel.assets.name -join ', ')"
-          $asset = $rel.assets | Where-Object { $_.name -eq "whisper-bin-x64.zip" } | Select-Object -First 1
-          if (-not $asset) { $asset = $rel.assets | Where-Object { $_.name -like "*bin-x64*.zip" -and $_.name -notlike "*cublas*" -and $_.name -notlike "*blas*" } | Select-Object -First 1 }
-          if (-not $asset) { throw "whisper bin asset not found" }
-          Invoke-WebRequest $asset.browser_download_url -OutFile w.zip
-          Expand-Archive w.zip -DestinationPath w
+          # تازه‌ترین انتشاری که فایل آمادهٔ ویندوز دارد؛ اگر نبود، از کد منبع با پشتیبانی همهٔ پردازنده‌ها ساخته می‌شود
+          $rels = gh api "repos/ggml-org/whisper.cpp/releases?per_page=20" | ConvertFrom-Json
+          $asset = $null; $tag = $rels[0].tag_name
+          foreach ($r in $rels) {
+            $a = $r.assets | Where-Object { $_.name -eq "whisper-bin-x64.zip" } | Select-Object -First 1
+            if ($a) { $asset = $a; $tag = $r.tag_name; break }
+          }
+          if ($asset) {
+            Write-Host "using prebuilt $tag"
+            Invoke-WebRequest $asset.browser_download_url -OutFile w.zip
+            Expand-Archive w.zip -DestinationPath w
+          } else {
+            Write-Host "no prebuilt asset; building $tag from source"
+            git clone --depth 1 --branch $tag https://github.com/ggml-org/whisper.cpp src-w
+            cmake -S src-w -B src-w/build -DGGML_NATIVE=OFF -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON -DWHISPER_BUILD_TESTS=OFF -DWHISPER_BUILD_EXAMPLES=ON -DBUILD_SHARED_LIBS=ON
+            if ($LASTEXITCODE -ne 0) { throw "cmake configure failed" }
+            cmake --build src-w/build --config Release -j 4 --target whisper-cli
+            if ($LASTEXITCODE -ne 0) { throw "cmake build failed" }
+            New-Item -ItemType Directory -Force -Path w | Out-Null
+            Get-ChildItem src-w/build -Recurse -Include *.exe,*.dll | Where-Object { $_.FullName -match "Release" } | Copy-Item -Destination w
+          }
+          $env:WHISPER_TAG = $tag; "WHISPER_TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append
           Invoke-WebRequest $env:FFMPEG_URL -OutFile ff.zip
           Expand-Archive ff.zip -DestinationPath ff
           $pack = Join-Path $PWD "pack"; New-Item -ItemType Directory -Force -Path $pack | Out-Null
@@ -68,7 +83,7 @@ jobs:
           foreach ($d in @("vcruntime140.dll", "vcruntime140_1.dll", "msvcp140.dll")) { $s = Join-Path "$env:WINDIR\System32" $d; if (Test-Path $s) { Copy-Item $s $pack } }
           @"
           Matnyaab speech-to-text pack $($env:PACK_VERSION)
-          whisper.cpp $($rel.tag_name) — MIT License — https://github.com/ggml-org/whisper.cpp
+          whisper.cpp $($env:WHISPER_TAG) — MIT License — https://github.com/ggml-org/whisper.cpp
           FFmpeg (LGPL build by BtbN) — https://ffmpeg.org — source: https://github.com/BtbN/FFmpeg-Builds
           "@ | Set-Content "$pack\NOTICE.txt" -Encoding UTF8
           Get-ChildItem $pack | Format-Table Name, Length
