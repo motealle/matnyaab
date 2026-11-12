@@ -296,7 +296,7 @@ object TemplateEditor {
             PromptTemplates.upsert(c.copy(id = id, title = c.title + " (نسخهٔ من)", builtIn = false)); refresh(id); onChange() } }
         val save = Button("ذخیره").apply { style = Theme.addButton(); setOnAction { val c = cur ?: return@setOnAction; if (c.builtIn) return@setOnAction; PromptTemplates.upsert(edited(c.id)); refresh(c.id); onChange() } }
         val del = Button("حذف").apply { style = Theme.addButton(); setOnAction { val c = cur ?: return@setOnAction; if (c.builtIn) return@setOnAction; PromptTemplates.delete(c.id); refresh(null); onChange() } }
-        val form = VBox(6.0, Label("نام"), name, Label("توضیح کوتاه"), desc, Label("سبک و لحن (دستور به هوش مصنوعی؛ متغیرها: {title} {keywords} {audience})"), style,
+        val form = VBox(6.0, Label("نام"), name, Label("توضیح کوتاه"), desc, Label("سبک و لحن (دستور به هوش مصنوعی؛ متغیرها: {title} {keywords} {audience})"), styleText,
             Label("شیوهٔ نوشتن"), mode, HBox(10.0, intro, sum, q, concl), HBox(8.0, dup, save, del).apply { alignment = Pos.CENTER_RIGHT },
             Label("قالب‌های پیش‌فرض فقط‌خواندنی‌اند؛ برای تغییر، تکثیرشان کنید.").apply { styleClass.add("muted") }).apply { padding = Insets(0.0, 0.0, 0.0, 10.0) }
         val root = HBox(10.0, list.apply { prefWidth = 230.0 }, form.also { HBox.setHgrow(it, Priority.ALWAYS) })
