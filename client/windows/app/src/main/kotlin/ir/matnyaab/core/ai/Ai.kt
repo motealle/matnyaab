@@ -39,13 +39,13 @@ object AiConfig {
     private val keyCache = HashMap<String, String>()
 
     val PRESETS = listOf(
-        AiPreset("avalai", "AvalAI (درگاه ایرانی، پرداخت ریالی)", "openai", "https://api.avalai.ir/v1", listOf("gpt-4o-mini", "gpt-4o", "claude-3-5-sonnet-latest", "gemini-2.0-flash"), "نشانی پایه را از مستندات AvalAI هم بررسی کنید.", "https://avalai.ir"),
+        AiPreset("avalai", "AvalAI (درگاه ایرانی، پرداخت ریالی)", "openai", "https://api.avalai.ir/v1", listOf("gpt-4o-mini", "gpt-4o", "claude-sonnet-4-5", "gemini-2.5-flash"), "نشانی پایه را از مستندات AvalAI هم بررسی کنید.", "https://avalai.ir"),
         AiPreset("gapgpt", "GapGPT (درگاه ایرانی)", "openai", "https://api.gapgpt.app/v1", listOf("gpt-4o-mini", "gpt-4o"), "نشانی پایه را از مستندات GapGPT هم بررسی کنید.", "https://gapgpt.app"),
         AiPreset("openrouter", "OpenRouter (مدل‌های رایگان و پولی)", "openai", "https://openrouter.ai/api/v1", listOf("deepseek/deepseek-chat-v3-0324:free", "meta-llama/llama-3.3-70b-instruct:free", "openai/gpt-4o-mini"), "مدل‌های دارای «:free» رایگان‌اند (با محدودیت تعداد درخواست).", "https://openrouter.ai"),
         AiPreset("deepseek", "DeepSeek (کم‌هزینه)", "openai", "https://api.deepseek.com/v1", listOf("deepseek-chat"), "", "https://platform.deepseek.com"),
         AiPreset("openai", "OpenAI", "openai", "https://api.openai.com/v1", listOf("gpt-4o-mini", "gpt-4o"), "", "https://platform.openai.com"),
         AiPreset("anthropic", "Anthropic Claude", "anthropic", "https://api.anthropic.com/v1", listOf("claude-sonnet-4-5", "claude-haiku-4-5"), "", "https://console.anthropic.com"),
-        AiPreset("gemini", "Google Gemini", "gemini", "https://generativelanguage.googleapis.com/v1beta", listOf("gemini-2.0-flash", "gemini-1.5-pro"), "", "https://aistudio.google.com"),
+        AiPreset("gemini", "Google Gemini", "gemini", "https://generativelanguage.googleapis.com/v1beta", listOf("gemini-2.5-flash", "gemini-2.5-pro"), "", "https://aistudio.google.com"),
         AiPreset("groq", "Groq (سریع، سطح رایگان)", "openai", "https://api.groq.com/openai/v1", listOf("llama-3.3-70b-versatile"), "", "https://console.groq.com"),
         AiPreset("ollama", "Ollama — مدل محلی و آفلاین (رایگان)", "openai", "http://localhost:11434/v1", listOf("qwen2.5:7b", "llama3.1:8b"), "Ollama را نصب و مدل را دانلود کنید؛ کلید لازم نیست و متن از رایانه بیرون نمی‌رود.", "https://ollama.com"),
         AiPreset("custom", "سرویس سازگار با OpenAI (دلخواه)", "openai", "", emptyList(), "نشانی پایهٔ API و نام مدل را از مستندات سرویس بردارید."),

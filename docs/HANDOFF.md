@@ -294,3 +294,11 @@ yearly 490,000 toman (editable in admin). Primary card 6037-9977-7025-9241 (مح
 - پل محلی `core/bridge/LocalBridge.kt`: HTTP روی 127.0.0.1 با توکن در `bridge.json`؛ در برنامهٔ باز یا حالت پنهان `Matnyaab.exe --bridge` (۳۰ دقیقه بیکاری ← خروج). مسیرها: ping, search, excerpt, note, add-folder, show, shutdown. پرچم `FF_WORD_BRIDGE=0` خاموشش می‌کند. آزمون سرتاسری در CI ویندوز.
 - افزونهٔ ورد: `client/word/` (C# net472، COM Add-in بدون PIA با dynamic). نصب‌کنندهٔ Inno برای کاربر جاری + ثبت سیستمی فقط اگر خودبه‌خود مدیر است (mscoreei در فرایندهای مدیر HKCU را نمی‌خواند — با Procmon اثبات شد). پوشه‌های نسخه‌دار؛ آزمون CI: فعال‌سازی COM بومی ۳۲/۶۴ بیتی، نصب دوباره، حذف. تصاویر پنل در CI ساخته می‌شوند (`Tests.exe --shots`).
 - سایت: بخش `partials/word-addin.blade.php` (پرچم `word_addin`)، کاتالوگ سرویس‌های هوش مصنوعی در پنل مدیریت (`ai_catalog` ← `/api/client/config`). releases.json کلید `word` را نگه می‌دارد.
+
+## 3.0 «متن‌یاب هوشمند» (۱۴۰۵/۰۸)
+- برنامه: نوار ابزار بالا (MainWindow.buildToolbar)، «میز پژوهش» ui/ResearchWindow.kt با زبانه‌های فیش‌ها/دستیار/ساخت کتاب/منبع‌یاب؛ AiSettingsDialog؛ ScenariosDialog («چه کارهایی می‌توانم بکنم؟»). فیش سریع: Ctrl+D یا «＋ فیش» در پیش‌نمایش.
+- هسته: core/research (Research.kt=research.json، SourceFinder، DocxWriter/MarkdownWriter/ReportWriter)، core/ai (Ai.kt: AiConfig در ai.json + DPAPI، AiClient؛ Missions.kt: Scenario و MissionRunner با نقل‌قول‌های راستی‌آزمایی‌شده).
+- پرچم‌ها (settings.ini، پیش‌فرض روشن، در تنظیمات): FF_RESEARCH، FF_SOURCE، FF_AI؛ FF_SEMANTIC همان قبلی.
+- پل: fish/list، fish/add، find-source، check.
+- افزونهٔ ورد 1.1.0: زبانه‌های «پژوهش» (UI/SmartViews.cs ResearchView) و «اداری» (OfficeView؛ WordOps/OfficeOps.cs)، گروه‌های ریبون پژوهش/اداری، ShowResearch/ShowOffice. سرویس‌های AI در ai.json مشترک‌اند (ai.json مرجع است).
+- سایت: partials/smart.blade.php (#ai، پرچم smart)، فهرست سرویس‌ها با پیوند و سلب مسئولیت، FAQ.

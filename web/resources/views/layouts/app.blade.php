@@ -174,7 +174,7 @@
         </a>
 
         <nav class="nav-links" id="primary-nav" aria-label="ناوبری اصلی">
-            <a href="{{ route('home') }}#whats-new">تازه‌های ۳٫۰</a>
+            <a href="{{ route('home') }}#ai">متن‌یاب هوشمند</a>
             <a href="{{ route('home') }}#word">افزونهٔ ورد</a>
             <a href="{{ route('home') }}#features">امکانات</a>
             <a href="{{ route('home') }}#download">دانلود</a>
