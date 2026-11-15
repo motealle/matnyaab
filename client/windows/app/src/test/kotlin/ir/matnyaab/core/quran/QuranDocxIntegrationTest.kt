@@ -21,8 +21,10 @@ class QuranDocxIntegrationTest {
                 doc.createParagraph().createRun().setText(
                     "MATNYAAB — آزمون عملی کشف‌الآیات. در این سند آیه زیر در میان متن توضیحی قرار گرفته است:"
                 )
+                // This excerpt is distinctive to Al-Baqarah 2:255. The shorter opening
+                // phrase "الله لا إله إلا هو الحي القيوم" is shared with Aal-e-Imran 3:2.
                 doc.createParagraph().createRun().setText(
-                    "اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ"
+                    "مَنْ ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلَّا بِإِذْنِهِ"
                 )
                 doc.createParagraph().createRun().setText(
                     "این عبارت بخشی از آیه ۲۵۵ سوره بقره است. برای کنترل دوم: قُلْ هُوَ اللَّهُ أَحَدٌ"
@@ -36,12 +38,12 @@ class QuranDocxIntegrationTest {
             val parsed = TikaExtractor.parse(file)
             assertEquals(200, parsed.status, "Tika باید سند Word را بدون خطا استخراج کند")
             val extracted = parsed.content.orEmpty()
-            assertTrue(extracted.contains("الْحَيُّ"), "متن عربی DOCX در خروجی Tika پیدا نشد: $extracted")
+            assertTrue(extracted.contains("يَشْفَعُ"), "متن عربی DOCX در خروجی Tika پیدا نشد: $extracted")
 
             val hits = Matcher.find(extracted, includeBasmala = true, withTranslations = false)
             assertTrue(
                 hits.any { it.sura == 2 && it.aya == 255 && it.kind == QKind.PARTIAL },
-                "قطعه آیه‌الکرسی شناسایی نشد. یافته‌ها: $hits"
+                "قطعه متمایز آیه‌الکرسی شناسایی نشد. یافته‌ها: $hits"
             )
             assertTrue(
                 hits.any { it.sura == 112 && it.aya == 1 },
