@@ -36,7 +36,7 @@ LZMAUseSeparateProcess=yes
 LZMANumBlockThreads=2
 WizardStyle=modern
 CloseApplications=yes
-VersionInfoVersion={#AppVersion}.0.0
+VersionInfoVersion={#AppVersion}.0
 VersionInfoProductName=Matnyaab
 
 [Tasks]
