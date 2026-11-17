@@ -334,7 +334,7 @@
                 const kotlin = releases.kotlin;
                 // Apply the released 3.x manifest, not an obsolete 2.x-only condition.
                 // If fetching fails, the HTML still contains a direct, versioned installer URL.
-                if (kotlin && /^3\\.[0-9]+(?:\\.[0-9]+)*$/.test(String(kotlin.version || '')) &&
+                if (kotlin && /^3\.[0-9]+(?:\.[0-9]+)*$/.test(String(kotlin.version || '')) &&
                     String(kotlin.url || '').startsWith('/downloadFiles/Matnyaab-Setup-')) {
                     const link = document.querySelector('[data-release-link="kotlin"]');
                     const size = document.querySelector('[data-release-size="kotlin"]');
