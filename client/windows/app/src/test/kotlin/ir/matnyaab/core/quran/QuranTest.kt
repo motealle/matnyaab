@@ -17,6 +17,15 @@ class QuranTest {
         assertTrue(h.any { it.sura == 2 && it.aya == 255 && it.kind == QKind.PARTIAL }, h.toString())
     }
 
+
+    @Test fun sharedOpeningIsNotSilentlyAssignedToTheWrongVerse() {
+        val opening = "اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ"
+        val hits = Matcher.find(opening, includeBasmala = true, withTranslations = false)
+        assertTrue(hits.any { it.sura == 2 && it.aya == 255 }, hits.toString())
+        assertTrue(hits.any { it.sura == 3 && it.aya == 2 }, hits.toString())
+        assertTrue(hits.filter { it.sura == 2 || it.sura == 3 }.any { it.alternatives > 0 }, hits.toString())
+    }
+
     @Test fun fullShortVerseAndPersianLetters() {
         val t = "چنان‌که آمده است: قل هو الله احد. الله الصمد. لم یلد و لم یولد."
         val h = Matcher.find(t)
