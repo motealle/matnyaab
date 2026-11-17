@@ -138,6 +138,9 @@ jobs:
           curl --silent --show-error --fail --location "$SITE_URL/" -o /tmp/home.html
           grep -q "متن‌یاب | جستجوی حرفه‌ای در محتوای فایل‌ها" /tmp/home.html
           grep -q "data-theme-toggle" /tmp/home.html
+          # Verify what a real customer actually clicks, not merely an uploaded EXE.
+          grep -Fq 'data-release-link="kotlin" href="/downloadFiles/Matnyaab-Setup-3.1.1.exe"' /tmp/home.html
+          grep -Fq 'نسخهٔ ۳٫۱٫۱' /tmp/home.html
           grep -q "/static/sc1.png" /tmp/home.html
 
           curl --silent --show-error --fail --location "$SITE_URL/static/sc1.png" -o /tmp/sc1.png
