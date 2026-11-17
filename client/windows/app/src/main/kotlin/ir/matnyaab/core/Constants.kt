@@ -7,16 +7,15 @@ import java.nio.file.Paths
 object Constants {
     const val APP_NAME = "MATNYAAB"
     const val APP_NAME_PERSIAN = "متن‌یاب"
-    const val APP_VERSION = "3.1"
+    const val APP_VERSION = "3.1.1"
     /** نام لاتین نمایشی (پوشه تنظیمات کاربر همچنان APP_NAME است تا داده‌های قبلی حفظ شوند) */
     const val APP_NAME_LATIN = "Matnyaab"
-    const val APP_VERSION_PERSIAN = "۳٫۱"
+    const val APP_VERSION_PERSIAN = "۳٫۱٫۱"
     const val SUPPORT_URL = "https://www.matnyaab.ir/subscribe"
     const val APP_ARCH = "x64"
 
     const val BASE_URL = "https://www.matnyaab.ir"
-    const val APP_UPDATE_DOWNLOAD_URL = "$BASE_URL/update/MATNYAAB_${APP_ARCH}_setup.exe"
-    const val APP_UPDATE_VERSION_URL = "$BASE_URL/update/version.txt"
+    const val APP_UPDATE_MANIFEST_URL = "$BASE_URL/downloadFiles/releases.json"
     const val APP_STATISTICS_URL = "$BASE_URL/statistics/"
     const val APP_NEWS_URL = "$BASE_URL/news/"
     const val GET_CONTENTS_URL = "$BASE_URL/get_contents/?password=compat"
