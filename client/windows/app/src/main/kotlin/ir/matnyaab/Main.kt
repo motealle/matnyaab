@@ -68,6 +68,24 @@ fun main(args: Array<String>) {
         return
     }
 
+    // End-to-end check of the packaged EXE: creates a real Word document,
+    // runs the same analyzer as the file picker, and verifies Quran resources.
+    if (args.contains("--quran-selftest")) {
+        val file = File.createTempFile("matnyaab-quran-smoke-", ".docx")
+        try {
+            org.apache.poi.xwpf.usermodel.XWPFDocument().use { doc ->
+                doc.createParagraph().createRun().setText("مَنْ ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلَّا بِإِذْنِهِ")
+                doc.createParagraph().createRun().setText("قُلْ هُوَ اللَّهُ أَحَدٌ")
+                file.outputStream().use { doc.write(it) }
+            }
+            val hits = ir.matnyaab.core.quran.QuranDocumentAnalyzer.analyze(file).hits
+            check(hits.any { it.sura == 2 && it.aya == 255 }) { "Al-Baqarah 2:255 missing: $hits" }
+            check(hits.any { it.sura == 112 && it.aya == 1 }) { "Al-Ikhlas 112:1 missing: $hits" }
+            println("MATNYAAB_QURAN_DOCX_SMOKE_OK " + Constants.APP_VERSION)
+        } finally { file.delete() }
+        return
+    }
+
     // آزمون خودکار بستهٔ معنایی در CI: --semantic-selftest <pack.zip> <out.json>
     args.indexOf("--semantic-selftest").takeIf { it >= 0 && it + 2 < args.size }?.let { i ->
         val out = File(args[i + 2])

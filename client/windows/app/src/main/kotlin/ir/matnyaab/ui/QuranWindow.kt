@@ -220,17 +220,34 @@ class QuranWindow(private val owner: Stage, private val settings: AppSettingsMan
     private val docTable = hitTable(false)
     private val docStatus = Label().apply { styleClass.add("muted") }
     private var docFile: File? = null
+    private var docRequestId = 0L
 
     fun analyzeFile(f: File) {
         tabs.selectionModel.select(tDoc)
-        docFile = f; docStatus.text = "در حال بررسی «${f.name}»…"
+        docFile = f
+        val request = ++docRequestId
+        val includeBasmala = basmala.isSelected
+        val collections = indexer.allObjects.toList()
+        docTable.items.clear() // Never display the previous document's hits while parsing a new one.
+        docStatus.text = "در حال بررسی «${f.name}»…"
         bg {
-            val content = Scanner.content(indexer.allObjects.toList(), f.absolutePath) ?: runCatching { TikaExtractor.parse(f).content }.getOrNull() ?: ""
-            val hits = Matcher.all(content, basmala.isSelected)
+            val result = runCatching {
+                val snapshot = if (f.isFile && f.canRead()) null else Scanner.content(collections, f.absolutePath)
+                ir.matnyaab.core.quran.QuranDocumentAnalyzer.analyze(f, includeBasmala, snapshot)
+            }
             Platform.runLater {
-                docTable.items.setAll(hits.filter { shown(it) }.map { Row(f.absolutePath, f.name, it) })
-                val n = hits.map { it.key }.distinct().size
-                docStatus.text = if (hits.isEmpty()) "آیه‌ای در «${f.name}» پیدا نشد." else "«${f.name}»: ${fa(n)} آیه در ${fa(hits.size)} موضع"
+                if (request != docRequestId || !stage.isShowing) return@runLater
+                result.onSuccess { report ->
+                    val hits = report.hits
+                    docTable.items.setAll(hits.filter { shown(it) }.map { Row(f.absolutePath, f.name, it) })
+                    val n = hits.map { it.key }.distinct().size
+                    val suffix = if (report.usedIndexSnapshot) " (از نسخهٔ ذخیره‌شده در فهرست)" else ""
+                    docStatus.text = if (hits.isEmpty()) "آیه‌ای در «${f.name}» پیدا نشد.$suffix"
+                        else "«${f.name}»: ${fa(n)} آیه در ${fa(hits.size)} موضع$suffix"
+                }.onFailure { error ->
+                    docTable.items.clear()
+                    docStatus.text = "خطا در بررسی «${f.name}»: ${error.message ?: error.javaClass.simpleName}"
+                }
             }
         }
     }

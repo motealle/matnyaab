@@ -40,7 +40,11 @@ class QuranDocxIntegrationTest {
             val extracted = parsed.content.orEmpty()
             assertTrue(extracted.contains("يَشْفَعُ"), "متن عربی DOCX در خروجی Tika پیدا نشد: $extracted")
 
-            val hits = Matcher.find(extracted, includeBasmala = true, withTranslations = false)
+            // Exercise the exact production file-picker path; the poisoned index snapshot
+            // must never replace freshly extracted DOCX content.
+            val hits = QuranDocumentAnalyzer.analyze(
+                file, includeBasmala = true, indexSnapshot = "این یک متنِ فهرست‌شدهٔ قدیمی و نامربوط است"
+            ).hits
             assertTrue(
                 hits.any { it.sura == 2 && it.aya == 255 && it.kind == QKind.PARTIAL },
                 "قطعه متمایز آیه‌الکرسی شناسایی نشد. یافته‌ها: $hits"

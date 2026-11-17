@@ -108,7 +108,11 @@ object Matcher {
         val taken = ArrayList<IntRange>()
         for (c in cands) {
             val a = c.r.docFrom; val b = c.r.docTo + ix.n - 1
-            if (taken.any { a <= it.last && it.first <= b }) continue
+            // A quoted fragment can be identical in multiple Quran verses.
+            // Report exact-span alternatives rather than silently assigning the text
+            // to whichever verse happened to score higher (e.g. 2:255 vs 3:2).
+            if (taken.any { a <= it.last && it.first <= b && (a != it.first || b != it.last) }) continue
+            if (taken.count { it.first == a && it.last == b } >= 6) continue
             // آیه‌های دیگری که همین متن را دارند (ابهام)
             val alt = cands.count { o -> o !== c && o.r.docFrom == c.r.docFrom && o.r.docTo == c.r.docTo && o.r.v != c.r.v }
             val key = ix.keys[c.r.v].split(':'); val s = key[0].toInt(); val ay = key[1].toInt()

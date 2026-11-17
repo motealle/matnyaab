@@ -19,7 +19,8 @@ object Scanner {
     data class DocHits(val path: String, val name: String, val collection: String, val time: Double, val hits: List<QHit>)
     private data class Cache(val version: Int, val translations: String, val docs: MutableMap<String, Pair<Double, List<QHit>>>)
 
-    private const val VERSION = 1
+    // Matching semantics changed: invalidate results computed by previous releases.
+    private const val VERSION = 2
     private val gson = Gson()
 
     private fun cacheFile(c: IndexerInfo) = File(c.savePath.trimEnd('/', '\\') + ".quran.json")
