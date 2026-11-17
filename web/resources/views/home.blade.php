@@ -164,9 +164,9 @@
 <section class="section" id="whats-new">
     <div class="container">
         <div class="whats-new">
-            <span class="new-badge">تازه: نسخهٔ ۳٫۱</span>
+            <span class="new-badge">تازه: نسخهٔ ۳٫۱٫۱</span>
             <h2>از جست‌وجو تا کتاب؛ و حالا کشف‌الآیات و خروجی با بافت</h2>
-            <p class="lead">متن‌یاب ۳٫۱ با پیشنهادهای پژوهشگران ساخته شد: کشف آیات قرآن در اسناد، خروجی نتایج در Word و Excel همراه با متن پیرامون، کنترل دامنهٔ جست‌وجوی مفهومی، و «کتاب با هوش مصنوعی» که از عنوان و کلیدواژه، پیش‌نویس کامل و صفحه‌آرایی‌شدهٔ کتاب را تحویل می‌دهد (<a href="#ai">بیشتر</a> · <a href="/docs/matnyaab-guide-3.1.pdf" target="_blank" rel="noopener">راهنمای کامل PDF</a>).</p>
+            <p class="lead">متن‌یاب ۳٫۱٫۱ با پیشنهادهای پژوهشگران ساخته شد: کشف آیات قرآن در اسناد، خروجی نتایج در Word و Excel همراه با متن پیرامون، کنترل دامنهٔ جست‌وجوی مفهومی، و «کتاب با هوش مصنوعی» که از عنوان و کلیدواژه، پیش‌نویس کامل و صفحه‌آرایی‌شدهٔ کتاب را تحویل می‌دهد (<a href="#ai">بیشتر</a> · <a href="/docs/matnyaab-guide-3.1.pdf" target="_blank" rel="noopener">راهنمای کامل PDF</a>).</p>
 
             <div class="new-grid">
                 <div class="new-item"><h3>۞ کشف‌الآیات</h3><p>هر آیه در کدام سند، چند بار و کجا؛ با تفکیک نقل کامل، نقل بخشی، ارجاع شماره‌ای («بقره، آیهٔ ۳»)، ترجمه و اشارهٔ مفهومی، و اطمینان و متن شاهد برای هر یافته. خروجی Word و Excel.</p></div>
@@ -253,14 +253,14 @@
 
             <div class="download-main">
                 <article class="release-card">
-                    <div><span class="new-badge">نسخهٔ ۳٫۱</span><h3 style="margin-top:10px">متن‌یاب ۳ برای ویندوز</h3></div>
+                    <div><span class="new-badge">نسخهٔ ۳٫۱٫۱</span><h3 style="margin-top:10px">متن‌یاب ۳ برای ویندوز</h3></div>
                     <p data-release-content="kotlin">نصب‌کننده را اجرا کنید؛ میان‌بر متن‌یاب روی میز کار و منوی شروع ساخته می‌شود.</p>
                     <div class="release-meta">
                         <span><strong>نوع فایل:</strong> <span data-release-delivery="kotlin">نصب‌کنندهٔ ویندوز ۱۰ و ۱۱ (۶۴ بیتی)</span></span>
                         <span><strong>اندازه:</strong> <span data-release-size="kotlin">در حال دریافت اطلاعات…</span></span>
                     </div>
-                    <a class="btn btn-primary" data-release-link="kotlin" href="/downloadFiles/Matnyaab-Setup-3.1.exe">دانلود نصب‌کنندهٔ متن‌یاب ۳ <span aria-hidden="true">↓</span></a>
-                    <small class="muted" style="color:var(--muted-2)">نسخهٔ بدون نصب: <a data-release-portable href="/downloadFiles/Matnyaab-3.1-win-x64-portable.zip" style="color:var(--accent-soft)">فایل ZIP</a></small>
+                    <a class="btn btn-primary" data-release-link="kotlin" href="/downloadFiles/Matnyaab-Setup-3.1.1.exe">دانلود نصب‌کنندهٔ متن‌یاب ۳ <span aria-hidden="true">↓</span></a>
+                    <small class="muted" style="color:var(--muted-2)">نسخهٔ بدون نصب: <a data-release-portable href="/downloadFiles/Matnyaab-3.1.1-win-x64-portable.zip" style="color:var(--accent-soft)">فایل ZIP</a></small>
                 </article>
                 <div style="display:grid;gap:14px">
                     <ul class="req-list">
@@ -328,12 +328,14 @@
             return new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 1 }).format(value) + ' ' + units[unit];
         };
 
-        fetch('/downloadFiles/releases.json', { cache: 'no-store' })
+        fetch('/downloadFiles/releases.json?v=' + Date.now(), { cache: 'no-store' })
             .then(response => response.ok ? response.json() : Promise.reject())
             .then(releases => {
                 const kotlin = releases.kotlin;
-                // فقط وقتی نسخهٔ ۲ واقعاً منتشر شده باشد، پیوند به‌روز شود
-                if (kotlin && String(kotlin.version || '').startsWith('2')) {
+                // Apply the released 3.x manifest, not an obsolete 2.x-only condition.
+                // If fetching fails, the HTML still contains a direct, versioned installer URL.
+                if (kotlin && /^3\.[0-9]+(?:\.[0-9]+)*$/.test(String(kotlin.version || '')) &&
+                    String(kotlin.url || '').startsWith('/downloadFiles/Matnyaab-Setup-')) {
                     const link = document.querySelector('[data-release-link="kotlin"]');
                     const size = document.querySelector('[data-release-size="kotlin"]');
                     const delivery = document.querySelector('[data-release-delivery="kotlin"]');
