@@ -69,24 +69,27 @@ class NewsLoader(private val callback: (List<Pair<String, String>>) -> Unit) {
     fun stop() { stopped = true; thread?.interrupt() }
 }
 
-/** معادل CheckUpdateThread: خواندن version.txt و اعلام نسخه جدید */
-class UpdateChecker(private val callback: (String) -> Unit) {
+/** Updates are announced from the Kotlin release manifest, never the classic installer. */
+class UpdateChecker(private val callback: (ClientRelease) -> Unit) {
     @Volatile private var stopped = false
     private var thread: Thread? = null
 
     fun start() {
         thread = Thread {
             try {
-                val req = Request.Builder().url(Constants.APP_UPDATE_VERSION_URL).get().build()
+                val req = Request.Builder()
+                    .url(Constants.APP_UPDATE_MANIFEST_URL)
+                    .header("Cache-Control", "no-cache")
+                    .get().build()
                 httpClient.newCall(req).execute().use { resp ->
                     if (resp.isSuccessful) {
-                        val remote = (resp.body?.string() ?: "").trim()
-                        val remoteNum = remote.toDoubleOrNull()
-                        val current = Constants.APP_VERSION.toDoubleOrNull() ?: 0.0
-                        if (remoteNum != null && remoteNum > current && !stopped) callback(remote)
+                        val release = ReleaseFeed.parse(resp.body?.string() ?: "")
+                        if (release != null && ReleaseFeed.newerThan(release.version, Constants.APP_VERSION) && !stopped) {
+                            callback(release)
+                        }
                     }
                 }
-            } catch (e: Exception) { /* عدم دسترسی به سرور */ }
+            } catch (e: Exception) { /* no connection: do not block the application */ }
         }.apply { isDaemon = true; start() }
     }
 
