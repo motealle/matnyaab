@@ -120,6 +120,9 @@ jobs:
           $smoke = & $exe --smoke 2>&1 | Out-String
           $smoke | Write-Host
           if ($smoke -notmatch "MATNYAAB_CLIENT_SMOKE_OK") { throw "Packaged Lucene/Tika smoke test failed" }
+          $quranSmoke = & $exe --quran-selftest 2>&1 | Out-String
+          $quranSmoke | Write-Host
+          if ($quranSmoke -notmatch "MATNYAAB_QURAN_DOCX_SMOKE_OK") { throw "Packaged DOCX Quran discovery failed: $quranSmoke" }
           # لانچر نباید هرگز دسترسی مدیر بخواهد (خطای 740)
           $raw = [System.Text.Encoding]::ASCII.GetString([System.IO.File]::ReadAllBytes($exe))
           $m = [regex]::Match($raw, 'requestedExecutionLevel\s+level="(\w+)"')
@@ -144,6 +147,9 @@ jobs:
           if (-not (Test-Path $installed)) { throw "Installed launcher missing at $installed" }
           $smoke2 = & $installed --smoke 2>&1 | Out-String
           if ($smoke2 -notmatch "MATNYAAB_CLIENT_SMOKE_OK") { throw "Installed app smoke failed: $smoke2" }
+          $quranInstalled = & $installed --quran-selftest 2>&1 | Out-String
+          if ($quranInstalled -notmatch "MATNYAAB_QURAN_DOCX_SMOKE_OK") { throw "Installed DOCX Quran discovery failed: $quranInstalled" }
+          Write-Host $quranInstalled
           if (-not (Test-Path (Join-Path ([Environment]::GetFolderPath("Programs")) "متن‌یاب.lnk"))) { Write-Host "Start-menu shortcut check skipped (name encoding)" }
           # پل افزونهٔ ورد: حالت پنهان، جست‌وجوی منطقی، یادداشت و جست‌وجوی دوباره
           $bp = Start-Process $installed -ArgumentList "--bridge" -PassThru
