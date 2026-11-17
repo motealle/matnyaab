@@ -882,34 +882,43 @@ class MainWindow(
             }
         }.also { it.start() }
 
-        updateChecker = UpdateChecker { version ->
+        updateChecker = UpdateChecker { release ->
             Platform.runLater {
-                btnUpdate.text = "دریافت نسخه $version"
+                btnUpdate.text = "دریافت نسخه ${release.version}"
                 btnUpdate.style = "${Theme.FONT} -fx-background-color: ${Constants.UPDATE_BUTTON_COLOR}; -fx-background-radius: 4px; -fx-cursor: hand;"
                 btnUpdate.isVisible = true; btnUpdate.isManaged = true
-                btnUpdate.setOnAction { downloadUpdate(version) }
+                btnUpdate.setOnAction { downloadUpdate(release) }
             }
         }.also { it.start() }
     }
 
     /** معادل DownloadUpdate + finishDownloadUpdate */
-    private fun downloadUpdate(version: String) {
-        val outFile = Constants.APP_SETTINGS_DIR.resolve("MATNYAAB_${Constants.APP_ARCH}_setup.exe").toFile()
+    private fun downloadUpdate(release: ClientRelease) {
+        val outFile = Constants.APP_SETTINGS_DIR.resolve("Matnyaab-Setup-${release.version}.exe").toFile()
         val tmp = File(outFile.absolutePath + ".tmp")
-        val dl = Downloader(Constants.APP_UPDATE_DOWNLOAD_URL, tmp,
+        val dl = Downloader(release.url, tmp,
             onProgress = { p -> Platform.runLater { onDownloadProgress(p) } },
             onFinish = { code ->
                 Platform.runLater {
                     onDownloadProgress(-1)
                     if (code == 0) {
+                        if (!runCatching { release.verify(tmp) }.getOrDefault(false)) {
+                            tmp.delete()
+                            CustomMessageBox.show(stage, "به‌روزرسانی", "فایل دریافتی با اندازه یا امضای SHA256 نسخهٔ رسمی مطابقت ندارد؛ نصب متوقف شد.")
+                            return@runLater
+                        }
                         tmp.copyTo(outFile, overwrite = true); tmp.delete()
-                        val r = CustomMessageBox.show(stage, "بروزرسانی",
-                            "برنامه بسته خواهد شد و نصب نسخه جدید آغاز می شود. ادامه می دهید؟", listOf("بله", "خیر"))
+                        val r = CustomMessageBox.show(stage, "به‌روزرسانی",
+                            "نسخهٔ ${release.version} بررسی شد. برنامه بسته می‌شود و نصب نسخهٔ جدید آغاز می‌شود. ادامه می‌دهید؟", listOf("بله", "خیر"))
                         if (r == 0) {
-                            try { Runtime.getRuntime().exec(arrayOf(outFile.absolutePath)) } catch (e: Exception) {}
+                            try { Runtime.getRuntime().exec(arrayOf(outFile.absolutePath)) }
+                            catch (e: Exception) {
+                                CustomMessageBox.show(stage, "به‌روزرسانی", "اجرای نصب‌کننده ممکن نشد: ${e.message}")
+                                return@runLater
+                            }
                             onClose()
                         }
-                    } else if (code == 1) CustomMessageBox.show(stage, "خطا", "خطا در دانلود بروزرسانی!")
+                    } else if (code == 1) CustomMessageBox.show(stage, "خطا", "خطا در دانلود به‌روزرسانی!")
                 }
             })
         dl.start()
