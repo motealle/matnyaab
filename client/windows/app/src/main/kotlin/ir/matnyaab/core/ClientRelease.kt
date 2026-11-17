@@ -26,7 +26,7 @@ data class ClientRelease(val version: String, val url: String, val sha256: Strin
 object ReleaseFeed {
     fun newerThan(remote: String, current: String): Boolean {
         fun parts(s: String): List<Int>? {
-            if (!s.matches(Regex("""[0-9]+(\\.[0-9]+){1,3}"""))) return null
+            if (!s.matches(Regex("""[0-9]+(\.[0-9]+){1,3}"""))) return null
             return s.split('.').map { it.toIntOrNull() ?: return null }
         }
         val a = parts(remote) ?: return false
@@ -41,13 +41,13 @@ object ReleaseFeed {
     fun parse(json: String, baseUrl: String = Constants.BASE_URL): ClientRelease? = runCatching {
         val kotlin = JsonParser.parseString(json).asJsonObject.getAsJsonObject("kotlin") ?: return null
         val version = kotlin.get("version")?.asString?.trim() ?: return null
-        if (!version.matches(Regex("""[0-9]+(\\.[0-9]+){1,3}"""))) return null
+        if (!version.matches(Regex("""[0-9]+(\.[0-9]+){1,3}"""))) return null
         val rawUrl = kotlin.get("url")?.asString ?: return null
         val source = URI(baseUrl)
         val uri = source.resolve(rawUrl)
         // Reject legacy, arbitrary external hosts and HTTP downloads.
         if (uri.scheme != "https" || uri.host?.removePrefix("www.") != source.host?.removePrefix("www.")) return null
-        if (!uri.path.matches(Regex("""/downloadFiles/Matnyaab-Setup-[0-9.]+\\.exe"""))) return null
+        if (!uri.path.matches(Regex("""/downloadFiles/Matnyaab-Setup-[0-9.]+\.exe"""))) return null
         if (uri.rawQuery != null || uri.fragment != null || uri.userInfo != null) return null
         val sha = kotlin.get("sha256")?.asString ?: return null
         if (!sha.matches(Regex("""[a-fA-F0-9]{64}"""))) return null
