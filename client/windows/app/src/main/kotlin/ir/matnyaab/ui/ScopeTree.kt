@@ -96,6 +96,7 @@ class ScopeTree(
     fun reload() {
         val root = tree.root as CheckBoxTreeItem<ScopeNode>
         root.children.clear()
+        root.isSelected = false
         for (obj in indexer.allObjects) {
             val files = indexer.readFileList(Path.of(obj.savePath))
             val totalSize = files.sumOf { it.size }
@@ -126,6 +127,9 @@ class ScopeTree(
             }
             root.children.add(topItem)
         }
+        // Select after constructing the whole tree so JavaFX tri-state propagation
+        // cannot leave a newly added collection or its children unchecked.
+        if (root.children.isNotEmpty()) root.isSelected = true
         emptyHint.isVisible = indexer.allObjects.isEmpty()
     }
 

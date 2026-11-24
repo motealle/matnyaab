@@ -589,11 +589,34 @@ class MainWindow(
         runSearch { indexer.makeAdvancedQuery(allW, anyW, noneW, slop) }
     }
 
+    private fun scopeForSearch(): Pair<List<IndexerInfo>, Set<String>>? {
+        val scope = scopeTree.getSelectedDocs()
+        if (scope.first.isEmpty()) {
+            table.items.clear()
+            preview.clear()
+            lblResultCount.text = "۰ فایل — ۰ مورد"
+            accordions.getOrNull(1)?.let { if (!it.isOpen) it.expand() }
+            CustomMessageBox.show(stage, "محدودهٔ جست‌وجو",
+                if (scopeTree.isEmpty) "هنوز هیچ پوشه‌ای فهرست نشده است. ابتدا پوشهٔ اسناد را اضافه کنید."
+                else "هیچ مجموعه‌ای برای جست‌وجو تیک نخورده است. در محدودهٔ جست‌وجو دست‌کم یک مجموعه را انتخاب کنید.")
+            return null
+        }
+        return scope
+    }
+
+    private fun showSearchDiagnostics() {
+        val warnings = indexer.lastSearchWarnings
+        if (warnings.isNotEmpty())
+            CustomMessageBox.show(stage, "فهرست‌های ناقص", warnings.joinToString("\n") + "\nاین مجموعه‌ها باید دوباره فهرست شوند.")
+        else if (indexer.lastDocCount == 0)
+            CustomMessageBox.show(stage, "فهرست خالی", "فهرست‌های انتخاب‌شده هیچ سند قابل جست‌وجویی ندارند. پوشهٔ اسناد را دوباره فهرست کنید.")
+    }
+
     /** جست‌وجوی نسل دوم (واژه/عبارت، چند واژه، چند عبارت) */
     private fun specSearch(spec: ir.matnyaab.core.search.SearchSpec, mode: SearchMode) {
         subscriptionGate()
+        val (selected, masked) = scopeForSearch() ?: return
         waitOverlay.showOverlay()
-        val (selected, masked) = scopeTree.getSelectedDocs()
         Thread {
             try {
                 val hits = indexer.searchSpec(spec, selected, masked)
@@ -608,6 +631,7 @@ class MainWindow(
                         PersianUtil.toPersianNumbers(hits.sumOf { it.matches }) + " مورد"
                     preview.clear(); preview.setSummary(null)
                     waitOverlay.hideOverlay()
+                    showSearchDiagnostics()
                 }
             } catch (e: Exception) {
                 Platform.runLater {
@@ -632,8 +656,8 @@ class MainWindow(
     fun externalSearchLater(text: String) = Platform.runLater { externalSearch(text) }
 
     private fun runSearch(queryBuilder: () -> org.apache.lucene.search.Query) {
+        val (selected, masked) = scopeForSearch() ?: return
         waitOverlay.showOverlay()
-        val (selected, masked) = scopeTree.getSelectedDocs()
         Thread {
             try {
                 val query = queryBuilder()
@@ -646,6 +670,7 @@ class MainWindow(
                         PersianUtil.toPersianNumbers(totalMatches) + " مورد"
                     preview.clear()
                     waitOverlay.hideOverlay()
+                    showSearchDiagnostics()
                 }
             } catch (e: Exception) {
                 Platform.runLater {
@@ -827,12 +852,12 @@ class MainWindow(
             listOf("بله", "بعدا"))
         if (r != 0) return
         for (o in old) {
-            WhooshIndexImporter.clearOldIndexFiles(o.dir)
+            // Keep the old index until rebuilding has actually succeeded.
             if (File(o.rootPath).isDirectory) {
-                ScanDirectoryDialog(stage, o.rootPath, indexer, license) { loadExistingIndexers() }.show()
-                o.dir.toFile().deleteRecursively()
-            } else {
-                o.dir.toFile().deleteRecursively()
+                ScanDirectoryDialog(stage, o.rootPath, indexer, license) {
+                    o.dir.toFile().deleteRecursively()
+                    loadExistingIndexers()
+                }.show()
             }
         }
         loadExistingIndexers()

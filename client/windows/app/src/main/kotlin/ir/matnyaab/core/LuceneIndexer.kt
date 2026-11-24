@@ -210,17 +210,22 @@ class LuceneIndexer(private val settings: AppSettingsManager) {
      */
     /** تعداد کل اسناد جست‌وجوشده در آخرین جست‌وجو (برای idf) */
     var lastDocCount = 0; private set
+    var lastSearchWarnings: List<String> = emptyList(); private set
 
     fun search(query: Query, selectedObjects: List<IndexerInfo>, maskedPaths: Set<String>): List<SearchHit> {
         searchResult.clear()
         lastDocCount = 0
+        lastSearchWarnings = emptyList()
+        val warnings = mutableListOf<String>()
+        var readable = 0
         for (obj in selectedObjects) {
             try {
                 FSDirectory.open(Path.of(obj.savePath)).use { dir ->
                     DirectoryReader.open(dir).use { reader ->
                         val searcher = IndexSearcher(reader)
-                        lastDocCount += reader.numDocs()
                         val top = searcher.search(query, Integer.MAX_VALUE)
+                        readable++
+                        lastDocCount += reader.numDocs()
                         for (sd in top.scoreDocs) {
                             val doc = searcher.storedFields().document(sd.doc)
                             val path = doc.get("path") ?: continue
@@ -239,9 +244,13 @@ class LuceneIndexer(private val settings: AppSettingsManager) {
                         }
                     }
                 }
-            } catch (e: IndexNotFoundException) { /* فهرست خالی */ }
-            catch (e: Exception) { /* فهرست خراب — رد می‌شود */ }
+            } catch (e: Exception) {
+                warnings.add("«${obj.indexName}»: فهرست خوانده نشد (${e.javaClass.simpleName}).")
+            }
         }
+        lastSearchWarnings = warnings.toList()
+        if (readable == 0 && warnings.isNotEmpty())
+            throw IllegalStateException("فهرست‌های انتخاب‌شده قابل خواندن نیستند. دوباره فهرست‌سازی کنید. " + warnings.joinToString(" "))
         return searchResult
     }
 

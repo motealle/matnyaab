@@ -45,11 +45,15 @@ object TikaExtractor {
     }.getOrNull()
 
     fun parse(file: File): ParseResult = try {
-        val metadata = Metadata()
-        val text = (if (file.extension.equals("pdf", true)) pdfWithPages(file, metadata) else null)
+        val metadata = Metadata().apply { set("resourceName", file.name) }
+        // A fresh Windows install must not guess the charset of valid UTF-8 Persian text.
+        val plain = if (file.extension.equals("txt", true)) runCatching {
+            java.nio.file.Files.readString(file.toPath(), Charsets.UTF_8).trimStart('\uFEFF')
+        }.getOrNull() else null
+        val text = plain ?: (if (file.extension.equals("pdf", true)) pdfWithPages(file, metadata) else null)
             ?: file.inputStream().use { tika.parseToString(it, metadata, -1) }
         if (text.isNotBlank()) ParseResult(text, 200)
-        else ParseResult(metadata.toString(), 200) // مطابق نسخه اصلی: در نبود متن، متادیتا ذخیره می‌شود
+        else ParseResult(null, 204) // metadata alone is not searchable document text
     } catch (e: Throwable) {
         ParseResult(null, 500) // معادل خطای سرور تیکا
     }

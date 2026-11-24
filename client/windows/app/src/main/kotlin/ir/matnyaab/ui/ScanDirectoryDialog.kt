@@ -229,6 +229,10 @@ class ScanDirectoryDialog(
                                     "«$name» آمادهٔ جست‌وجو است.$extra")
                                 onFinished(); stage.close()
                             }
+                            4 -> {
+                                CustomMessageBox.show(stage, "فهرست خالی",
+                                    "هیچ سند دارای متن قابل جست‌وجو پیدا نشد. نوع فایل‌ها، مسیر، محدودهٔ حجم یا اسکن‌بودن PDFها را بررسی کنید.")
+                            }
                             2 -> {
                                 progressBox.isVisible = false; progressBox.isManaged = false
                                 CustomMessageBox.show(stage, "افزودن پوشه", "فهرست‌گیری متوقف شد و تغییری ذخیره نشد.")

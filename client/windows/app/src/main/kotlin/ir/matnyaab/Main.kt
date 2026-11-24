@@ -47,6 +47,10 @@ class MatnyaabApp : Application() {
 }
 
 fun main(args: Array<String>) {
+    if (args.contains("--fresh-search-selftest")) {
+        ir.matnyaab.core.FreshSearchSelfTest.run()
+        return
+    }
     if (args.contains("--smoke")) {
         val probe = File.createTempFile("matnyaab-client-smoke", ".txt")
         try {

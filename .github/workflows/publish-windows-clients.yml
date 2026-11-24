@@ -21,9 +21,9 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  KOTLIN_VERSION: "3.1.1"
-  KOTLIN_FILE: "Matnyaab-3.1.1-win-x64-portable.zip"
-  SETUP_FILE: "Matnyaab-Setup-3.1.1.exe"
+  KOTLIN_VERSION: "3.1.2"
+  KOTLIN_FILE: "Matnyaab-3.1.2-win-x64-portable.zip"
+  SETUP_FILE: "Matnyaab-Setup-3.1.2.exe"
   APP_NAME: "Matnyaab"
   SITE_URL: "https://www.matnyaab.ir"
 
@@ -31,6 +31,8 @@ jobs:
   package-kotlin:
     runs-on: windows-latest
     timeout-minutes: 25
+    env:
+      SIGNING_ENABLED: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.MATNYAAB_SIGNING_ENDPOINT != '' }}
     defaults:
       run:
         working-directory: client/windows
@@ -68,7 +70,7 @@ jobs:
         shell: pwsh
         run: gradle --no-daemon :app:clean :app:test :app:shadowJar
 
-      - name: Build slim runtime, app image, installer and portable zip
+      - name: Build slim runtime and app image
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
@@ -131,6 +133,26 @@ jobs:
           $appBytes = (Get-ChildItem $appDir -Recurse | Measure-Object Length -Sum).Sum
           Write-Host "App image bytes: $appBytes"
 
+      - name: Sign launcher with Azure Artifact Signing
+        if: env.SIGNING_ENABLED == 'true'
+        uses: azure/artifact-signing-action@v2
+        with:
+          azure-tenant-id: ${{ secrets.MATNYAAB_SIGNING_TENANT_ID }}
+          azure-client-id: ${{ secrets.MATNYAAB_SIGNING_CLIENT_ID }}
+          azure-client-secret: ${{ secrets.MATNYAAB_SIGNING_CLIENT_SECRET }}
+          endpoint: ${{ secrets.MATNYAAB_SIGNING_ENDPOINT }}
+          signing-account-name: ${{ secrets.MATNYAAB_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ secrets.MATNYAAB_SIGNING_PROFILE }}
+          files: ${{ github.workspace }}\client\windows\release\Matnyaab\Matnyaab.exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      - name: Compile Windows installer
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $appDir = Join-Path $PWD "release\$env:APP_NAME"
           # نصب‌کنندهٔ ویندوز (Inno Setup)
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           if (-not (Test-Path $iscc)) { choco install innosetup --no-progress -y | Out-Null }
@@ -140,6 +162,34 @@ jobs:
           $setup = Join-Path $PWD $env:SETUP_FILE
           if (-not (Test-Path $setup)) { throw "Installer not created" }
 
+      - name: Sign installer with Azure Artifact Signing
+        if: env.SIGNING_ENABLED == 'true'
+        uses: azure/artifact-signing-action@v2
+        with:
+          azure-tenant-id: ${{ secrets.MATNYAAB_SIGNING_TENANT_ID }}
+          azure-client-id: ${{ secrets.MATNYAAB_SIGNING_CLIENT_ID }}
+          azure-client-secret: ${{ secrets.MATNYAAB_SIGNING_CLIENT_SECRET }}
+          endpoint: ${{ secrets.MATNYAAB_SIGNING_ENDPOINT }}
+          signing-account-name: ${{ secrets.MATNYAAB_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ secrets.MATNYAAB_SIGNING_PROFILE }}
+          files: ${{ github.workspace }}\client\windows\Matnyaab-Setup-3.1.2.exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      - name: Verify signatures, fresh install, search, uninstall and archive
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $setup = Join-Path $PWD $env:SETUP_FILE
+          $appDir = Join-Path $PWD "release\$env:APP_NAME"
+          $s = Get-AuthenticodeSignature $setup
+          $launcherSig = Get-AuthenticodeSignature (Join-Path $appDir "Matnyaab.exe")
+          Write-Host "Installer signature: $($s.Status); launcher signature: $($launcherSig.Status)"
+          if ($env:SIGNING_ENABLED -eq "true" -and ($s.Status -ne "Valid" -or $launcherSig.Status -ne "Valid")) { throw "Authenticode validation failed" }
+          if ($s.Status -ne "Valid") { Write-Warning "Unsigned installer: SmartScreen reputation warnings may occur. Configure a verified signing account." }
+          @{ status = $s.Status.ToString(); publisher = if ($s.SignerCertificate) { $s.SignerCertificate.Subject } else { "" }; launcher_status = $launcherSig.Status.ToString() } |
+            ConvertTo-Json -Compress | Set-Content -Path installer-signature.json -Encoding utf8
           # آزمون واقعی نصب: نصب بی‌صدا برای کاربر جاری، اجرا از محل نصب، و حذف
           $p = Start-Process $setup -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART" -PassThru -Wait
           if ($p.ExitCode -ne 0) { throw "Silent install failed: $($p.ExitCode)" }
@@ -150,6 +200,9 @@ jobs:
           $quranInstalled = & $installed --quran-selftest 2>&1 | Out-String
           if ($quranInstalled -notmatch "MATNYAAB_QURAN_DOCX_SMOKE_OK") { throw "Installed DOCX Quran discovery failed: $quranInstalled" }
           Write-Host $quranInstalled
+          $fresh = & $installed --fresh-search-selftest 2>&1 | Out-String
+          Write-Host $fresh
+          if ($fresh -notmatch "MATNYAAB_FRESH_SEARCH_OK $env:KOTLIN_VERSION") { throw "Fresh install search failed: $fresh" }
           if (-not (Test-Path (Join-Path ([Environment]::GetFolderPath("Programs")) "متن‌یاب.lnk"))) { Write-Host "Start-menu shortcut check skipped (name encoding)" }
           # پل افزونهٔ ورد: حالت پنهان، جست‌وجوی منطقی، یادداشت و جست‌وجوی دوباره
           $bp = Start-Process $installed -ArgumentList "--bridge" -PassThru
@@ -215,6 +268,7 @@ jobs:
             client/windows/${{ env.KOTLIN_FILE }}.sha256
             client/windows/${{ env.SETUP_FILE }}
             client/windows/${{ env.SETUP_FILE }}.sha256
+            client/windows/installer-signature.json
           if-no-files-found: error
           retention-days: 3
 
@@ -333,6 +387,7 @@ jobs:
           else:
               legacy_content = "در فهرست قابل بازرسی نصب‌کننده کلاسیک، بسته محتوایی آماده‌ای شناسایی نشد؛ بسته‌های محتوایی از داخل برنامه جدا دریافت می‌شوند."
 
+          signature = json.load(open("release/installer-signature.json", encoding="utf-8-sig"))
           manifest = {
               "schema": 1,
               "classic": {
@@ -344,7 +399,8 @@ jobs:
                   "content_summary": legacy_content,
               },
               "kotlin": {
-                  "label": "متن‌یاب ۲",
+                  "label": "متن‌یاب ۳",
+                  "signature": signature,
                   "version": os.environ["KOTLIN_VERSION"],
                   "url": "/downloadFiles/" + os.environ["SETUP_FILE"],
                   "checksum_url": "/downloadFiles/" + os.environ["SETUP_FILE"] + ".sha256",
@@ -378,14 +434,19 @@ jobs:
           set -euo pipefail
           curl --silent --show-error --fail --location             "$SITE_URL/downloadFiles/releases.json" -o /tmp/releases.json
           python3 - <<'PY'
-          import json
+          import json, os
           x=json.load(open("/tmp/releases.json", encoding="utf-8"))
           assert x["classic"]["size_bytes"] > 1_000_000
           assert x["kotlin"]["size_bytes"] > 20_000_000
+          assert x["kotlin"]["version"] == os.environ["KOTLIN_VERSION"]
+          assert x["kotlin"]["sha256"] == os.environ["SETUP_SHA256"]
           assert x["kotlin"]["content_summary"]
           print("Release manifest verified.")
           PY
 
+          # Verify the actual public bytes, not just HEAD or the manifest.
+          curl --silent --show-error --fail --location --retry 2 --max-time 420 "$SITE_URL/downloadFiles/$SETUP_FILE" -o /tmp/public-setup.exe
+          echo "$SETUP_SHA256  /tmp/public-setup.exe" | sha256sum -c -
           for url in "$LEGACY_URL" "/downloadFiles/$SETUP_FILE" "/downloadFiles/$KOTLIN_FILE"; do
             code="$(curl --silent --show-error --location --head               --connect-timeout 15 --max-time 60               -o /dev/null -w '%{http_code}' "$SITE_URL$url" || true)"
             test "$code" = "200"
