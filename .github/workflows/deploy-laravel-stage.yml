@@ -139,8 +139,8 @@ jobs:
           grep -q "متن‌یاب | جستجوی حرفه‌ای در محتوای فایل‌ها" /tmp/home.html
           grep -q "data-theme-toggle" /tmp/home.html
           # Verify what a real customer actually clicks, not merely an uploaded EXE.
-          grep -Fq 'data-release-link="kotlin" href="/downloadFiles/Matnyaab-Setup-3.1.1.exe"' /tmp/home.html
-          grep -Fq 'نسخهٔ ۳٫۱٫۱' /tmp/home.html
+          grep -Fq 'data-release-link="kotlin" href="/downloadFiles/Matnyaab-Setup-3.1.2.exe"' /tmp/home.html
+          grep -Fq 'نسخهٔ ۳٫۱٫۲' /tmp/home.html
 
           # End-to-end download contract: fetch the same public EXE a customer receives,
           # then compare its actual bytes against the release manifest SHA256.
@@ -149,13 +149,13 @@ jobs:
           python3 - <<'PY'
           import json
           x=json.load(open('/tmp/matnyaab-releases-live.json',encoding='utf-8'))['kotlin']
-          assert x['version']=='3.1.1', x.get('version')
-          assert x['url']=='/downloadFiles/Matnyaab-Setup-3.1.1.exe', x.get('url')
+          assert x['version']=='3.1.2', x.get('version')
+          assert x['url']=='/downloadFiles/Matnyaab-Setup-3.1.2.exe', x.get('url')
           assert len(x['sha256'])==64
           assert int(x['size_bytes'])>20_000_000
           PY
           curl --silent --show-error --fail --location --retry 2 --max-time 420 \
-            "$SITE_URL/downloadFiles/Matnyaab-Setup-3.1.1.exe" -o /tmp/matnyaab-public-setup.exe
+            "$SITE_URL/downloadFiles/Matnyaab-Setup-3.1.2.exe" -o /tmp/matnyaab-public-setup.exe
           python3 - <<'PY'
           import hashlib, json, os
           x=json.load(open('/tmp/matnyaab-releases-live.json',encoding='utf-8'))['kotlin']
@@ -165,7 +165,7 @@ jobs:
           with open(p,'rb') as f:
               for chunk in iter(lambda:f.read(1024*1024),b''): h.update(chunk)
           assert h.hexdigest()==x['sha256'], 'Public installer SHA256 mismatch'
-          print('Public Windows 3.1.1 installer downloaded and SHA256 verified.')
+          print('Public Windows 3.1.2 installer downloaded and SHA256 verified.')
           PY
           grep -q "/static/sc1.png" /tmp/home.html
 
