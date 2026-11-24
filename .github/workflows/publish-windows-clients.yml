@@ -21,9 +21,9 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  KOTLIN_VERSION: "3.1.1"
-  KOTLIN_FILE: "Matnyaab-3.1.1-win-x64-portable.zip"
-  SETUP_FILE: "Matnyaab-Setup-3.1.1.exe"
+  KOTLIN_VERSION: "3.1.2"
+  KOTLIN_FILE: "Matnyaab-3.1.2-win-x64-portable.zip"
+  SETUP_FILE: "Matnyaab-Setup-3.1.2.exe"
   APP_NAME: "Matnyaab"
   SITE_URL: "https://www.matnyaab.ir"
 
@@ -150,6 +150,9 @@ jobs:
           $quranInstalled = & $installed --quran-selftest 2>&1 | Out-String
           if ($quranInstalled -notmatch "MATNYAAB_QURAN_DOCX_SMOKE_OK") { throw "Installed DOCX Quran discovery failed: $quranInstalled" }
           Write-Host $quranInstalled
+          $fresh = & $installed --fresh-search-selftest 2>&1 | Out-String
+          Write-Host $fresh
+          if ($fresh -notmatch "MATNYAAB_FRESH_SEARCH_OK $env:KOTLIN_VERSION") { throw "Fresh install search failed: $fresh" }
           if (-not (Test-Path (Join-Path ([Environment]::GetFolderPath("Programs")) "متن‌یاب.lnk"))) { Write-Host "Start-menu shortcut check skipped (name encoding)" }
           # پل افزونهٔ ورد: حالت پنهان، جست‌وجوی منطقی، یادداشت و جست‌وجوی دوباره
           $bp = Start-Process $installed -ArgumentList "--bridge" -PassThru

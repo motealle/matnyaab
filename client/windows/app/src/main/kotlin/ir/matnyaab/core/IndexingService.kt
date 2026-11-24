@@ -17,7 +17,7 @@ class IndexingService(
         fun onFileError(file: File, error: String) {}
         fun onProgress(done: Int, total: Int) {}
         fun onLog(message: String) {}
-        /** err: 0=موفق 2=لغو 3=خطا (متن‌یاب ۲ هیچ سقف حجمی ندارد) */
+        /** err: 0=موفق 2=لغو 3=خطا 4=بدون سند قابل جست‌وجو */
         fun onFinish(err: Int) {}
     }
 
@@ -75,7 +75,7 @@ class IndexingService(
                     }
                     cb.onFileStart(f)
                     val parsed = TikaExtractor.parse(f)
-                    if (parsed.status == 500 || parsed.content == null) {
+                    if (parsed.status != 200 || parsed.content.isNullOrBlank()) {
                         cb.onFileError(f, "متن این فایل قابل استخراج نبود")
                     } else {
                         indexer.addDocument(
@@ -90,6 +90,11 @@ class IndexingService(
                 }
                 writer.commit()
             }
+            if (entries.isEmpty()) {
+                indexer.deleteIndexer(savePath.toString())
+                cb.onLog("هیچ سند دارای متنِ قابل جست‌وجو فهرست نشد.")
+                cb.onFinish(4); return
+            }
             indexer.saveFileInfo(savePath, indexName, rootPath)
             indexer.saveFileList(savePath, entries)
             indexer.loadIndexer(indexName, savePath.toString(), rootPath)
@@ -97,6 +102,8 @@ class IndexingService(
             cb.onLog("زمان کل فهرست‌گیری %02d:%02d".format(secs / 60, secs % 60))
             cb.onFinish(0)
         } catch (e: Exception) {
+            // An incomplete new index must not be loaded on the next launch.
+            runCatching { indexer.deleteIndexer(savePath.toString()) }
             cb.onLog("خطا: ${e.message}")
             cb.onFinish(3)
         }
@@ -146,7 +153,7 @@ class IndexingService(
                     if (cancelled) { writer.rollback(); cb.onFinish(2); return }
                     cb.onFileStart(f)
                     val parsed = TikaExtractor.parse(f)
-                    if (parsed.status == 500 || parsed.content == null) {
+                    if (parsed.status != 200 || parsed.content.isNullOrBlank()) {
                         cb.onFileError(f, "متن این فایل قابل استخراج نبود")
                     } else {
                         indexer.addDocument(writer, f.name, f.absolutePath, f.length(), f.lastModified() / 1000.0, parsed.content)

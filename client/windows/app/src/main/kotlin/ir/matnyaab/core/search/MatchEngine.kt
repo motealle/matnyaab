@@ -284,9 +284,11 @@ class MatchEngine(val spec: SearchSpec) {
             sb.append(".{0,9}")
             return sb.toString()
         }
-        if (partial) sb.append(".*") else sb.append("[،؛؟٪٫٬\u0640]*")
+        // Old and new indexes may contain an entire punctuation-glued Arabic token.
+        // Candidate selection must never discard a word that the final regex would accept.
+        sb.append(".*")
         for (c in w) ch(c)
-        sb.append(if (partial) ".*" else "[،؛؟٪٫٬\u0640]*")
+        sb.append(".*")
         return sb.toString()
     }
 
