@@ -31,7 +31,7 @@ jobs:
   deploy-stage:
     needs: compatibility
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     env:
       FTP_SERVER: ${{ secrets.FTP_SERVER }}
       FTP_USER: ${{ secrets.FTP_USER }}
@@ -40,6 +40,23 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Wait for verified Windows release before changing public landing
+        shell: bash
+        run: |
+          set -euo pipefail
+          ready=0
+          for attempt in $(seq 1 45); do
+            if curl --silent --show-error --fail --location --max-time 30 "$SITE_URL/downloadFiles/releases.json?preflight=$GITHUB_SHA-$attempt" -o /tmp/release-preflight.json && python3 -c 'import json; r=json.load(open("/tmp/release-preflight.json"))["kotlin"]; assert r["version"]=="3.1.2" and r["url"]=="/downloadFiles/Matnyaab-Setup-3.1.2.exe" and len(r["sha256"])==64' && curl --silent --show-error --fail --location --head --max-time 30 "$SITE_URL/downloadFiles/Matnyaab-Setup-3.1.2.exe" > /dev/null; then
+              ready=1
+              break
+            fi
+            echo "Release 3.1.2 not ready (attempt $attempt); existing landing remains untouched."
+            sleep 15
+          done
+          test "$ready" = 1
+          curl --silent --show-error --fail --location --max-time 420 "$SITE_URL/downloadFiles/Matnyaab-Setup-3.1.2.exe" -o /tmp/preflight-setup.exe
+          python3 -c 'import hashlib,json,os; r=json.load(open("/tmp/release-preflight.json"))["kotlin"]; p="/tmp/preflight-setup.exe"; assert os.path.getsize(p)==int(r["size_bytes"]); assert hashlib.file_digest(open(p,"rb"),"sha256").hexdigest()==r["sha256"]; print("Public installer verified before landing deployment.")'
 
       - name: Setup PHP 8.2
         uses: shivammathur/setup-php@v2
